@@ -6,6 +6,32 @@
   "type": "module",
   "license": "MIT",
   "author": "search5",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juijs-vue/jui-chart-vue.git"
+  },
+  "homepage": "https://github.com/juijs-vue/jui-chart-vue#readme",
+  "bugs": {
+    "url": "https://github.com/juijs-vue/jui-chart-vue/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "chart",
+    "component-library"
+  ],
+  "main": "./dist-lib/jui-chart-vue.umd.js",
+  "module": "./dist-lib/jui-chart-vue.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist-lib/jui-chart-vue.es.js",
+      "require": "./dist-lib/jui-chart-vue.umd.js"
+    },
+    "./style.css": "./dist-lib/style.css"
+  },
+  "files": [
+    "dist-lib"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
