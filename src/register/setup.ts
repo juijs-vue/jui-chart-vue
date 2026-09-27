@@ -156,4 +156,10 @@ import './widget/map/tooltip'
 import './widget/map/control'
 import './widget/map/minimap'
 
+// www.jui-vue.io gallery/realtime demo: its second dashboard chart runs in `canvas: true` mode
+// and configures `{ type: "canvas.dragselect" }` - a genuinely separate implementation from
+// `./widget/dragselect`'s plain SVG version (see that file's own updated header comment for why
+// an SVG-drawn rect wouldn't even be visible under a canvas-mode chart).
+import './widget/canvas/dragselect'
+
 export { GRID_TYPES } from './gridTypes'

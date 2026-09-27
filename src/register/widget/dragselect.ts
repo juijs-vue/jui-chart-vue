@@ -31,9 +31,14 @@ export const DRAGSELECT_WIDGET_OWN_DEFAULTS = {
 }
 
 export class DragSelectWidget extends CoreWidget {
-  private thumb: any = null
+  protected thumb: any = null
 
-  private onDrawStart(x: number, y: number, w: number, h: number): void {
+  // `protected`, not `private`: `./canvas/dragselect.ts`'s `CanvasDragSelectWidget` subclasses
+  // this whole class, overriding these two draw methods (canvas-mode `Builder`s stack their
+  // `<canvas>` elements ON TOP of the SVG layer - an SVG-drawn rect would render underneath it and
+  // never be visible - see that file's own header comment) while reusing `setDragEvent()`'s
+  // mouse-event-wiring/data-matching logic unchanged.
+  protected onDrawStart(x: number, y: number, w: number, h: number): void {
     this.thumb.attr({
       width: w >= 0 ? w : Math.abs(w),
       height: h >= 0 ? h : Math.abs(h),
@@ -42,11 +47,12 @@ export class DragSelectWidget extends CoreWidget {
     this.thumb.translate(w >= 0 ? x : x + w, h >= 0 ? y : y + h)
   }
 
-  private onDrawEnd(): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected onDrawEnd(_x?: number, _y?: number, _w?: number, _h?: number): void {
     this.thumb.attr({ width: 0, height: 0 })
   }
 
-  private setDragEvent(brush: Record<string, unknown>): void {
+  protected setDragEvent(brush: Record<string, unknown>): void {
     const axis = this.chart.axis(brush.axis as number)
     let isMove = false
     let mouseStartX = 0
@@ -56,15 +62,18 @@ export class DragSelectWidget extends CoreWidget {
     let startValueX: unknown = 0
     let startValueY: unknown = 0
 
-    // **PRESERVED QUIRK**: the original computes and passes 4 real coordinate args here
-    // (`self.chart.area("x") + axis.area("x")`, etc) to `onDrawEnd(x,y,w,h)` - but `onDrawEnd`'s
-    // own body never reads any of its 4 parameters (`thumb.attr({width:0,height:0})` is
-    // hardcoded), so that whole computation is dead on arrival. Not reproduced as inert arguments
-    // here since TypeScript has no equivalent of silently-ignored extra call args being load-
-    // bearing in any way - same "drop an already-100%-inert argument" precedent used elsewhere in
-    // this project (e.g. `grid/panel.ts`'s own dropped `drawGrid("panel")` argument).
+    // The original computes and passes 4 real coordinate args here (`self.chart.area("x") +
+    // axis.area("x")`, etc - the WHOLE axis plotting area, not just the previous rect) to
+    // `onDrawEnd(x,y,w,h)`. This class's OWN `onDrawEnd` never reads them (`thumb.attr({width:0,
+    // height:0})` is hardcoded) - inert here, exactly as in the original. They're NOT dead in
+    // general, though: `./canvas/dragselect.ts`'s `CanvasDragSelectWidget` overrides `onDrawEnd`
+    // to `this.canvas.clearRect(x,y,w,h)` with these exact args, and actually needs them - a
+    // canvas surface has no persistent "shape" to just re-attr like an SVG element, so the
+    // previous frame's pixels must be wiped explicitly before the next `onDrawStart` repaints the
+    // current rect. Computed unconditionally here (not just when a canvas subclass is in play)
+    // since it's cheap and keeps this one `resetDragDraw` shared verbatim by both.
     const resetDragDraw = () => {
-      this.onDrawEnd()
+      this.onDrawEnd(this.chart.area("x") + axis.area("x"), this.chart.area("y") + axis.area("y"), axis.area("width"), axis.area("height"))
     }
 
     const emitDataList = (sx: unknown, sy: unknown, ex: unknown, ey: unknown) => {
