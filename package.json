@@ -6,6 +6,18 @@
   "type": "module",
   "license": "MIT",
   "author": "search5",
+  "main": "./dist-lib/jui-chart-vue.umd.js",
+  "module": "./dist-lib/jui-chart-vue.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist-lib/jui-chart-vue.es.js",
+      "require": "./dist-lib/jui-chart-vue.umd.js"
+    },
+    "./style.css": "./dist-lib/style.css"
+  },
+  "files": [
+    "dist-lib"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
