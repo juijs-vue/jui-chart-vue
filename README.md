@@ -16,21 +16,28 @@ npm install jui-chart-vue
 import { Chart } from "jui-chart-vue"
 import "jui-chart-vue/style.css"
 
-const axis = [
-    {
-        x: { type: "block", domain: "quarter", line: true },
-        y: { type: "range", domain: [0, 100], step: 10, line: true },
-        data: [
-            { quarter: "1Q", sales: 50 },
-            { quarter: "2Q", sales: 80 }
-        ]
-    }
-]
-const brush = [{ type: "column", target: ["sales"] }]
+const axis = {
+    x: { type: "block", domain: "quarter", line: true },
+    y: {
+        type: "range",
+        domain: (d) => [d.sales, d.profit],
+        step: 3,
+        line: true,
+        orient: "right"
+    },
+    data: [
+        { quarter: "1Q", sales: 1, profit: 3 },
+        { quarter: "2Q", sales: 3, profit: 2 },
+        { quarter: "3Q", sales: 10, profit: 1 },
+        { quarter: "4Q", sales: 0.49, profit: 4 }
+    ]
+}
+const brush = [{ type: "column", target: ["sales", "profit"] }]
+const widget = [{ type: "title", text: "hihi" }]
 </script>
 
 <template>
-    <Chart :axis="axis" :brush="brush" theme="classic" />
+    <Chart width="600" height="600" theme="classic" :axis="axis" :brush="brush" :widget="widget" />
 </template>
 ```
 
