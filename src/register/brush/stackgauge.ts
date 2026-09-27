@@ -1,0 +1,141 @@
+// Port of the REAL legacy `chart.brush.stackgauge` ("chart.brush.stackgauge", extend:
+// "chart.brush.donut") - found via `git clone https://github.com/juijs/jui-chart.git` -> the
+// repo's own `legacy` branch (also present in every `v2.0.x` tag), at `js/brush/stackgauge.js`.
+// Not on `master`, not in the npm-published `juijs-chart@2.6.12` tarball - but confirmed
+// byte-identical logic (identifier-renamed) in `www.jui-vue.io/lib/jui/js/chart.min.js`
+// (`jui.define("chart.brush.stackgauge",...)`), itself confirmed byte-identical to
+// `chartplay.jui.io/lib/jui/js/chart.min.js` via `md5sum`. A real, authentic original - not a
+// reverse-engineered reconstruction.
+//
+// Extends `DonutBrush` (confirmed from the legacy file's own `extend:` field), reusing only
+// `drawDonut()` unmodified - `draw()`/`drawBefore()` are both completely overridden. Draws
+// concentric partial-ring "stacked" gauges, one per data row, each ring's radius shrinking inward
+// by `brush.size` from the previous (`outerRadius -= brush.size` at the end of each iteration - a
+// real, intentional mutation of shared per-instance state across `eachData()` iterations, not a
+// bug - kept as a private field here for the same reason).
+//
+// `drawBefore`'s own `if (!axis.c) { axis.c = function() {...} }` fallback (synthesizing a
+// full-chart-area panel when no `c`-type axis panel is configured, which is exactly the situation
+// every real `stack_gauge` demo is in) is ported verbatim - see `fillgauge.ts`'s header comment
+// for why the *sibling* brush needed this same fallback added by hand (it was missing there, but
+// is genuinely present here in the original).
+import { registerBrush } from 'jui-graph-ts'
+import type { BrushData } from 'jui-graph-ts'
+import { DonutBrush } from './donut'
+
+type CAxis = () => { width: number; height: number; x: number; y: number }
+
+/** Own `chart.brush.stackgauge.setup()` fields - see legacy `stackgauge.js`. */
+export const STACKGAUGE_BRUSH_OWN_DEFAULTS = {
+  /** @cfg {Number} [min=0] Determines the minimum value of a stack gauge. */
+  min: 0,
+  /** @cfg {Number} [max=100] Determines the maximum value of a stack gauge. */
+  max: 100,
+  /** @cfg {Number} [cut=5] Determines the bar spacing of a stack gauge. */
+  cut: 5,
+  /** @cfg {Number} [size=24] Determines the bar size of a stack gauge. */
+  size: 24,
+  /** @cfg {Number} [startAngle=-180] Determines the start angle of a stack gauge. */
+  startAngle: -180,
+  /** @cfg {Number} [endAngle=360] Determines the end angle of a stack gauge. */
+  endAngle: 360,
+  /** @cfg {String} [title="title"] Sets a data key to be configured as the title of a stack gauge. */
+  title: 'title',
+}
+
+export class StackGaugeBrush extends DonutBrush {
+  private sgW = 0
+  private sgCenterX = 0
+  private sgCenterY = 0
+  private sgOuterRadius = 0
+
+  drawBefore = (): void => {
+    if (!this.axis.c) {
+      ;(this.axis as unknown as { c: CAxis }).c = () => ({
+        x: 0,
+        y: 0,
+        width: this.chart.area('width') as number,
+        height: this.chart.area('height') as number,
+      })
+    }
+
+    const obj = (this.axis.c as unknown as CAxis)()
+    const width = obj.width
+    const height = obj.height
+    const x = obj.x
+    const y = obj.y
+    let min = width
+
+    if (height < min) {
+      min = height
+    }
+
+    this.sgW = min / 2
+    this.sgCenterX = width / 2 + x
+    this.sgCenterY = height / 2 + y
+    this.sgOuterRadius = this.sgW
+  }
+
+  draw = (): any => {
+    const group = this.chart.svg.group()
+    const brush = this.brush as Record<string, unknown>
+
+    this.eachData((data, i) => {
+      const row = data as BrushData
+      const target = brush.target as string
+      const min = brush.min as number
+      const max = brush.max as number
+      const size = brush.size as number
+      const cut = brush.cut as number
+      const startAngle = brush.startAngle as number
+
+      const rate = ((row[target] as number) - min) / (max - min)
+      let endAngle = brush.endAngle as number
+      const currentAngle = endAngle * rate
+      const innerRadius = this.sgOuterRadius - size + cut
+
+      if (endAngle >= 360) {
+        brush.endAngle = 359.99999
+        endAngle = 359.99999
+      }
+
+      // 빈 공간 그리기 (draw the empty portion)
+      let g = this.drawDonut(this.sgCenterX, this.sgCenterY, innerRadius, this.sgOuterRadius, startAngle + currentAngle, endAngle - currentAngle, {
+        fill: this.chart.theme('gaugeBackgroundColor'),
+      })
+
+      group.append(g)
+
+      // 채워진 공간 그리기 (draw the filled portion)
+      g = this.drawDonut(this.sgCenterX, this.sgCenterY, innerRadius, this.sgOuterRadius, startAngle, currentAngle, {
+        fill: this.color(i as number),
+      })
+
+      group.append(g)
+
+      // draw text
+      group.append(
+        this.chart.text(
+          {
+            x: this.sgCenterX + 2,
+            y: this.sgCenterY + Math.abs(this.sgOuterRadius) - 5,
+            fill: this.color(i as number),
+            'font-size': '12px',
+            'font-weight': 'bold',
+          },
+          (row[brush.title as string] as string) || '',
+        ),
+      )
+
+      this.sgOuterRadius -= size
+    })
+
+    return group
+  }
+
+  static setup(): Record<string, unknown> {
+    return STACKGAUGE_BRUSH_OWN_DEFAULTS
+  }
+}
+
+registerBrush('stackgauge', StackGaugeBrush)

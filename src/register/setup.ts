@@ -156,4 +156,12 @@ import './widget/map/tooltip'
 import './widget/map/control'
 import './widget/map/minimap'
 
+// Phase 7: real, genuine `chart.brush.*` originals found on github.com/juijs/jui-chart's own
+// `legacy` branch (absent from `master`/the npm tarball, but confirmed byte-identical to the real
+// shipped `chart.min.js`) - a full-repo demo scan surfaced these 3 as the only remaining
+// unregistered brush types across all 161 site demos.
+import './brush/gauge'
+import './brush/fillgauge'
+import './brush/stackgauge'
+
 export { GRID_TYPES } from './gridTypes'
