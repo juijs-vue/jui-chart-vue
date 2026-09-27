@@ -23,3 +23,13 @@ export type { AxisConfig, AxisPadding, BrushConfig, WidgetConfig } from './Chart
 // re-export is the one place both real entry points into this project's engine share.
 export { ChartBuilder as Builder } from './register/chartMap'
 export { GRID_TYPES } from './register/setup'
+
+// Re-exported so a consumer can register a genuinely NEW, demo-specific brush/widget (one not
+// worth adding to this project's own shared registry - e.g. www.jui-vue.io's gallery/gps demo's
+// own "radar"/"compass" widgets) against the SAME registry <Chart> actually reads from at draw
+// time. `jui-graph-ts` is bundled directly into this package's own dist-lib output (not marked
+// `external` in vite.lib.config.ts) - a consumer that separately depended on `jui-graph-ts` on its
+// own would get a SECOND, independent copy with its own separate registry Map, and anything
+// registered there would be invisible to <Chart>. Importing these FROM HERE instead guarantees
+// the same module instance, and thus the same registry.
+export { CoreWidget, registerWidget, registerBrush, registerTheme, mathUtil, colorUtil } from 'jui-graph-ts'
