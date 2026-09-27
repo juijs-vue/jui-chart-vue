@@ -1,9 +1,7 @@
 # jui-chart-vue
 
 A native Vue 3 `<Chart>` component built on [jui-graph-ts](https://github.com/juijs-vue/jui-graph-ts)'s
-real `Builder`/`Axis` rendering engine — every brush, widget and theme
-[jui-chart](https://github.com/juijs/jui-chart) ships, as plain reactive props instead of a jQuery
-selector and a `chart.builder(selector, options)` factory call.
+real `Builder`/`Axis` rendering engine, covering 81 chart brushes, 18 widgets and 5 themes.
 
 ## Install
 
@@ -36,15 +34,12 @@ const brush = [{ type: "column", target: ["sales"] }]
 </template>
 ```
 
-Where the legacy library takes one big `options` object, `<Chart>` splits it into individual props -
-`axis` / `brush` / `widget` / `theme` / `style` / `width` / `height` / `padding` / `canvas` / `event` /
-`render` / `icon` - same shape underneath, just typed and reactive: change any prop and the chart
-re-renders. A `type` string (`"bar"`, `"stackcolumn3d"`, `"canvas.scatter3d"`, `"map.marker"`, ...) is
-unchanged from jui-chart itself, so existing `axis`/`brush`/`widget` config objects carry over as-is.
+`<Chart>` takes `axis`, `brush`, `widget`, `theme`, `style`, `width`, `height`, `padding`, `canvas`,
+`event`, `render` and `icon` as individual reactive props - change any of them and the chart
+re-renders.
 
 For imperative access to the live engine instance (`axis(i).update(...)`, `.zoom(...)`,
-`.setTheme(...)`, `.on(...)`, matching jui-chart's own `chart.builder` instance API), take a template
-ref and call `getBuilder()`:
+`.setTheme(...)`, `.on(...)`), take a template ref and call `getBuilder()`:
 
 ```vue
 <script setup>
@@ -60,17 +55,11 @@ onMounted(() => chartRef.value.getBuilder().axis(0).update(newData))
 
 ## Brushes, widgets & themes
 
-81 brushes, 18 widgets and 5 themes are pre-registered (`src/register/`) - everything jui-chart itself
-ships, reimplemented against `jui-graph-ts`'s engine via its `registerBrush`/`registerWidget`/
-`registerTheme` extension points. Nothing needs registering by hand; importing `jui-chart-vue` at all
-registers every type as a side effect.
+81 brushes, 18 widgets and 5 themes are pre-registered (`src/register/`) via `jui-graph-ts`'s
+`registerBrush`/`registerWidget`/`registerTheme` extension points. Nothing needs registering by hand;
+importing `jui-chart-vue` at all registers every type as a side effect.
 
 ## Development
-
-This repo also holds the original jQuery-based `jui-chart` source (`src/brush/`, `src/widget/`,
-`src/theme/`, `examples/`, `test/`) alongside the Vue port built from it - `src/register/` is a
-from-scratch reimplementation of each brush/widget/theme against `jui-graph-ts`, using that original
-source as the reference for exact geometry/behavior, not a thin wrapper around it.
 
 ```bash
 npm install
