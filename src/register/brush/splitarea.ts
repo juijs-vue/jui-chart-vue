@@ -37,6 +37,18 @@ export class SplitAreaBrush extends SplitLineBrush {
     const splitColor = this.chart.theme('areaSplitBackgroundColor')
 
     for (let k = 0; k < path.length; k++) {
+      const xList = path[k].x
+
+      // Real bug, found via www.jui-vue.io's gallery/realtime demo (its "Today's TPS"/"Today's
+      // Concurrent Users" splitarea charts start with NO data at all - `<Chart>` renders once
+      // before the first `setInterval` tick ever populates them): with an empty `xList`, the
+      // `i==0` branch below falls back to `xList[xList.length - 1]` = `xList[-1]` = `undefined`,
+      // producing a `<path>` `d` string containing the literal text "undefined" (a real, if
+      // purely cosmetic, malformed-attribute console error - confirmed via a real Chromium
+      // render). Skip this target entirely when there's nothing to draw yet, same as every
+      // data-row-driven brush already does implicitly via `eachData()` iterating zero times.
+      if (xList.length === 0) continue
+
       const opts: Record<string, unknown> = {
         fill: this.color(k),
         'fill-opacity': this.chart.theme('areaBackgroundOpacity'),
@@ -44,7 +56,6 @@ export class SplitAreaBrush extends SplitLineBrush {
       }
 
       const line = this.createLine(path[k], k)
-      const xList = path[k].x
 
       // 날짜일 경우, 해당 인덱스를 구해야 함 (a Date `split` is resolved to its row INDEX here,
       // once per target, before the per-segment fill loop below - unlike `createLine()`'s own

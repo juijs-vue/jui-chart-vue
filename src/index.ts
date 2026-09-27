@@ -32,4 +32,4 @@ export { GRID_TYPES } from './register/setup'
 // own would get a SECOND, independent copy with its own separate registry Map, and anything
 // registered there would be invisible to <Chart>. Importing these FROM HERE instead guarantees
 // the same module instance, and thus the same registry.
-export { CoreWidget, registerWidget, registerBrush, registerTheme, mathUtil, colorUtil } from 'jui-graph-ts'
+export { CoreWidget, registerWidget, registerBrush, registerTheme, mathUtil, colorUtil, timeUtil } from 'jui-graph-ts'

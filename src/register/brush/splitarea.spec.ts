@@ -62,6 +62,25 @@ describe('splitarea brush', () => {
     expect(paths.length).toBe(1)
   })
 
+  it('with no data at all (real usage: a realtime chart before its first data update), draws no malformed path - just an empty group, no <path d> containing "undefined"', () => {
+    const wrapper = mount(Chart, {
+      props: {
+        width: 400,
+        height: 300,
+        axis: [{ x: { type: 'block', domain: [] }, y: { type: 'range', domain: [0, 100] }, data: [] }],
+        brush: [{ type: 'splitarea', target: ['value'], split: 5 }],
+      },
+    })
+
+    const group = wrapper.element.querySelector('g.brush-splitarea')
+    expect(group).not.toBeNull()
+
+    const paths = group!.querySelectorAll('path')
+    for (const p of paths) {
+      expect(p.getAttribute('d') ?? '').not.toContain('undefined')
+    }
+  })
+
   it('setup() defaults symbol:"normal", split:null, line:true (line is new over the inherited splitline defaults)', () => {
     const wrapper = mount(Chart, {
       props: {
