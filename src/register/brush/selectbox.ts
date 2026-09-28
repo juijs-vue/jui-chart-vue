@@ -33,6 +33,11 @@ export class SelectBoxBrush extends CoreBrush {
   private height = 0
   private ticks: Date[] = []
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the bottom plot-area edge (`zeroY`), each cell's width (the x-axis row band) and height (the
+   * full plot area height), and the list of tick boundaries (`ticks`) from a real date/time scale
+   * (see this file's header comment on why this requires the real `util/scale.ts` `time()` scale,
+   * unlike `main` branch's approximated port). */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.zeroY = this.axis.area('y2')
@@ -41,6 +46,12 @@ export class SelectBoxBrush extends CoreBrush {
     this.ticks = (this.axis.x as DateAxisScale).ticks('milliseconds', (this.axis.get('x') as Record<string, unknown>).interval as number)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws one
+   * invisible (`fill-opacity`/`stroke-opacity: 0`) full-height overlay rect per consecutive pair
+   * of tick boundaries, revealed (background + border) only on hover, and wires `addEvent()` with
+   * a `{start, end}` payload (the tick interval's own boundary dates) instead of the usual
+   * row-index/target-key shape - `addEvent()`'s `object`-typed `dataIndex` branch is what makes
+   * that possible (see `jui-graph-ts`'s `CoreBrush.addEvent()` doc comment). */
   draw = (): any => {
     const bgColor = this.chart.theme('selectBoxBackgroundColor')
     const bgOpacity = this.chart.theme('selectBoxBackgroundOpacity')
@@ -89,6 +100,8 @@ export class SelectBoxBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`SELECT_BOX_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return SELECT_BOX_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

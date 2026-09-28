@@ -31,6 +31,9 @@ export class StackBar3DBrush extends CoreBrush {
   private barHeight = 0
   private zeroXY = { x: 0, y: 0, depth: 0 }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the shared lane height (`barHeight`, the row band minus twice `outerPadding`) and the
+   * panel-grid origin (`zeroXY`, `axis.c(0, 0)`) every row's boxes are offset from. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const height = (this.axis.y as unknown as { rangeBand(): number }).rangeBand()
@@ -40,6 +43,13 @@ export class StackBar3DBrush extends CoreBrush {
     this.zeroXY = (this.axis.c as unknown as CAxis)(0, 0)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row,
+   * draws every target's extruded 3D box (`rect3d()`) end-to-end along x within one shared
+   * `barHeight` lane, each offset further right by the running `colWidth` and vertically by its
+   * own depth-driven `top` (from `axis.c`'s own `radian`/`degree` projection). See this file's
+   * header comment for the preserved trailing `addEvent(group, ...)` bug (an unused, never-
+   * appended `group` element gets a spurious second event binding using the last target's stale
+   * `value`/`j`). */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -83,6 +93,8 @@ export class StackBar3DBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`STACKBAR3D_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return STACKBAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

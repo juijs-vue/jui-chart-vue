@@ -60,6 +60,10 @@ export class ScatterBrush extends CoreBrush {
   protected activeScatter: any = null
   protected activeTooltip: any = null
 
+  /** Resolves the marker shape for one point: when `symbol` is a function, calls it with
+   * `(target, value)` and classifies the result as `'default'` (one of the four named shapes) or
+   * `'image'` (any other string, treated as an image URL); otherwise just wraps the configured
+   * static `symbol` string as `'default'`. */
   getSymbolType(key: number, value: unknown): ScatterSymbol {
     const symbol = (this.brush as Record<string, unknown>).symbol
     const target = (this.brush.target ?? [])[key]
@@ -77,6 +81,14 @@ export class ScatterBrush extends CoreBrush {
     return { type: 'default', uri: symbol }
   }
 
+  /** Builds one point's marker element for the shape `symbol` resolved to: an `<image>` for
+   * `'image'`-type symbols, or for `'default'` a triangle/cross (drawn as a small group of
+   * polygon/lines), rectangle, or ellipse (the fallback for `'circle'` and anything else).
+   * `'cross'` markers get no fill/stroke/hover styling at all (its own two `<line>`s are already
+   * fully styled) - every other default shape gets fill/border/hover wiring here, dimming on
+   * mouseout to `0` opacity when `hide` is set, and - when `hoverSync` is set - restyling every
+   * OTHER marker in the same row (`cachedSymbol[dataIndex]`) together with the hovered one instead
+   * of just itself. Hover is skipped entirely for whichever marker is currently `activeScatter`. */
   createScatter(pos: { x: number; y: number; value: unknown }, dataIndex: number, targetIndex: number, symbol: ScatterSymbol): any {
     const w = (this.brush as Record<string, unknown>).size as number
     const h = (this.brush as Record<string, unknown>).size as number
@@ -190,6 +202,17 @@ export class ScatterBrush extends CoreBrush {
     return elem
   }
 
+  /** Draws every target's points (resets `cachedSymbol` first, so a redraw doesn't keep stale
+   * references from a prior one). Skips a point entirely when `hideZero` is set and its value is
+   * `0`, or when its value is `undefined`/`null` (a genuine data gap, not just a zero). Caches
+   * only "plain colorable" markers (`type === 'default'` and not `'cross'`) into
+   * `cachedSymbol[targetIndex]` for `hoverSync`/`activeEvent` to restyle later. Draws a permanent
+   * tooltip at points matching `display` (same `'max'`/`'min'`/`'all'` semantics as `LineBrush`'s
+   * `createTooltip`, but here only ONE tooltip total is ever drawn for `'max'`/`'min'` mode across
+   * the WHOLE brush via `isTooltipDraw`, not one per target/line). When `activeEvent` is
+   * configured, wires it to swap `activeScatter`'s highlight to the clicked marker and reposition
+   * the single shared `activeTooltip` (created once, appended after the loop) to show that point's
+   * value. `hide` renders every marker at `opacity: 0` (still interactive). */
   drawScatter(points: BrushSeriesXY[]): any {
     this.cachedSymbol = {}
 
@@ -284,6 +307,9 @@ export class ScatterBrush extends CoreBrush {
     return g
   }
 
+  /** Builds a simple text-only tooltip positioned `size` px above `(x, y)` - distinct from the
+   * inherited `CoreBrush.drawTooltip()` (text+circle marker); this brush's own simpler override,
+   * used both for the permanent min/max/all tooltips and the single shared `activeTooltip`. */
   drawTooltip(x: number, y: number, text: unknown): any {
     return this.chart
       .text(
@@ -300,17 +326,20 @@ export class ScatterBrush extends CoreBrush {
       .translate(x, y)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Resolves every
+   * target's `{x, y, value, min, max}` series via the inherited `CoreBrush.getXY()` and hands it
+   * to `drawScatter()`. */
   draw = (): any => {
     return this.drawScatter(this.getXY())
   }
 
-  // Arrow-function class FIELD (unlike `BarBrush`/`ColumnBrush`/`BubbleBrush`'s own `drawAnimate`,
-  // which take a `root` param): legacy `scatter.js`'s own `drawAnimate` takes NO parameters at all
-  // and returns the created `<animateTransform>` WITHOUT appending it anywhere (`Draw.render()`
-  // discards `drawAnimate()`'s return value) - so this element attaches directly to the SVG's
-  // `mainGroup` (via `svg.animateTransform()`'s own `create()` call, since nothing is nested at
-  // this call depth), not nested inside this brush's own drawn group at all. A real, preserved
-  // legacy oddity - ported literally, not "fixed" to actually animate the scatter's own group.
+  /** Arrow-function class FIELD (unlike `BarBrush`/`ColumnBrush`/`BubbleBrush`'s own `drawAnimate`,
+   * which take a `root` param): legacy `scatter.js`'s own `drawAnimate` takes NO parameters at all
+   * and returns the created `<animateTransform>` WITHOUT appending it anywhere (`Draw.render()`
+   * discards `drawAnimate()`'s return value) - so this element attaches directly to the SVG's
+   * `mainGroup` (via `svg.animateTransform()`'s own `create()` call, since nothing is nested at
+   * this call depth), not nested inside this brush's own drawn group at all. A real, preserved
+   * legacy oddity - ported literally, not "fixed" to actually animate the scatter's own group. */
   drawAnimate = (): any => {
     // `jui-graph-ts`'s own `BrushChart` interface (`brush/core.ts`) only declares the single-key
     // overload of `area(key: string): number`, not `Builder`'s real zero-arg `area(): AreaBox`
@@ -331,6 +360,8 @@ export class ScatterBrush extends CoreBrush {
     })
   }
 
+  /** Returns this brush's own config defaults (`SCATTER_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

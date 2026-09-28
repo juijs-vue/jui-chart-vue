@@ -46,6 +46,10 @@ export class LineBrush extends CoreBrush {
 
   private g: any
 
+  /** Restyles every line in `lineList` (and their min/max/all-point tooltips, via
+   * `tooltip.style()`) so only the line matching `elem` shows at full `lineBorderOpacity`, every
+   * other line dims to `lineDisableBorderOpacity`. Wired to each line's `activeEvent` (e.g.
+   * `'click'`) in `drawLine()`, for interactive single-line highlighting. */
   setActiveEffect(elem: any): void {
     const lines = this.lineList
 
@@ -61,6 +65,11 @@ export class LineBrush extends CoreBrush {
     }
   }
 
+  /** Config-driven counterpart to `setActiveEffect`, applied once after all lines are drawn when
+   * `brush.active` is set: shows each line (and its tooltip) at full opacity when its own
+   * `target` key matches `active` (a single key, or is included in an `active` array), or when
+   * `active` is `null` (meaning "all lines active"), dimming every other line to
+   * `lineDisableBorderOpacity`. */
   setActiveEffects(): void {
     const lines = this.lineList
     const active = (this.brush as Record<string, unknown>).active as unknown
@@ -83,10 +92,20 @@ export class LineBrush extends CoreBrush {
     }
   }
 
+  /** Registers one target's drawn line element (plus its as-yet-unset tooltip slot) into
+   * `lineList`, so `setActiveEffect`/`setActiveEffects` can later restyle it by index. */
   addLineElement(elem: LineListItem): void {
     this.lineList.push(elem)
   }
 
+  /** Builds one target's line as a group of one-or-more `<path>` segments (a new segment starts
+   * whenever the resolved `color`/`opacity` for a row differs from the previous one, e.g. a
+   * `colors` callback that varies per row), skipping any stretch of consecutive rows where a
+   * value is `undefined`/`null` (so gaps in the data don't draw a connecting line across them).
+   * Each segment is drawn as straight (`LineTo`), curved (`CurveTo`, using `curvePoints()` for
+   * cubic-Bezier control points) or stepped (an extra horizontal-then-vertical `LineTo` pair at
+   * the segment midpoint) depending on `symbol`. `cursor` is set to `'pointer'` whenever
+   * `activeEvent` is configured, signaling the line is clickable. */
   createLine(pos: BrushSeriesXY, tIndex: number): any {
     const x = pos.x
     const y = pos.y
@@ -156,6 +175,11 @@ export class LineBrush extends CoreBrush {
     return g
   }
 
+  /** Draws a permanent value tooltip (`drawTooltip()`) at each point matching `display`
+   * (`'max'`/`'min'` points only, or `'all'` points), oriented above the line for a max point and
+   * below it otherwise. For `'max'`/`'min'` mode only the first matching point creates a tooltip
+   * per line (reused/positioned via `lineList[index].tooltip`, checked via `tooltip == null`);
+   * `'all'` mode creates a fresh tooltip for every matching point. */
   createTooltip(g: any, pos: BrushSeriesXY, index: number): void {
     const display = (this.brush as Record<string, unknown>).display
 
@@ -175,6 +199,10 @@ export class LineBrush extends CoreBrush {
     }
   }
 
+  /** Resolves the stroke opacity for a line/segment: `brush.opacity` called with `(data, index)`
+   * when it's a function and `rowIndex` is a number, the configured number directly, or the
+   * theme's `lineBorderOpacity` when `opacity` is unset (or `rowIndex` is `null`, as in
+   * `drawBefore()`'s initial call). */
   getOpacity(rowIndex: number | null): number {
     const opacity = (this.brush as Record<string, unknown>).opacity
     const defOpacity = this.chart.theme('lineBorderOpacity') as number
@@ -188,6 +216,11 @@ export class LineBrush extends CoreBrush {
     return defOpacity
   }
 
+  /** Draws every target's line (`createLine()` per entry in `path`, one per `getXY()` result),
+   * wires each line's click/hover events (`addEvent`) and, when `activeEvent` is set, its
+   * active-toggle handler (`setActiveEffect`), draws each line's tooltip(s) when `display` is
+   * set, and finally applies the initial `active` highlighting (`setActiveEffects()`) once all
+   * lines exist. Returns the brush's group. */
   drawLine(path: BrushSeriesXY[]): any {
     for (let k = 0; k < path.length; k++) {
       const p = this.createLine(path[k], k)
@@ -216,6 +249,11 @@ export class LineBrush extends CoreBrush {
     return this.g
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the shared tooltip-marker color and the theme's line-stroke width/dash-array/opacity so
+   * `createLine()`/`createTooltip()` don't re-read the theme per point; `lineBorderOpacity` is
+   * resolved once via `getOpacity(null)` (i.e. the static/default opacity, since no row index is
+   * meaningful yet). */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.circleColor = this.chart.theme('linePointBorderColor')
@@ -225,10 +263,19 @@ export class LineBrush extends CoreBrush {
     this.lineBorderOpacity = this.getOpacity(null)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Resolves every
+   * target's `{x, y, value}` series via the inherited `CoreBrush.getXY()` and hands it to
+   * `drawLine()`. */
   draw = (): any => {
     return this.drawLine(this.getXY())
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional animation hook. For each drawn
+   * element under `root` that exposes a `.join`/path-length API (i.e. an actual `<path>`, not a
+   * plain group): if it has no existing dash array (`'none'`), animates it drawing on by sliding
+   * `stroke-dashoffset` from its full length to `0`; otherwise (already dashed, e.g. via
+   * `lineBorderDashArray`) fades it in via `opacity` instead, since animating dash-offset on an
+   * already-dashed stroke wouldn't read as a clean "draw-on" effect. */
   drawAnimate = (root: any): void => {
     const svg = this.chart.svg
 
@@ -267,8 +314,9 @@ export class LineBrush extends CoreBrush {
     })
   }
 
-  // `jui-graph-ts`'s `defineOptions()` now walks the full `LineBrush -> CoreBrush -> Draw` chain
-  // itself, so this only needs to return `LineBrush`'s own legacy defaults (1:1 with `line.js`).
+  /** Returns this brush's own config defaults (`LINE_BRUSH_OWN_DEFAULTS`). `jui-graph-ts`'s
+   * `defineOptions()` now walks the full `LineBrush -> CoreBrush -> Draw` chain itself, so this
+   * only needs to return `LineBrush`'s own legacy defaults (1:1 with `line.js`). */
   static setup(): Record<string, unknown> {
     return LINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

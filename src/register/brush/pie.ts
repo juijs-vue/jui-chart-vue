@@ -60,6 +60,12 @@ export class PieBrush extends CoreBrush {
   private g: any
   private cache_active: Record<string, PieCacheEntry> = {}
 
+  /** Applies the "active/exploded" visual state to every cached slice in `items`: an active
+   * slice's group is translated outward along its own `centerAngle` by `pieActiveDistance`
+   * (inactive slices are translated back to their plain center). When `useOpacity` is set, also
+   * dims every non-active slice's pie/text to `pieDisableBackgroundOpacity` (or `0.5` when that
+   * theme value is falsy) - unless NO slice is active at all (`isDisableAll`), in which case every
+   * slice stays at full opacity. */
   setActiveEvent(items: Record<string, PieCacheEntry>, useOpacity?: boolean): void {
     let isDisableAll = true
     const disabledOpacity = (this.chart.theme('pieDisableBackgroundOpacity') as number) || 0.5
@@ -96,6 +102,9 @@ export class PieBrush extends CoreBrush {
     }
   }
 
+  /** Repositions each cached slice's `'inside'`-mode text along its own `centerAngle`, pushing an
+   * active slice's label further out (by `pieActiveDistance`) to follow the exploded slice; only
+   * meaningful when `showText === 'inside'` (callers already gate on that). */
   setActiveTextEvent(items: Record<string, PieCacheEntry>): void {
     for (const key in items) {
       const data = items[key]
@@ -113,6 +122,10 @@ export class PieBrush extends CoreBrush {
   // `donut.js`'s own `drawUnit()` calls `this.getFormatText(target[i], value)` with only 2 args,
   // letting `max` come through as `undefined`, exactly like this signature already behaved before
   // this widening; only the TS call-site ergonomics changed, not runtime behavior).
+  /** Resolves a slice's display text: calls `brush.format(target, value, max)` when it's a
+   * function, otherwise falls back to `"target: value"` (or just `target` when `value` is
+   * falsy/zero). `max` is optional since `donut.js`'s own `drawUnit()` only ever passes 2 args
+   * (see this method's own inline comment). */
   getFormatText(target: string, value: unknown, max?: number): string {
     if (typeof (this.brush as Record<string, unknown>).format === 'function') {
       return this.format(target, value, max) as string
@@ -125,6 +138,11 @@ export class PieBrush extends CoreBrush {
     }
   }
 
+  /** Draws one flat 2D slice as a `<path>` wedge from `startAngle` to `endAngle` (both in degrees,
+   * `0` = up, per `mathUtil.rotate`'s convention), or - when `endAngle === 360` (a single-slice,
+   * i.e. 100%, pie) - a plain `<circle>` instead, since a 360-degree arc path can't close cleanly.
+   * The returned group is pre-translated to `(centerX, centerY)` and stamped `order = 1` for the
+   * z-order sorting the brush's renderer applies. */
   drawPie(centerX: number, centerY: number, outerRadius: number, startAngle: number, endAngle: number, color: unknown): any {
     const pie = this.chart.svg.group()
 
@@ -167,6 +185,11 @@ export class PieBrush extends CoreBrush {
     return pie
   }
 
+  /** Pseudo-3D ("beveled edge") counterpart to `drawPie`: draws the same top-face arc, then
+   * extends the path down-and-right by a fixed 5/10px offset and back with a second arc before
+   * closing, giving the slice an extruded side face. Used for the `'3d'` config's darker
+   * "underside" layer (`drawUnit()` calls this with `colorUtil.darken(...)`), drawn BEHIND the
+   * flat `drawPie()` top layer. */
   drawPie3d(centerX: number, centerY: number, outerRadius: number, startAngle: number, endAngle: number, color: unknown): any {
     const pie = this.chart.svg.group()
     const path = this.chart.svg.path({
@@ -202,6 +225,14 @@ export class PieBrush extends CoreBrush {
     return pie
   }
 
+  /** Draws one slice's label, in whichever mode `showText` selects (the returned group is hidden
+   * outright when `showText` is falsy). `'inside'` mode centers the text at the slice's midpoint
+   * radius. Otherwise (`'outside'`) draws a leader line from the slice's outer edge out to a label
+   * positioned past `pieOuterLineSize`, fading/shrinking consecutive labels whose angle is within
+   * 2 degrees of the previous one's (`preAngle`/`preRate`/`preOpacity`, mutated across calls in
+   * `drawUnit()`'s loop) to reduce overlap between adjacent thin slices' labels - skipped
+   * entirely once the shrinking `preRate` drops to `1.2` or below. Empty/falsy `text` renders
+   * nothing (an empty group). */
   drawText(centerX: number, centerY: number, centerAngle: number, outerRadius: number, text: string): any {
     const g = this.svg.group({
       visibility: !(this.brush as Record<string, unknown>).showText ? 'hidden' : 'visible',
@@ -289,6 +320,16 @@ export class PieBrush extends CoreBrush {
     return g
   }
 
+  /** Draws every slice for one data row: computes each target's angular span from
+   * `value / max` (`max` being the row's target-value sum), skipping any target whose value is
+   * `0`. When `'3d'` is enabled, first draws a full pass of darker `drawPie3d()` "underside" wedges
+   * behind everything, then a second pass draws the flat `drawPie()` top faces plus labels
+   * (`drawText()`). Each slice is cached into `cache_active` keyed by its own `centerAngle`
+   * (**note**: a full/100% single-slice pie, `isOnlyOne`, is drawn but never gets its active state
+   * set or wired to `activeEvent` - it's excluded from that whole block since there's nothing
+   * meaningful to toggle between). Wires `activeEvent` (when configured) to toggle that slice's
+   * `active` flag and re-run `setActiveEvent`/`setActiveTextEvent`, and calls `addEvent()` for the
+   * standard click/hover dispatch. */
   drawUnit(index: number, data: Record<string, unknown>, g: any): void {
     const props = this.getProperty(index)
     const { centerX, centerY, outerRadius } = props
@@ -380,16 +421,23 @@ export class PieBrush extends CoreBrush {
     }
   }
 
+  /** Draws a single full-circle placeholder wedge (via `drawPie(..., 0, 360, ...)`, themed with
+   * `pieNoDataBackgroundColor`) when the brush has no data rows at all. */
   drawNoData(g: any): void {
     const props = this.getProperty(0)
 
     g.append(this.drawPie(props.centerX, props.centerY, props.outerRadius, 0, 360, this.chart.theme('pieNoDataBackgroundColor')))
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook - just
+   * creates this brush's own group. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws the
+   * no-data placeholder (`drawNoData()`) when there are zero rows, otherwise draws every row's
+   * slices via `drawUnit()`. */
   draw = (): any => {
     if (this.listData().length == 0) {
       this.drawNoData(this.g)
@@ -402,6 +450,9 @@ export class PieBrush extends CoreBrush {
     return this.g
   }
 
+  /** Resolves the pie's center point and outer radius from the axis's "c" (panel) grid rect at
+   * `index` (`axis.c(index)`) - the radius is half of whichever of the rect's width/height is
+   * smaller, so the pie always fits inscribed within its panel regardless of aspect ratio. */
   getProperty(index: number): { centerX: number; centerY: number; outerRadius: number } {
     const obj = (this.axis.c as unknown as (i: number) => { width: number; height: number; x: number; y: number })(index)
 
@@ -422,6 +473,8 @@ export class PieBrush extends CoreBrush {
     }
   }
 
+  /** Returns this brush's own config defaults (`PIE_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return PIE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

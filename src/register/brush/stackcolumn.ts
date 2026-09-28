@@ -19,6 +19,8 @@ export type StackColumnBrushOptions = StackBarBrushOptions
 export class StackColumnBrush extends StackBarBrush {
   private stackColWidth = 0
 
+  /** Column-axis counterpart to `StackBarBrush.getTargetSize`: derives the shared segment lane
+   * width from the x-axis's column band instead of the y-axis's row band. */
   getTargetSize(): number {
     const width = (this.axis.x as BrushAxisScale).rangeBand!()
     const brush = this.brush as Record<string, unknown>
@@ -31,6 +33,9 @@ export class StackColumnBrush extends StackBarBrush {
     }
   }
 
+  /** Column-axis counterpart to `StackBarBrush.drawBefore`: caches `stackColWidth` (via the
+   * overridden `getTargetSize()`) instead of `stackBarSize`, resetting the same per-draw tooltip/
+   * edge tracking arrays. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.stackColWidth = this.getTargetSize()
@@ -40,6 +45,10 @@ export class StackColumnBrush extends StackBarBrush {
     this.edgeData = []
   }
 
+  /** Column-axis counterpart to `StackBarBrush.draw`: stacks every target's segment upward along y
+   * (instead of rightward along x) within one shared `stackColWidth` lane, reusing the same
+   * `getBarElement`/`drawStackTooltip`/`drawStackEdge`/`setActiveEventOption`/`setActiveTooltips`/
+   * `setActiveEffectOption` machinery inherited from `StackBarBrush` unchanged. */
   draw = (): any => {
     const target = this.brush.target ?? []
     let maxIndex: number | null = null

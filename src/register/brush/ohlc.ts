@@ -18,10 +18,19 @@ export type OHLCBrushOptions = CandleStickBrushOptions
 export class OHLCBrush extends CandleStickBrush {
   private ohlcG: any
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook - creates
+   * this brush's own group (`ohlcG`), completely replacing `CandleStickBrush.drawBefore`'s
+   * candlestick-body setup rather than extending it (see this file's header comment). */
   drawBefore = (): void => {
     this.ohlcG = this.chart.svg.group()
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook - fully replaces
+   * `CandleStickBrush.draw`. For each row draws a vertical high-low tick line plus a short "open"
+   * tick to the left and "close" tick to the right (both offset by `ohlcBorderRadius`), colored
+   * with `ohlcInvertBorderColor` when the row closed lower than it opened (`open > close`) or
+   * `ohlcBorderColor` otherwise. Only the high-low line gets `addEvent()` wired (the open/close
+   * ticks are purely visual). */
   draw = (): any => {
     this.eachData((data, i) => {
       const row = data as BrushData

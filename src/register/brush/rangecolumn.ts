@@ -29,6 +29,10 @@ export class RangeColumnBrush extends CoreBrush {
   private half_width = 0
   private column_width = 0
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Derives
+   * `half_width` (the column band width minus twice `outerPadding`) and `column_width` (that space
+   * split evenly across every target, minus the `innerPadding` gaps between them), so `draw()`
+   * can lay out each row's per-target range-columns without recomputing this per row. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -40,6 +44,12 @@ export class RangeColumnBrush extends CoreBrush {
     this.column_width = (width - (brush.outerPadding as number) * 2 - (target.length - 1) * (brush.innerPadding as number)) / target.length
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row
+   * and each target field (a `[min, max]` tuple), draws one vertical rect spanning from the
+   * `min`-resolved y to the `max`-resolved y (height is the absolute difference), laying out each
+   * target's column side-by-side within the row band using the `column_width`/`half_width`
+   * computed in `drawBefore()`. The border theme keys it looks up don't actually exist in the
+   * classic theme - see this file's header comment. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -80,6 +90,8 @@ export class RangeColumnBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`RANGE_COLUMN_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return RANGE_COLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -62,6 +62,8 @@ export const RATE_BAR_BRUSH_OWN_DEFAULTS: RateBarBrushOptions = {
 export class RateBarBrush extends CoreBrush {
   protected barList: any[] = []
 
+  /** Bundles every `rateBar*` theme value one bar segment/label/tooltip needs into a single
+   * object, so callers don't repeat individual `chart.theme(...)` lookups. */
   getBarStyle(): RateBarStyle {
     return {
       fontColor: this.chart.theme('rateBarFontColor'),
@@ -78,6 +80,9 @@ export class RateBarBrush extends CoreBrush {
     }
   }
 
+  /** Builds one segment's centered label text, sized/positioned relative to the segment's own
+   * `width`/`height` (vertically centered via the font size's own third, a common baseline-nudge
+   * heuristic used elsewhere in this port). */
   createTextElement(width: number, height: number, text: unknown): any {
     const style = this.getBarStyle()
 
@@ -93,6 +98,10 @@ export class RateBarBrush extends CoreBrush {
       .text(text as string)
   }
 
+  /** Builds a small floating "callout" tooltip - a dashed leader line down from the segment's top
+   * edge, a background rect sized to the tooltip text, and the text itself - translated so it sits
+   * just above the segment (`-tooltipSize`). Not wired to hover/click; `draw()` only appends it
+   * when it actually fits within the segment's own `width` (see `draw()`'s own doc comment). */
   createTooltipElement(width: number, tooltip: unknown): any {
     const style = this.getBarStyle()
     const tooltipSize = (this.brush as Record<string, unknown>).tooltipSize as number
@@ -137,6 +146,13 @@ export class RateBarBrush extends CoreBrush {
     return t
   }
 
+  /** Builds one segment's pill-shaped body as a single closed `<path>` (rounded only on
+   * whichever corners `leftRadius`/`rightRadius` are non-zero for - `draw()` only rounds a
+   * segment's outer edges, giving the whole row bar one continuous rounded pill shape rather than
+   * rounding every individual segment), plus its label (`createTextElement`) and, when the
+   * tooltip text fits within `width`, its callout (`createTooltipElement`). Wires the standard
+   * `addEvent()` dispatch and, when `activeEvent` is configured, toggles this segment's active
+   * state via `setActiveBarElement` on that event. */
   createBarElement(dataIndex: number, target: string, width: number, height: number, leftRadius = 0, rightRadius = 0, text: unknown = '', tooltip: unknown = ''): any {
     const g = this.svg.group()
     const style = this.getBarStyle()
@@ -181,6 +197,12 @@ export class RateBarBrush extends CoreBrush {
     return g
   }
 
+  /** Dims every cached segment (`barList`) to `disableBackgroundOpacity` EXCEPT the one at
+   * `activeIndex`/`activeTarget` (both must match, and `activeTarget` must be non-null - when
+   * `activeTarget` is `null`, every segment in `activeIndex`'s row also gets dimmed, i.e. "no
+   * segment highlighted" is the effective behavior unless a specific target key is named).
+   * Called once after every row is drawn (from `draw()`, with the brush's static `activeIndex`/
+   * `activeTarget` config) and again per click when `activeEvent` fires on a segment. */
   setActiveBarElement(activeIndex: number | null, activeTarget: string | null): void {
     const style = this.getBarStyle()
 
@@ -195,10 +217,21 @@ export class RateBarBrush extends CoreBrush {
     })
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook - resets
+   * `barList` so a redraw doesn't accumulate stale segment references from a prior draw. */
   drawBefore = (): void => {
     this.barList = []
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row,
+   * filters `target` down to keys whose value is `> 0` (see header comment - a non-positive value
+   * is skipped, not rendered as a zero-width segment), computes each remaining key's share of the
+   * row's own total (`axis.x.rate(value, sumValues)`), and draws each as a contiguous segment
+   * (`createBarElement()`) - only the first/last VISIBLE segment in the row gets a rounded corner,
+   * so the row's full bar reads as one continuous pill. `showText`/`showTooltip`, when functions,
+   * compute each segment's label/tooltip content from `(value, percent, key)`; otherwise the
+   * label defaults to `"{percent}%"` and the tooltip to the raw value. After all rows are drawn,
+   * applies the initial `activeIndex`/`activeTarget` highlighting via `setActiveBarElement()`. */
   draw = (): any => {
     const style = this.getBarStyle()
     const keys = this.brush.target ?? []
@@ -251,6 +284,8 @@ export class RateBarBrush extends CoreBrush {
     return g
   }
 
+  /** Returns this brush's own config defaults (`RATE_BAR_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return RATE_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

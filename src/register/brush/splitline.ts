@@ -104,6 +104,8 @@ export class SplitLineBrush extends CoreBrush {
     return g
   }
 
+  /** Draws every target's split line (`createLine()` per entry in `path`) and wires each one's
+   * click/hover events via `addEvent()`. */
   drawLine(path: BrushSeriesXY[]): any {
     const g = this.chart.svg.group()
 
@@ -117,10 +119,14 @@ export class SplitLineBrush extends CoreBrush {
     return g
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Resolves every
+   * target's `{x, y}` series via the inherited `CoreBrush.getXY()` and hands it to `drawLine()`. */
   draw = (): any => {
     return this.drawLine(this.getXY())
   }
 
+  /** Returns this brush's own config defaults (`SPLITLINE_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return SPLITLINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

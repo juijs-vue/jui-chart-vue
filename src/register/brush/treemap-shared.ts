@@ -28,10 +28,14 @@
  * precedent as the rest of this file) even though neither `treemap.js` nor `flame.js` calls them
  * directly - only `isIndexDepth`/`getIndexList` are actually exercised by `NodeManager` below. */
 export class KeyParser {
+  /** Returns `true` when `index` is a dot-separated string (i.e. deeper than the root level, e.g.
+   * `"0.1"` rather than a plain top-level number/numeric string like `"0"`). */
   isIndexDepth(index: unknown): boolean {
     return typeof index === 'string' && index.indexOf('.') !== -1
   }
 
+  /** Splits a dot-separated index string (or coerces a plain number) into its numeric path
+   * segments, e.g. `"0.1.2"` -> `[0, 1, 2]`. */
   getIndexList(index: unknown): number[] {
     const resIndex: number[] = []
     const strIndexes = ('' + index).split('.')
@@ -43,6 +47,9 @@ export class KeyParser {
     return resIndex
   }
 
+  /** Rewrites `index` so its leading `rootIndex`-length path segments are replaced with
+   * `targetIndex`'s own path, e.g. reparenting a subtree's index when it moves under a different
+   * root. Not called by `treemap.js`/`flame.js` (ported for completeness, see class doc comment). */
   changeIndex(index: string, targetIndex: string, rootIndex: string): string {
     const rootIndexLen = this.getIndexList(rootIndex).length
     const indexList = this.getIndexList(index)
@@ -55,6 +62,8 @@ export class KeyParser {
     return (tIndexList as unknown[]).concat(indexList as unknown[]).join('.')
   }
 
+  /** Returns `index` with its final path segment incremented by one, e.g. `"0.1"` -> `"0.2"`. Not
+   * called by `treemap.js`/`flame.js` (ported for completeness, see class doc comment). */
   getNextIndex(index: string): string {
     const indexList = this.getIndexList(index)
     const no = (indexList.pop() as number) + 1
@@ -63,6 +72,9 @@ export class KeyParser {
     return indexList.join('.')
   }
 
+  /** Returns `index` with its final path segment dropped (the parent's own index), or `null` when
+   * `index` is already at the root level (`isIndexDepth` is false). Not called by `treemap.js`/
+   * `flame.js` (ported for completeness, see class doc comment). */
   getParentIndex(index: string): string | null {
     if (!this.isIndexDepth(index)) return null
 
@@ -71,6 +83,8 @@ export class KeyParser {
 }
 
 // ---- "util.treemap" -----------------------------------------------------------------------------
+/** Literal port of legacy `util.treemap`'s `sumArray` - a plain numeric array sum, used throughout
+ * the squarify layout algorithm below. */
 export function sumArray(arr: number[]): number {
   let sum = 0
 
@@ -82,6 +96,8 @@ export function sumArray(arr: number[]): number {
 }
 
 // ---- "chart.brush.treemap.node" ------------------------------------------------------------------
+/** Plain constructor payload for `TreemapNode` - a node's own display/layout fields (`x`/`y`/
+ * `width`/`height` are typically unset until the squarify layout pass fills them in). */
 export interface TreemapNodeData {
   text?: unknown
   value?: number
@@ -135,6 +151,10 @@ export class TreemapNode {
     }
   }
 
+  /** Recomputes this node's `nodenum`/`index`/`depth` from its parent chain (a root-level node,
+   * with no `parent`, keeps `index` unset and `depth` at its initial `0`), then recurses into
+   * descendants via the no-op `setIndexChild` (see that method's own doc comment - this recursion
+   * doesn't actually update any descendant's own `index`/`depth`, only this node's). */
   reload(nodenum?: number): void {
     this.nodenum = typeof nodenum === 'number' && !isNaN(nodenum) ? nodenum : this.nodenum
 
@@ -152,14 +172,18 @@ export class TreemapNode {
     }
   }
 
+  /** Returns `true` when this node has no children. */
   isLeaf(): boolean {
     return this.children.length === 0
   }
 
+  /** Appends `node` to the end of this node's `children` array. */
   appendChild(node: TreemapNode): void {
     this.children.push(node)
   }
 
+  /** Inserts `node` at position `nodenum` within this node's `children` array, shifting later
+   * children back. */
   insertChild(nodenum: number, node: TreemapNode): void {
     const preNodes = this.children.splice(0, nodenum)
     preNodes.push(node)
@@ -167,6 +191,8 @@ export class TreemapNode {
     this.children = preNodes.concat(this.children)
   }
 
+  /** Removes the (at most one) direct child whose own `index` matches. A no-op when no child
+   * matches. */
   removeChild(index: string | null): void {
     for (let i = 0; i < this.children.length; i++) {
       const node = this.children[i]
@@ -177,12 +203,16 @@ export class TreemapNode {
     }
   }
 
+  /** Returns this node's last direct child, or `null` when it has none. */
   lastChild(): TreemapNode | null {
     if (this.children.length > 0) return this.children[this.children.length - 1]
 
     return null
   }
 
+  /** Walks down the "last child" chain (starting from `lastRow`, or this node's own `lastChild()`
+   * when omitted) until it reaches a leaf, returning that leaf - i.e. the last-added node in the
+   * deepest, most-recently-appended branch. */
   lastChildLeaf(lastRow?: TreemapNode): TreemapNode {
     const row = !lastRow ? (this.lastChild() as TreemapNode) : lastRow
 
@@ -200,6 +230,8 @@ export class NodeManager {
   private root = new TreemapNode({ text: null, value: -1, x: -1, y: -1, width: -1, height: -1 })
   private iParser = new KeyParser()
 
+  /** Builds a new `TreemapNode` from `data`, wires its `parent` and calls `reload(no)` to derive
+   * its `nodenum`/`index`/`depth` immediately. */
   private createNode(data: TreemapNodeData, no: number, pNode: TreemapNode | null): TreemapNode {
     const node = new TreemapNode(data)
 
@@ -209,6 +241,8 @@ export class NodeManager {
     return node
   }
 
+  /** Recursively appends every descendant of `node` (depth-first) into `dataList` - the flattening
+   * helper behind `getNodeAll()`. */
   private setNodeChildAll(dataList: TreemapNode[], node: TreemapNode): void {
     const c_nodes = node.children
 
@@ -223,6 +257,9 @@ export class NodeManager {
     }
   }
 
+  /** Walks down `node`'s children following the remaining `keys` path segments (consumed one per
+   * recursive call via `keys.shift()`) until the path is exhausted, returning the node reached -
+   * the multi-level index resolver behind `getNode()`. */
   private getNodeChildLeaf(keys: number[], node: TreemapNode | null): TreemapNode | null {
     if (!node) return null
     const tmpKey = keys.shift()
@@ -234,6 +271,8 @@ export class NodeManager {
     }
   }
 
+  /** Builds a new node from `data` and inserts it as `index`'s own node into that index's parent
+   * (`getNodeParent(index)`), at the position given by `index`'s final path segment. */
   private insertNodeDataChild(index: string, data: TreemapNodeData): TreemapNode {
     const keys = this.iParser.getIndexList(index)
 
@@ -246,6 +285,8 @@ export class NodeManager {
     return node
   }
 
+  /** Builds a new node from `data` and appends it as a new top-level child of the manager's
+   * internal `root`. */
   private appendNodeData(data: TreemapNodeData): TreemapNode {
     const node = this.createNode(data, this.root.children.length, this.root)
     this.root.appendChild(node)
@@ -253,6 +294,7 @@ export class NodeManager {
     return node
   }
 
+  /** Builds a new node from `data` and appends it as a new child of the existing node at `index`. */
   private appendNodeDataChild(index: string, data: TreemapNodeData): TreemapNode {
     const pNode = this.getNode(index) as TreemapNode
     const cNode = this.createNode(data, pNode.children.length, pNode)
@@ -307,6 +349,9 @@ export class NodeManager {
     return node
   }
 
+  /** Resolves `index` to a node: `null`/omitted returns every top-level child (`root.children`)
+   * as an array; a dot-separated index walks the tree via `getNodeChildLeaf`; a plain top-level
+   * index returns that direct child (or `null` if out of range). */
   getNode(index?: string | number | null): TreemapNode | TreemapNode[] | null {
     if (index == null) return this.root.children
     else {
@@ -321,6 +366,9 @@ export class NodeManager {
     }
   }
 
+  /** Returns a flat array of `index`'s subtree (that node plus every descendant, depth-first via
+   * `setNodeChildAll`), or the ENTIRE tree (every top-level child plus all their descendants) when
+   * `index` is omitted/`null`. */
   getNodeAll(index?: string | number | null): TreemapNode[] {
     const dataList: TreemapNode[] = []
     const single = index == null ? null : (this.getNode(index) as TreemapNode | null)
@@ -339,6 +387,10 @@ export class NodeManager {
     return dataList
   }
 
+  /** Resolves `index`'s parent node: the manager's internal `root` for a single-segment index, the
+   * corresponding top-level node for a 2-segment index, or a recursive `getNode()` lookup on the
+   * index with its final segment dropped for anything deeper. Returns `undefined` for a malformed
+   * (empty-path) index. */
   getNodeParent(index: string): TreemapNode | undefined {
     const keys = this.iParser.getIndexList(index)
 
@@ -352,6 +404,8 @@ export class NodeManager {
     }
   }
 
+  /** Returns the manager's internal, otherwise-inaccessible root node (whose own `text`/`value`/
+   * position fields are just placeholder `-1`s - only its `children` are meaningful). */
   getRoot(): TreemapNode {
     return this.root
   }
@@ -373,10 +427,16 @@ export class TreemapContainer {
     this.width = width
   }
 
+  /** Returns whichever of this container's `width`/`height` is smaller - the squarify algorithm's
+   * own "aim for aspect ratios close to this edge length" reference dimension. */
   shortestEdge(): number {
     return Math.min(this.height, this.width)
   }
 
+  /** Lays out `row` (a group of already-decided box areas) as a strip along whichever of this
+   * container's edges is longer: a horizontal strip of side-by-side columns when `width >=
+   * height`, or a vertical strip of stacked rows otherwise. Returns each box's `[x1, y1, x2, y2]`
+   * corners. */
   getCoordinates(row: number[]): [number, number, number, number][] {
     const coordinates: [number, number, number, number][] = []
     let subxoffset = this.xoffset
@@ -399,6 +459,9 @@ export class TreemapContainer {
     return coordinates
   }
 
+  /** Returns a new, smaller `TreemapContainer` with `area` worth of space removed from whichever
+   * edge is longer (matching `getCoordinates()`'s own orientation choice) - the remaining
+   * rectangle the next squarify row lays out into. */
   cutArea(area: number): TreemapContainer {
     if (this.width >= this.height) {
       const areawidth = area / this.height
@@ -415,6 +478,9 @@ export class TreemapContainer {
 }
 
 // ---- "chart.brush.treemap.calculator" ------------------------------------------------------------
+/** Rescales `data` so its values sum to exactly `area` (preserving their relative proportions) -
+ * the squarify algorithm's own pixel-area normalization step, run once before laying out a
+ * single-dimensional data set. */
 function normalize(data: number[], area: number): number[] {
   const normalizeddata: number[] = []
   const sum = sumArray(data)
@@ -427,6 +493,9 @@ function normalize(data: number[], area: number): number[] {
   return normalizeddata
 }
 
+/** Recursively sums every leaf number in a (possibly nested) array - used to collapse each
+ * top-level group of a multi-dimensional data set down to one number before the outer squarify
+ * pass lays out the groups themselves. */
 function sumMultidimensionalArray(arr: unknown[]): number {
   let total = 0
 
@@ -441,6 +510,10 @@ function sumMultidimensionalArray(arr: unknown[]): number {
   return total
 }
 
+/** The Bruls squarify algorithm's worst-aspect-ratio metric for a candidate `row` of box areas
+ * against a strip of the given `length` (the container's shortest edge) - the larger of "widest
+ * box's ratio" and "narrowest box's ratio", so a lower result always means a row of boxes closer
+ * to square. */
 function calculateRatio(row: number[], length: number): number {
   const min = Math.min.apply(Math, row)
   const max = Math.max.apply(Math, row)
@@ -449,6 +522,10 @@ function calculateRatio(row: number[], length: number): number {
   return Math.max((Math.pow(length, 2) * max) / Math.pow(sum, 2), Math.pow(sum, 2) / (Math.pow(length, 2) * min))
 }
 
+/** Decides whether adding `nextnode` to `currentrow` would keep (or improve) the row's aspect
+ * ratio, or make it worse - an empty `currentrow` always accepts the first node. See this
+ * function's own inline comment on the Bruls paper's own pseudocode having the comparison
+ * direction backwards; this is the corrected direction. */
 function improvesRatio(currentrow: number[], nextnode: number, length: number): boolean {
   if (currentrow.length === 0) {
     return true
@@ -465,6 +542,12 @@ function improvesRatio(currentrow: number[], nextnode: number, length: number): 
   return currentratio >= newratio
 }
 
+/** The squarify algorithm's own recursive core: greedily grows `currentrow` with successive
+ * `data` values as long as `improvesRatio` says the row keeps improving, otherwise flushes the
+ * accumulated row's coordinates into `stack` (via `container.getCoordinates()`), cuts that area
+ * out of `container` (`cutArea()`), and starts a fresh row against the remaining space. Recurses
+ * until `data` is exhausted, at which point the final row is flushed too. Mutates and returns
+ * `stack`. */
 function squarify(data: number[], currentrow: number[], container: TreemapContainer, stack: unknown[][]): unknown[][] | undefined {
   if (data.length === 0) {
     stack.push(container.getCoordinates(currentrow))
@@ -485,6 +568,9 @@ function squarify(data: number[], currentrow: number[], container: TreemapContai
   return stack
 }
 
+/** Flattens `squarify()`'s row-grouped stack of coordinate arrays into one flat list of box
+ * corners, in the same order the rows were flushed. Returns an empty array when `rawtreemap` is
+ * `undefined` (e.g. an empty `data` set). */
 function flattenTreemap(rawtreemap: unknown[][] | undefined): [number, number, number, number][] {
   const flattreemap: [number, number, number, number][] = []
 
@@ -499,6 +585,10 @@ function flattenTreemap(rawtreemap: unknown[][] | undefined): [number, number, n
   return flattreemap
 }
 
+/** Runs the full squarify pipeline for one flat, single-dimensional data set: normalizes it to the
+ * `width * height` pixel area, squarifies it into a fresh `width`x`height` container positioned at
+ * `(xoffset, yoffset)`, and flattens the result into one box-corners array per input value (same
+ * order as `data`). */
 function treemapSingledimensional(data: number[], width: number, height: number, xoffset = 0, yoffset = 0): [number, number, number, number][] {
   const rawtreemap = squarify(normalize(data, width * height), [], new TreemapContainer(xoffset, yoffset, width, height), [])
   return flattenTreemap(rawtreemap)

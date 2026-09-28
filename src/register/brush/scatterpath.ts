@@ -71,6 +71,14 @@ function loop(total: number): (callback: (index: number, group: number) => void)
 }
 
 export class ScatterPathBrush extends CoreBrush {
+  /** Draws every target's points batched into exactly 5 `PathSymbolElement`s instead of one node
+   * per point (see this file's header comment): builds a template of the configured `symbol`
+   * shape at `size`x`size` via a throwaway `pathSymbol()` (`path`, removed again at the end - only
+   * used to generate `tpl`), creates the 5 real symbol-path groups upfront, then round-robin
+   * assigns every `(target, point-index)` pair to one of them via the inlined `loop()` helper,
+   * appending each point's coordinates (floored via `| 0`) to its assigned group's path data.
+   * Every point across every target shares one flat `color(0)` - unlike `ScatterBrush`, colors
+   * don't vary per row/target here. */
   private drawScatter(points: BrushSeriesXY[]): any {
     const brush = this.brush as Record<string, unknown>
     const width = brush.size as number
@@ -118,10 +126,15 @@ export class ScatterPathBrush extends CoreBrush {
     return g
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Resolves every
+   * target's `{x, y}` series via `getXY(false)` (`isCheckMinMax: false`, since this brush never
+   * needs per-point min/max flags) and hands it to `drawScatter()`. */
   draw = (): any => {
     return this.drawScatter(this.getXY(false))
   }
 
+  /** Returns this brush's own config defaults (`SCATTERPATH_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return SCATTERPATH_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

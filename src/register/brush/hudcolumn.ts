@@ -35,6 +35,10 @@ export class HUDColumnBrush extends CoreBrush {
   private y1 = 0
   private y2 = 0
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the zero baseline (`zeroY`), the x-axis row band width, and the plot area's four edges
+   * (`x1`/`x2`/`y1`/`y2`), and derives each of the two HUD columns' width (`colWidth`, split
+   * evenly across `outerPadding`/`innerPadding`, floored at `0` if the padding leaves no room). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const op = brush.outerPadding as number
@@ -56,6 +60,10 @@ export class HUDColumnBrush extends CoreBrush {
     this.y2 = this.axis.area('y2')
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws two
+   * angled "flag" polygons per row (via `createColumn()`) - one for `left`, one for `right` -
+   * colored with `hudColumnLeftBackgroundColor`/`hudColumnRightBackgroundColor`, then appends the
+   * brush's own bottom grid (`drawGrid()`) and returns the group. */
   draw = (): any => {
     const data = this.axis.data as BrushData[]
 
@@ -84,6 +92,11 @@ export class HUDColumnBrush extends CoreBrush {
     return this.g
   }
 
+  /** Draws the brush's own bottom axis line, plus per-domain grid points: an outer circle
+   * (`point1`, themed with the axis background), an inner dot (`point2`, hidden until hovered),
+   * and a domain label below it. Also draws a transparent, `stroke`-only pair of `createColumn()`
+   * outlines per domain purely as a larger hover/click hit-test target (wired via `addEvent`),
+   * grouped so hovering either outline reveals that domain's `point2` inner dot. */
   private drawGrid(): void {
     const r = this.chart.theme('hudColumnGridPointRadius') as number
     const stroke = this.chart.theme('hudColumnGridPointBorderColor')
@@ -163,6 +176,12 @@ export class HUDColumnBrush extends CoreBrush {
     }
   }
 
+  /** Builds one HUD "flag" polygon: a quadrilateral running from `(moveX, moveY)` across to
+   * `(moveX + colWidth, moveY)`, then down to a bottom edge that's slanted in opposite directions
+   * for `type === 0` (left column, slants down-right) vs. any other `type` (right column, slants
+   * down-left) - `padding`/`dist` control how far short of/past `y2` that bottom edge sits. The
+   * polygon is hidden (`visibility: 'hidden'`) whenever its top (`moveY`) would sit at or below
+   * `zeroY - dist`, i.e. whenever the flag would be too short to clear the zero baseline. */
   private createColumn(type: number, attr: Record<string, unknown>, moveX: number, moveY: number): any {
     const padding = 20
     const dist = 15 + padding
@@ -186,6 +205,8 @@ export class HUDColumnBrush extends CoreBrush {
     return rect
   }
 
+  /** Returns this brush's own config defaults (`HUDCOLUMN_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return HUDCOLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

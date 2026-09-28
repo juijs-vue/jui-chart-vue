@@ -32,6 +32,12 @@ export const PIN_BRUSH_OWN_DEFAULTS: PinBrushOptions = {
 }
 
 export class PinBrush extends CoreBrush {
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Renders the
+   * brush's single marker at `axis.x(brush.split)` (see this file's header comment - unlike every
+   * other brush, this never loops over `axis.data`): an optional centered label (shown only when
+   * `format` is a function, formatting the axis value at that x position via `axis.x.invert()`), a
+   * downward-pointing triangle flag sized by `size`, and a vertical line spanning from just below
+   * the flag down to the bottom of the plot area. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const size = brush.size as number
@@ -83,6 +89,8 @@ export class PinBrush extends CoreBrush {
     })
   }
 
+  /** Returns this brush's own config defaults (`PIN_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return PIN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

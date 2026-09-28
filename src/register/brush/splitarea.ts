@@ -40,6 +40,16 @@ export const SPLITAREA_BRUSH_OWN_DEFAULTS: SplitAreaBrushOptions = {
 }
 
 export class SplitAreaBrush extends SplitLineBrush {
+  /** For each target, builds the inherited `createLine()` path(s) and extends each one into a
+   * closed fill shape by dropping straight down to `maxY` (the plot area's bottom) and back:
+   * everything up to the `split` boundary (resolved to a row index once per target, ahead of the
+   * fill loop, when `split` is a `Date`) fills with the normal series color, everything from
+   * `split` onward fills with `areaSplitBackgroundColor` - mirroring `createLine()`'s own two-tone
+   * stroke split, but as two differently-colored fill regions instead. When `split` is `null`, the
+   * ENTIRE line is treated as "before the split" (filled with the normal color only - `split`
+   * defaults to `xList.length - 1`, the last index, so the second/`splitColor` region is empty).
+   * Draws the fill first (`g.prepend`, so it sits visually beneath), then - when `line` is set -
+   * prepends the split line's own stroke on top via a second `createLine()` call. */
   drawArea(path: BrushSeriesXY[]): any {
     const g = this.chart.svg.group()
     const maxY = this.chart.area('height')
@@ -98,10 +108,14 @@ export class SplitAreaBrush extends SplitLineBrush {
     return g
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Resolves every
+   * target's `{x, y}` series via the inherited `CoreBrush.getXY()` and hands it to `drawArea()`. */
   draw = (): any => {
     return this.drawArea(this.getXY())
   }
 
+  /** Returns this brush's own config defaults (`SPLITAREA_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return SPLITAREA_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

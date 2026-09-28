@@ -43,6 +43,11 @@ interface PyramidSegment {
   index: number
 }
 
+/** Builds one `PyramidSegment` per `targets` key present on `obj` (the first, and only, data row -
+ * see this file's header comment), computing each one's `rate = value / total` (no `total === 0`
+ * guard - see header comment) and sorting the result by `value` DESCENDING, so `draw()`'s loop
+ * naturally produces the widest segment first (the base of the pyramid/funnel). Not exported;
+ * internal to this file. */
 function getCalculatedData(obj: BrushData, targets: string[]): PyramidSegment[] {
   let total = 0
   const list: PyramidSegment[] = []
@@ -66,6 +71,11 @@ function getCalculatedData(obj: BrushData, targets: string[]): PyramidSegment[] 
 }
 
 export class PyramidBrush extends CoreBrush {
+  /** Draws one segment's label as a leader line from `(cx, cy)` out to `(cx + pyramidTextLineSize,
+   * y)` plus the text itself just past its end. `dist` is the vertical distance to the PREVIOUS
+   * segment's label y (`textY - ty2` in `draw()`'s loop) - when it's a small positive gap (less
+   * than the leader-line length), the label is nudged up by half that gap to reduce label
+   * overlap between adjacent thin segments. */
   createText(text: unknown, cx: number, cy: number, dist: number): any {
     const l_size = this.chart.theme('pyramidTextLineSize') as number
     const f_size = this.chart.theme('pyramidTextFontSize') as number
@@ -100,6 +110,14 @@ export class PyramidBrush extends CoreBrush {
     return g
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Reads only the
+   * FIRST data row (`axis.data[0]`, or `{}` when there are no rows - see header comment), computes
+   * each target's trapezoid slice via `getCalculatedData()`, then walks the sorted segments from
+   * the base inward: each iteration narrows the running `(startX, endX)`/`(dy)` span by that
+   * segment's `rate`-proportional share of the plot area's diagonal distance, flipped vertically
+   * when `reverse` is set (funnel apex at the bottom instead of the top). Draws each segment's
+   * trapezoid polygon (`addEvent()`-wired), an optional divider line between segments, and -
+   * when `showText` is set - a label via `createText()`. */
   draw = (): any => {
     const g = this.svg.group()
     const obj = this.axis.data.length > 0 ? (this.axis.data[0] as BrushData) : {}
@@ -176,6 +194,8 @@ export class PyramidBrush extends CoreBrush {
     return g
   }
 
+  /** Returns this brush's own config defaults (`PYRAMID_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return PYRAMID_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -42,6 +42,10 @@ export class ImageBarBrush extends CoreBrush {
   protected colWidth = 0
   protected colHeight = 0
 
+  /** Resolves `brush.uri` for one bar segment: returns it as-is when it's a plain string, or
+   * calls it with `(key, value)` (bound to `this.chart`) when it's a function, whichever
+   * `ImageBarBrushOptions.uri` was configured as. Reused unchanged by `imagecolumn.ts`/
+   * `patternbar.ts`/`patterncolumn.ts`. */
   getImageURI(key: string, value: unknown): string {
     let uri = (this.brush as Record<string, unknown>).uri as string | ((this: unknown, key: string, value: unknown) => string) | null
 
@@ -52,6 +56,9 @@ export class ImageBarBrush extends CoreBrush {
     return uri as string
   }
 
+  /** Returns the theme's shared bar border styling (`barBorderColor`/`barBorderWidth`/
+   * `barBorderOpacity`), applied to the plain colored rect drawn behind a `fixed: true` image.
+   * Reused unchanged by `imagecolumn.ts`/`patternbar.ts`/`patterncolumn.ts`. */
   getBarStyle(): { borderColor: unknown; borderWidth: unknown; borderOpacity: unknown } {
     return {
       borderColor: this.chart.theme('barBorderColor'),
@@ -60,6 +67,11 @@ export class ImageBarBrush extends CoreBrush {
     }
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the zero-value x coordinate (`zeroX`), the y-axis row band height, the configured fixed image
+   * `width`/`height` (`colWidth`/`colHeight`), and the combined height of one row's stacked
+   * per-target images plus their `innerPadding` gaps (`halfHeight`, used to vertically center them
+   * within the row band). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
 
@@ -73,6 +85,13 @@ export class ImageBarBrush extends CoreBrush {
     this.halfHeight = this.colHeight * this.targets.length + (this.targets.length - 1) * this.padding
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row
+   * and each `target` field, draws an `<image>` (from `getImageURI()`) either stretched to the
+   * bar's full length (when `fixed` is falsy, via `img.scale()`) or left at its configured size
+   * with a plain colored rect (styled via `getBarStyle()`) filling the remaining length (when
+   * `fixed` is truthy, the default). Bars for rows whose value is `0` skip `addEvent()` (no click/
+   * hover events fire on a zero-length bar). Positions each row's stack of target bars starting at
+   * `zeroX`, growing left or right depending on whether the resolved x coordinate is past `zeroX`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
 
@@ -135,6 +154,8 @@ export class ImageBarBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`IMAGEBAR_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return IMAGEBAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

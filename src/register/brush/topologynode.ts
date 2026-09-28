@@ -215,6 +215,10 @@ export class TopologyNode extends CoreBrush {
   private readonly anchor = 7
   private activeEdges: TopologyEdge[] = []
 
+  /** Computes the angle and true distance between `(x1, y1)` and `(x2, y2)`, plus a point that far
+   * PLUS an extra `dist` offset away from `(x1, y1)` along that same angle - used to pull an edge's
+   * endpoint back from a node's true center to just outside its rendered radius (`dist` negative
+   * shortens the segment, `setDataEdges()`'s own callers always pass a negated radius). */
   private getDistanceXY(x1: number, y1: number, x2: number, y2: number, dist?: number): { x: number; y: number; angle: number; distance: number } {
     const a = x1 - x2
     const b = y1 - y2
@@ -230,6 +234,9 @@ export class TopologyNode extends CoreBrush {
     }
   }
 
+  /** Linear-scans every data row for the one whose `key` field matches, or `null` if none does -
+   * there's no key-to-index map here (unlike `timeline.ts`'s `keyToIndex`), so this is `O(n)` per
+   * call. */
   private getNodeData(key: unknown): BrushData | null {
     for (let i = 0; i < this.axis.data.length; i++) {
       const d = this.axis.data[i] as BrushData
@@ -243,6 +250,9 @@ export class TopologyNode extends CoreBrush {
     return null
   }
 
+  /** Linear-scans `brush.edgeData` for the record whose own `key` field matches, or `null` if none
+   * exists - `edgeData` carries the extra per-edge content (label/tooltip source data) the row
+   * data itself doesn't include (only each node's `outgoing` key list). */
   private getEdgeData(key: string): Record<string, unknown> | null {
     const edgeData = (this.brush as Record<string, unknown>).edgeData as Record<string, unknown>[]
 
@@ -255,6 +265,9 @@ export class TopologyNode extends CoreBrush {
     return null
   }
 
+  /** Same lookup as `getEdgeData()`, keyed by `edge.key()` instead of a raw string - kept as a
+   * separate method (rather than just calling `getEdgeData(edge.key())`) matching the legacy
+   * source's own duplicated closure, not consolidated here. */
   private getTooltipData(edge: TopologyEdge): Record<string, unknown> | null {
     const edgeData = (this.brush as Record<string, unknown>).edgeData as Record<string, unknown>[]
 
@@ -267,6 +280,11 @@ export class TopologyNode extends CoreBrush {
     return null
   }
 
+  /** Resolves an edge tooltip's title source: `key` is a `"<fromKey>:<toKey>"` pair, split and
+   * matched against every node row's own `key` field to find each end's `nodeTitle` (falling back
+   * to the raw node key when `nodeTitle` returns falsy). Returns the populated `[fromTitle,
+   * toTitle]` array once at least one end matched a row during the `eachData` scan, or the raw
+   * `key` string unchanged when neither end matched anything (`names` stays empty). */
   private getTooltipTitle(key: string): unknown {
     const names: unknown[] = []
     const keys = key.split(':')
@@ -289,6 +307,9 @@ export class TopologyNode extends CoreBrush {
     return key
   }
 
+  /** Resolves one node's rendered radius: the theme's base `topologyNodeRadius`, scaled by
+   * `nodeScale(data)` when it's a function and `data` is non-null (a `null` `data`, e.g. an
+   * unresolved edge target, falls back to `scale: 1`, i.e. the unscaled base radius). */
   private getNodeRadius(data: BrushData | null): { r: number; scale: number } {
     let r = this.chart.theme('topologyNodeRadius') as number
     let scale = 1
@@ -302,6 +323,9 @@ export class TopologyNode extends CoreBrush {
     return { r, scale }
   }
 
+  /** Resolves one edge's opacity: the theme's base `topologyEdgeOpacity`, overridden by
+   * `edgeOpacity(data)` when it's a function and `data` (the matching `edgeData` record, or
+   * `null`) is truthy. */
   private getEdgeOpacity(data: unknown): number {
     let opacity = this.chart.theme('topologyEdgeOpacity') as number
     const edgeOpacity = (this.brush as Record<string, unknown>).edgeOpacity
@@ -313,6 +337,13 @@ export class TopologyNode extends CoreBrush {
     return opacity
   }
 
+  /** Builds one node's group: either an `<image>` (when `nodeImage` returns a value) or a plain
+   * circle, plus an optional centered body text (`nodeText`) and an optional bold title below it
+   * (`nodeTitle`), all sized by `getNodeRadius()`'s scale and the panel's own per-node `xy.scale`
+   * (zoom level). Wires `activeEvent` to `onNodeActiveHandler` (highlighting this node's outgoing
+   * edges) and emits `'topology.nodeclick'`. Also bumps this node's z-order to the front
+   * (`node.order = 1`) when it matches `axis.cache.nodeKey` - the currently-dragged/focused node
+   * tracked by the (out-of-scope) `topologyctrl` widget, per this file's header comment. */
   private createNodes(index: number, data: BrushData): any {
     const brush = this.brush as Record<string, unknown>
     const key = this.getValue(data, 'key')
@@ -391,6 +422,9 @@ export class TopologyNode extends CoreBrush {
     return node
   }
 
+  /** Draws every edge tracked in `this.edges` (populated earlier by `setDataEdges()`): a line
+   * (`createEdgeLine`) plus an optional label (`createEdgeText`), grouped together and appended
+   * to the brush's group. */
   private createEdges(): void {
     this.edges.each((edge) => {
       const in_xy = edge.get('in_xy')
@@ -404,6 +438,14 @@ export class TopologyNode extends CoreBrush {
     })
   }
 
+  /** Draws one edge's visual line plus its arrowhead-like endpoint circle. When `edge.connect()`
+   * is true - meaning a reverse edge (`b:a` for this `a:b`) was already drawn - this edge draws NO
+   * line of its own at all, instead just re-styling the REVERSE edge's already-drawn line/circle
+   * opacity to match this edge's own resolved `edgeOpacity` (so a bidirectional pair only ever
+   * renders one visible line, but both directions' opacity settings still apply to it). Wires
+   * `activeEvent`/`mouseover`/`mouseout` on the group to the edge active/hover handlers, and
+   * caches the built group onto `edge.element(g)` for later re-styling (by this same method's
+   * "connected" branch, and by the active/hover handlers). */
   private createEdgeLine(edge: TopologyEdge, in_xy: { x: number; y: number }, out_xy: { x: number; y: number }): any {
     const g = this.svg.group()
     const size = this.chart.theme('topologyEdgeWidth') as number
@@ -459,6 +501,11 @@ export class TopologyNode extends CoreBrush {
     return g
   }
 
+  /** Draws one edge's label, only when `getEdgeData(edge.key())` finds a matching record AND
+   * `edgeText(edgeData, align)` returns a non-nullish value. Text alignment/rotation flips
+   * depending on whether the edge points left-to-right or right-to-left (`edgeAlign`, derived from
+   * comparing `out_xy.x`/`in_xy.x`), so the label always reads upright alongside its edge line.
+   * Wires the same `activeEvent`/`mouseover`/`mouseout` handlers as the edge's own line. */
   private createEdgeText(edge: TopologyEdge, in_xy: { x: number; y: number; angle: number }, out_xy: { x: number; y: number; angle: number }): any {
     let text: any = null
     const edgeAlign = out_xy.x > in_xy.x ? 'end' : 'start'
@@ -516,6 +563,13 @@ export class TopologyNode extends CoreBrush {
     return text
   }
 
+  /** Builds and registers one `TopologyEdge` for row `index`'s `outgoing[targetIndex]` target
+   * (a no-op when the target key equals the row's own key, i.e. a self-loop is silently dropped).
+   * Both endpoints are pulled back from the two nodes' true centers to just outside their
+   * rendered radii (via `getDistanceXY`'s negative-`dist` offset), each padded by `this.point`
+   * (the edge endpoint dot's own radius) and scaled by the source node's `xy.scale`. Marks the new
+   * edge `connect(true)` when its reverse (`target:source`) was already registered, so
+   * `createEdgeLine` knows to skip drawing a duplicate line for it. */
   private setDataEdges(index: number, targetIndex: number): void {
     const data = this.getData(index)
     const key = this.getValue(data, 'key')
@@ -539,6 +593,14 @@ export class TopologyNode extends CoreBrush {
     this.edges.add(edge)
   }
 
+  /** Renders (and emits `'topology.edgeclick'` for) the click tooltip on a shared, reused `<g>`
+   * (cleared and rebuilt every call - `rect.attr({points: ''})`/`text.element.textContent = ''`) -
+   * a no-op when `tooltipTitle`/`tooltipText` aren't both configured as functions, and shows
+   * nothing further when `getTooltipData(edge)` finds no matching `edgeData` record either. Builds
+   * two raw SVG `<tspan>` elements directly via `document.createElementNS` (title bold, contents
+   * below it) rather than this project's own SVG element wrapper, measures the resulting text box
+   * (`text.size()`), and shapes the tooltip's balloon outline via the inherited `Draw.balloonPoints()`,
+   * flipped top/bottom depending on which side of the edge (`align`) the anchor point sits. */
   private showTooltip(edge: TopologyEdge, e?: unknown): void {
     const brush = this.brush as Record<string, unknown>
     if (typeof brush.tooltipTitle !== 'function' || typeof brush.tooltipText !== 'function') return
@@ -590,6 +652,15 @@ export class TopologyNode extends CoreBrush {
     }
   }
 
+  /** Activates a node: recomputes `activeEdges` as every edge directly reachable from `data`'s own
+   * `outgoing` list (plus, for each one already marked `connect()`, its reverse edge too - since a
+   * connected pair shares one drawn line, both directions need to be recognized as "active" for
+   * restyling), then restyles every edge in `this.edges` - active ones get the theme's
+   * `topologyActiveEdgeColor`/`topologyActiveEdgeWidth`, everything else reverts to the plain
+   * `topologyEdgeColor`/`topologyEdgeWidth` - and hides the click tooltip (since a node activation,
+   * unlike an edge click, has nothing to show a tooltip about). Each edge element's line/circle
+   * are picked apart via `elem.children.length === 2` (a "connected" edge's line-less group has
+   * only the endpoint circle as its single child). */
   private onNodeActiveHandler(data: BrushData): void {
     const color = this.chart.theme('topologyEdgeColor')
     const activeColor = this.chart.theme('topologyActiveEdgeColor')
@@ -634,6 +705,13 @@ export class TopologyNode extends CoreBrush {
     })
   }
 
+  /** Activates a single edge (or clears the active edge entirely when `edge` is `null`, e.g. from
+   * `draw()`'s background-click handler): restyles every edge, matching either `edge` itself or
+   * its reverse-key counterpart to the active theme colors/width (and showing the click tooltip
+   * only for the edge whose key matches exactly, not its reverse), everything else reverting to
+   * the plain theme styling. Also updates `activeEdges` to `[edge]` (plus its reverse, when
+   * connected) for `onEdgeMouseOverHandler`/`onEdgeMouseOutHandler` to skip re-styling an
+   * already-active edge on hover. */
   private onEdgeActiveHandler(edge: TopologyEdge | null): void {
     this.edges.each((newEdge) => {
       const elem = newEdge.element()
@@ -667,6 +745,9 @@ export class TopologyNode extends CoreBrush {
     })
   }
 
+  /** Restyles one edge's line/circle to the theme's hover colors/width on mouseover - a no-op when
+   * the edge is already in `activeEdges` (an active/highlighted edge keeps its active styling
+   * through a hover, it's never overridden by the plain hover style). */
   private onEdgeMouseOverHandler(edge: TopologyEdge): void {
     if (inArray(edge, this.activeEdges) !== -1) return
 
@@ -683,6 +764,8 @@ export class TopologyNode extends CoreBrush {
     circle.attr({ fill: color })
   }
 
+  /** Reverts one edge's line/circle to the plain theme colors/width on mouseout - same
+   * already-active guard as `onEdgeMouseOverHandler` (an active edge's styling is left untouched). */
   private onEdgeMouseOutHandler(edge: TopologyEdge): void {
     if (inArray(edge, this.activeEdges) !== -1) return
 
@@ -699,6 +782,9 @@ export class TopologyNode extends CoreBrush {
     circle.attr({ fill: color })
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the shared edge endpoint dot radius (`point`) and pre-builds the (initially hidden) shared
+   * click tooltip group `showTooltip()` fills in and repositions later. */
   drawBefore = (): void => {
     this.g = this.svg.group()
     this.point = this.chart.theme('topologyEdgePointRadius') as number
@@ -718,6 +804,16 @@ export class TopologyNode extends CoreBrush {
     })
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. First pass:
+   * builds every `TopologyEdge` via `setDataEdges()` (one call per `(row, outgoing-target)`
+   * pair). Second pass: actually draws them (`createEdges()`) BEFORE drawing any node, so nodes
+   * visually layer on top of edge lines. Third pass: draws every node (`createNodes()`). Wires a
+   * global `'axis.mousedown'` handler that clears the active edge/hides the tooltip when the click
+   * target is the axis root itself (i.e. empty background, not a node/edge). When `activeEdge`/
+   * `activeNode` are configured, wires one-time `'render'` handlers that apply that initial
+   * highlight - but explicitly skipped on the FIRST render (`!init` guard), since the very first
+   * render already draws nodes/edges in their default state and doesn't need a highlight pass
+   * layered on top of itself; only a later re-render applies it. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
 
@@ -764,6 +860,8 @@ export class TopologyNode extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`TOPOLOGYNODE_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return TOPOLOGYNODE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

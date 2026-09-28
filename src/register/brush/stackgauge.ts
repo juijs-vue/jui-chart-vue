@@ -65,6 +65,12 @@ export class StackGaugeBrush extends DonutBrush {
   private sgCenterY = 0
   private sgOuterRadius = 0
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. When no
+   * `c`-type axis panel is configured (the normal situation for a `stack_gauge` demo - see header
+   * comment), synthesizes a fallback `axis.c` spanning the whole chart area. Derives the shared
+   * gauge center (`sgCenterX`/`sgCenterY`) and starting outer radius (`sgOuterRadius`, reset to
+   * `sgW` on every draw) from that panel's rect - the smaller of its width/height halved, so the
+   * outermost ring always fits inscribed. */
   drawBefore = (): void => {
     if (!this.axis.c) {
       ;(this.axis as unknown as { c: CAxis }).c = () => ({
@@ -92,6 +98,17 @@ export class StackGaugeBrush extends DonutBrush {
     this.sgOuterRadius = this.sgW
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws one
+   * concentric partial-ring gauge per data row, via the inherited `DonutBrush.drawDonut()`: an
+   * "empty" background arc for the unfilled portion plus a colored arc for the filled portion
+   * (`rate = (value - min) / (max - min)` of `endAngle`), and a title label read from
+   * `row[brush.title]`. A configured `endAngle >= 360` is clamped down to `359.99999` (both on
+   * the local variable AND mutated back onto `brush.endAngle` itself, so this clamp only ever
+   * happens once - subsequent rows in the same draw, and subsequent draws, see the already-clamped
+   * value) since a true 360-degree ring can't be drawn as a distinguishable open arc. After each
+   * row, shrinks `sgOuterRadius` by `size` so the next row's ring nests inside this one - genuine,
+   * intentional mutation of shared per-instance state across `eachData()` iterations (see header
+   * comment), not a bug. */
   draw = (): any => {
     const group = this.chart.svg.group()
     const brush = this.brush as Record<string, unknown>
@@ -149,6 +166,8 @@ export class StackGaugeBrush extends DonutBrush {
     return group
   }
 
+  /** Returns this brush's own config defaults (`STACKGAUGE_BRUSH_OWN_DEFAULTS`); `builder.ts`'s
+   * `defineOptions()` still layers `DonutBrush`'s own defaults underneath. */
   static setup(): Record<string, unknown> {
     return STACKGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

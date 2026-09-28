@@ -26,6 +26,10 @@ export class RangeBarBrush extends CoreBrush {
   private half_height = 0
   private bar_height = 0
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Derives
+   * `half_height` (the row band height minus twice `outerPadding`) and `bar_height` (that space
+   * split evenly across every target, minus the `innerPadding` gaps between them), so `draw()`
+   * can stack each row's per-target range-bars without recomputing this per row. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -37,6 +41,11 @@ export class RangeBarBrush extends CoreBrush {
     this.bar_height = (this.half_height - (target.length - 1) * (brush.innerPadding as number)) / target.length
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row
+   * and each target field (a `[min, max]` tuple), draws one horizontal rect spanning from the
+   * `min`-resolved x to the `max`-resolved x (width is the absolute difference, so the tuple's
+   * order doesn't need `min <= max`), stacking each target's bar vertically within the row band
+   * using the `bar_height`/`half_height` computed in `drawBefore()`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -79,6 +88,8 @@ export class RangeBarBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`RANGE_BAR_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return RANGE_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

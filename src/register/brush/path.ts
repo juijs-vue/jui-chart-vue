@@ -14,6 +14,12 @@ export type PathBrushOptions = BrushOptions
 type CAxis = (i: number, value: unknown) => { x: number; y: number }
 
 export class PathBrush extends CoreBrush {
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws one
+   * closed `<path>` per `target` field, moving through every data row's `axis.c(index, value)`
+   * panel-grid position (translated from chart-root coordinates back into the brush's own local
+   * space via `chart.area()`/`axis.padding()`), starting with `MoveTo` on the first row and
+   * `LineTo` for the rest, then closing the shape with `ClosePath()`. No per-point event wiring -
+   * unlike most brushes, this one never calls `addEvent()`. */
   draw = (): any => {
     const g = this.svg.group()
     const target = (this.brush.target ?? []) as string[]

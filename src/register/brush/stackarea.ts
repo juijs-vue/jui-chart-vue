@@ -12,6 +12,9 @@ import type { AreaBrushOptions } from './area'
 export type StackAreaBrushOptions = AreaBrushOptions
 
 export class StackAreaBrush extends AreaBrush {
+  /** Arrow-function class field overriding `AreaBrush.draw` - the only override this class makes
+   * (see header comment): draws stacked series via the inherited `CoreBrush.getStackXY()` instead
+   * of `getXY()`, reusing `AreaBrush.drawArea()` unchanged. */
   draw = (): any => {
     return this.drawArea(this.getStackXY())
   }

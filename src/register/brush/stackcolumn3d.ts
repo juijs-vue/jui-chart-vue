@@ -25,6 +25,9 @@ export class StackColumn3DBrush extends CoreBrush {
   private barWidth = 0
   private zeroXY = { x: 0, y: 0, depth: 0 }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the shared lane width (`barWidth`, the column band minus twice `outerPadding`) and the
+   * panel-grid origin (`zeroXY`, `axis.c(0, 0)`) every column's boxes are offset from. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const width = (this.axis.x as BrushAxisScale).rangeBand!()
@@ -34,10 +37,19 @@ export class StackColumn3DBrush extends CoreBrush {
     this.zeroXY = (this.axis.c as unknown as CAxis)(0, 0)
   }
 
+  /** Builds one stacked segment's extruded 3D box. Factored out as its own overridable method
+   * (unlike `stackbar3d.ts`'s inline `rect3d()` call) purely so `stackcylinder3d.ts`'s
+   * `StackCylinder3DBrush` can override just this piece and reuse this class's `drawBefore`/`draw`
+   * wholesale. */
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {
     return this.chart.svg.rect3d(this.color(index), width, height, degree as number, depth)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. For each row,
+   * stacks every target's box upward along y within one shared `barWidth` lane, each segment's
+   * box built via the overridable `drawMain()` and offset further up by the running `colHeight`
+   * plus its own depth-driven `top` projection. Unlike `stackbar3d.ts`, `group` here is genuinely
+   * used (each `r` appends to it, not directly to `this.g`) - no equivalent unused-`group` bug. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -75,6 +87,8 @@ export class StackColumn3DBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`STACKCOLUMN3D_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return STACKCOLUMN3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -16,6 +16,12 @@ export class ImageColumnBrush extends ImageBarBrush {
   private zeroY = 0
   private halfWidth = 0
 
+  /** Column-axis counterpart to `ImageBarBrush.drawBefore`: caches the zero-value y coordinate
+   * (`zeroY`) instead of `zeroX`, and the combined width of one column's stacked per-target images
+   * plus their `innerPadding` gaps (`halfWidth`, used to horizontally center them within the
+   * column band) instead of `halfHeight`. Also calls `axis.x.rangeBand()` without storing its
+   * result - dead in the legacy source too, see this line's own inline comment and `hudbar.ts`'s
+   * identical convention note. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
 
@@ -29,6 +35,11 @@ export class ImageColumnBrush extends ImageBarBrush {
     this.halfWidth = this.colWidth * this.targets.length + (this.targets.length - 1) * this.padding
   }
 
+  /** Column-axis counterpart to `ImageBarBrush.draw`: draws each row's stack of target images
+   * growing vertically (height instead of width driven by the resolved value), anchored so the
+   * bar always starts at `zeroY` and extends up toward the value when the value's y coordinate is
+   * above the baseline, or down toward `zeroY` otherwise. Rows whose value is `0` skip
+   * `addEvent()`, same as `ImageBarBrush.draw`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
 

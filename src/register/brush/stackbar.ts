@@ -52,10 +52,17 @@ export class StackBarBrush extends BarBrush {
   // dropping a truly-never-read value changes nothing observable.
   private stackBarSize = 0
 
+  /** Registers one row's whole stacked-segment group into `stackGroupList`, so `setActiveEffect`
+   * can later restyle it by index. Distinct from `BarBrush`'s own same-named `barList`/
+   * `getBarElement` - see this file's header comment on why the two aren't actually shared state
+   * despite the nominal overlap in the legacy source. */
   addBarElement(elem: any): void {
     this.stackGroupList.push(elem)
   }
 
+  /** Builds one segment's plain colored rect (no rounded corners/min-size handling, unlike
+   * `BarBrush.getBarElement`) - hides it outright (`display: 'none'`) when its value is exactly
+   * `0`, and skips `addEvent()` for a zero value too (so a hidden segment is also non-interactive). */
   getBarElement(dataIndex: number, targetIndex: number): any {
     const style = this.getBarStyle()
     const color = this.color(targetIndex)
@@ -80,6 +87,11 @@ export class StackBarBrush extends BarBrush {
     return r
   }
 
+  /** Dims every OTHER row's stacked group to `disableOpacity`, leaving `group` (the row that
+   * matched an `activeEvent`/`active` trigger) at full opacity. Also toggles each row's stack
+   * tooltip: visible when its row is the active one, OR when its index is already recorded in
+   * `tooltipIndexes` (i.e. it's one of the `display`-driven min/max/all tooltips `setActiveTooltips`
+   * already turned on), hidden otherwise. */
   setActiveEffect(group: any): void {
     const style = this.getBarStyle()
     const columns = this.stackGroupList
@@ -100,6 +112,9 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Applies the initial `active`-row highlighting (from `brush.active`, an index into
+   * `stackGroupList`) once every row has been drawn; a no-op when `active` doesn't resolve to an
+   * existing row. */
   setActiveEffectOption(): void {
     const active = (this.brush as Record<string, unknown>).active as number
     if (this.stackGroupList && this.stackGroupList[active]) {
@@ -107,12 +122,16 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Wires `group`'s configured `activeEvent` (e.g. `'click'`) to highlight that row via
+   * `setActiveEffect`. */
   setActiveEvent(group: any): void {
     group.on((this.brush as Record<string, unknown>).activeEvent, () => {
       this.setActiveEffect(group)
     })
   }
 
+  /** Wires `group`'s active-toggle interaction (`setActiveEvent`) and cursor styling, but only
+   * when `activeEvent` is actually configured. */
   setActiveEventOption(group: any): void {
     if ((this.brush as Record<string, unknown>).activeEvent != null) {
       this.setActiveEvent(group)
@@ -120,6 +139,8 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Resolves the shared row-lane height for every stacked segment: the configured `size` when
+   * positive, otherwise the row band minus twice `outerPadding` (floored at `minSize`). */
   getTargetSize(): number {
     const height = (this.axis.y as BrushAxisScale).rangeBand!()
     const brush = this.brush as Record<string, unknown>
@@ -132,6 +153,11 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Reveals (`opacity: 1`) each row's stack-total tooltip that matches `display`: the single row
+   * at `minIndex` (`display === 'min'`) or `maxIndex` (anything else, effectively `'max'`), or
+   * every row's tooltip when `display === 'all'` - and records each revealed row's index into
+   * `tooltipIndexes` so `setActiveEffect` knows to keep it visible even when that row isn't the
+   * currently-active one. */
   setActiveTooltips(minIndex: number | null, maxIndex: number | null): void {
     const type = (this.brush as Record<string, unknown>).display
     const activeIndex = type == 'min' ? minIndex : maxIndex
@@ -144,6 +170,10 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Builds one row's stack-total tooltip text (initially `opacity: 0` - `setActiveTooltips`/
+   * `setActiveEffect` reveal it later), anchored/offset according to `pos` (`'left'`/`'right'`
+   * align the text start/end with a small inward nudge, `'top'`/anything else vertically offsets
+   * a centered label above/below the point) and caches it into `stackTooltips[index]`. */
   drawStackTooltip(group: any, index: number, value: number, x: number, y: number, pos: string): void {
     const fontSize = this.chart.theme('tooltipPointFontSize') as number
     let orient = 'middle'
@@ -181,6 +211,12 @@ export class StackBarBrush extends BarBrush {
     group.append(tooltip)
   }
 
+  /** Draws the `edge` config's connecting lines: for every consecutive pair of rows, one line per
+   * target linking that segment's trailing edge in the PREVIOUS row to its leading edge in the
+   * CURRENT row (using each cached `edgeData` entry's `x`/`width`/`ex`/`dx` offsets, which already
+   * account for axis reversal - see `draw()`'s own `ex: isReverse ? opts.width : 0`) - visually
+   * approximating a mini stacked-area overlay on top of the bars. Segments with zero `width`/
+   * `height` (a `0`-value target) are skipped, so no line is drawn to/from a hidden segment. */
   drawStackEdge(g: any): void {
     const borderWidth = this.chart.theme('barStackEdgeBorderWidth')
     const target = this.brush.target ?? []
@@ -206,6 +242,10 @@ export class StackBarBrush extends BarBrush {
     }
   }
 
+  /** Arrow-function class field overriding `BarBrush.drawBefore` completely (see header comment -
+   * never calls `super.drawBefore()`). Caches the shared segment lane height (`getTargetSize()`)
+   * and resets the per-draw tooltip/edge tracking arrays so a redraw doesn't accumulate stale
+   * entries from a prior one. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.stackBarSize = this.getTargetSize()
@@ -215,6 +255,14 @@ export class StackBarBrush extends BarBrush {
     this.edgeData = []
   }
 
+  /** Arrow-function class field overriding `BarBrush.draw` completely (see header comment). For
+   * each row, stacks every target's segment end-to-end along x (`startX` running from the zero
+   * point, `value` accumulating each target's contribution so the next segment starts where this
+   * one ended), caching each segment's box + derived edge-linking geometry (`edgeData`) and
+   * tracking which row has the largest/smallest stack total (`maxIndex`/`minIndex`, used by
+   * `setActiveTooltips` when `display` is set). After every row is drawn, optionally draws the
+   * `edge` connecting lines (`drawStackEdge`) and applies `display`/`active` tooltip and
+   * highlight state. */
   draw = (): any => {
     const target = this.brush.target ?? []
     let maxIndex: number | null = null
@@ -293,6 +341,8 @@ export class StackBarBrush extends BarBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`STACK_BAR_BRUSH_OWN_DEFAULTS`); `builder.ts`'s
+   * `defineOptions()` still layers `BarBrush`'s own defaults underneath (see header comment). */
   static setup(): Record<string, unknown> {
     return STACK_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -14,6 +14,11 @@ import type { StackColumn3DBrushOptions } from './stackcolumn3d'
 export type StackCylinder3DBrushOptions = StackColumn3DBrushOptions
 
 export class StackCylinder3DBrush extends StackColumn3DBrush {
+  /** Overrides `StackColumn3DBrush.drawMain` to draw a cylinder instead of a box, shortening every
+   * segment's height EXCEPT the first (`index > 0`) by its own projected "top" sliver
+   * (`sin(radian) * depth`) first, so consecutive cylinders visually butt up against each other
+   * without a projection-induced gap. `drawBefore`/`draw` are reused unchanged from the parent
+   * class (see header comment). */
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {
     const top = Math.sin((this.axis.c as unknown as { radian: number }).radian) * depth
     const h = index > 0 ? height - top : height

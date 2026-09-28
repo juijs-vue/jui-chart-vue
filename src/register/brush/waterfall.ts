@@ -34,6 +34,10 @@ export class WaterfallBrush extends CoreBrush {
   private halfWidth = 0
   private outerPadding = 0
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Caches
+   * the row count (`count`, used by `draw()` to detect the last column), the zero baseline
+   * (`zeroY`), and each column's width (`columnWidth`, the column band minus `outerPadding` on
+   * both sides, split evenly - minus one unit - across every target). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -49,6 +53,13 @@ export class WaterfallBrush extends CoreBrush {
     this.columnWidth = (this.width - this.outerPadding * 2 - (target.length - 1)) / target.length
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Only ever reads
+   * `target[0]` - a waterfall chart has exactly one value series per row, unlike most brushes'
+   * multi-target loops. The first row (and the last, when `end` is set) draws a full
+   * `waterfallEdgeBackgroundColor` bar from the zero baseline; every other row draws a floating
+   * segment between the PREVIOUS row's value and this row's (colored `waterfallBackgroundColor`
+   * when rising, `waterfallInvertBackgroundColor` when falling), plus - when `line` is set - a
+   * dashed guide line from the previous column's edge to this segment's top. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = ((brush.target ?? []) as string[])[0]
@@ -106,6 +117,8 @@ export class WaterfallBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`WATERFALL_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return WATERFALL_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

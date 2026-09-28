@@ -20,6 +20,12 @@ import type { BrushAxisScale, BrushData, BrushOptions } from 'jui-graph-ts'
 export type RangeAreaBrushOptions = BrushOptions
 
 export class RangeAreaBrush extends CoreBrush {
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Builds one
+   * closed polygon per target field: traces `value[0]` (the low bound) forward across every row,
+   * then `value[1]` (the high bound) backward across every row, producing a single band shape with
+   * straight point-to-point edges (no curve/step interpolation, unlike `LineBrush`). Which axis is
+   * treated as the "index" axis vs. the "value" axis is picked by `isRangeY`, same convention as
+   * `CoreBrush.getXY()`. See this file's header comment for why no `addEvent()` call exists here. */
   draw = (): any => {
     const g = this.svg.group()
     const targets = this.brush.target ?? []
@@ -59,6 +65,9 @@ export class RangeAreaBrush extends CoreBrush {
     return g
   }
 
+  /** Returns an empty object - this brush declares no config fields of its own (see header
+   * comment) and relies entirely on `builder.ts`'s `defineOptions()` chain walk for `CoreBrush`/
+   * `Draw`'s own defaults. */
   static setup(): Record<string, unknown> {
     // No own options at all - see header comment. Relies entirely on the (now-fixed)
     // `defineOptions()` chain walk for `CoreBrush`/`Draw`'s own defaults.

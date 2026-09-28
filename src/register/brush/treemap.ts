@@ -129,6 +129,9 @@ function mergeArrayToNode(nodes: NodeManager, keys: unknown[], values: unknown[]
   }
 }
 
+/** Literal port of `isDrawNode(node)`: a node is drawable only if at least one of its `x`/`y`/
+ * `width`/`height` is non-zero - see this file's header comment on why every non-leaf node stays
+ * at its `drawBefore()`-time default `(0,0,0,0)` and is therefore never drawn as a rectangle. */
 function isDrawNode(node: TreemapNode): boolean {
   if (node.width === 0 && node.height === 0 && node.x === 0 && node.y === 0) {
     return false
@@ -153,6 +156,10 @@ export class TreemapBrush extends CoreBrush {
   private nodes = new NodeManager()
   private titleKeys: Record<string, boolean> = {}
 
+  /** Draws `node`'s group title label, anchored at `treemapTitleAnchor()`'s (quirky, see that
+   * function's own doc comment) first-descendant corner plus a fixed `TEXT_MARGIN_LEFT`/font-size
+   * offset, and records `node.index` into `titleKeys` so `draw()`'s per-leaf text rendering knows
+   * to skip this node (a title-depth node's own text is never ALSO drawn as a regular leaf label). */
   private createTitleDepth(g: any, node: TreemapNode, sx: number, sy: number): void {
     const fontSize = this.chart.theme('treemapTitleFontSize')
     const w = this.axis.area('width')
@@ -177,6 +184,13 @@ export class TreemapBrush extends CoreBrush {
     this.titleKeys[node.index as string] = true
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook. Builds
+   * the whole tree into `nodes` (a `NodeManager`) from every row's dot-separated `index` field,
+   * then runs the full squarify layout pipeline: flattens the tree into `treemapMultidimensional`'s
+   * expected 2-level-deep value/index arrays (`convertNodeToArray`), squarifies it
+   * (`treemapMultidimensional`), and writes the resulting `x`/`y`/`width`/`height` rectangles back
+   * onto their matching leaf nodes (`mergeArrayToNode`) - see this file's header comment for the
+   * real, preserved grouping-depth quirk this flattening has for trees deeper than 2 levels. */
   drawBefore = (): void => {
     for (let i = 0; i < this.axis.data.length; i++) {
       const d = this.axis.data[i] as BrushData
@@ -200,6 +214,13 @@ export class TreemapBrush extends CoreBrush {
     mergeArrayToNode(this.nodes, preKeys, afterData)
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Walks every
+   * node in the tree (`getNodeAll()`, depth-first): draws a group title (`createTitleDepth`) for
+   * every node at exactly `titleDepth`, then - skipping non-leaf/non-drawable nodes
+   * (`isDrawNode()`) - draws the node's own rect (colored by `getRootNodeSeq()`'s shared
+   * top-level-group index, or overridden per-node via `nodeColor`) plus its own text (unless
+   * `showText` is off or this node already got a title label via `createTitleDepth`, tracked in
+   * `titleKeys`). Text position within the rect is derived from `textOrient`/`textAlign`. */
   draw = (): any => {
     const g = this.svg.group()
     const sx = this.axis.area('x')
@@ -279,6 +300,8 @@ export class TreemapBrush extends CoreBrush {
     return g
   }
 
+  /** Returns this brush's own config defaults (`TREEMAP_BRUSH_OWN_DEFAULTS`) for `builder.ts`'s
+   * `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return TREEMAP_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

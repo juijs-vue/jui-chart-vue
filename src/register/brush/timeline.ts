@@ -82,6 +82,12 @@ export class TimelineBrush extends CoreBrush {
   private cacheRect: TimelineCacheRow[] = []
   private cacheRectIndex: number | null = null
 
+  /** Restyles every cached row's bar (`r1`) and full-row overlay (`r2`) so the row whose `r2`
+   * DOM element matches `target` shows the "active" theme colors (and full opacity on its
+   * overlay) while every other row falls back to its own series `color`/the hover-layer theme -
+   * used when `activeType === 'rect'` (the default). Also records the matched row's index in
+   * `cacheRectIndex` so `setHoverRect` can tell an already-active row apart from a merely-hovered
+   * one. */
   setActiveRect(target: unknown): void {
     for (let k = 0; k < this.cacheRect.length; k++) {
       const r1 = this.cacheRect[k].r1
@@ -106,6 +112,11 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Restyles every cached row's overlay (`r2`) for a hover event: the row matching `target` (or
+   * the row already recorded as active in `cacheRectIndex`) gets the active/hover fill+stroke and
+   * full opacity, every other row's overlay is reset to invisible (`fill-opacity: 0`). Called from
+   * `drawData()`'s per-row `mouseover` handler and from `draw()`'s group-level `mouseout` handler
+   * (with `target: null`, which clears the hover highlight from every row except the active one). */
   setHoverRect(target: unknown): void {
     for (let k = 0; k < this.cacheRect.length; k++) {
       const r2 = this.cacheRect[k].r2
@@ -120,6 +131,11 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Bar-targeted counterpart to `setActiveRect`, used when `activeType` is anything other than
+   * `'rect'`. The row whose visible bar (`r1`) matches `target` is grown to the row's full
+   * `this.height` (recentered via `y1`), recolored with the active-bar theme color, and its
+   * tooltip text (`t1`) is made visible; every other row's bar is restored to its own recorded
+   * `height`/`color` and its tooltip text hidden. Also updates `cacheRectIndex`. */
   setActiveBar(target: unknown): void {
     for (let k = 0; k < this.cacheRect.length; k++) {
       const r1 = this.cacheRect[k].r1
@@ -153,6 +169,10 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Bar-targeted counterpart to `setHoverRect`: recolors each row's bar (`r1`) with the hover
+   * theme color when it matches `target` (and isn't already the active row), the active theme
+   * color when it's the currently-active row (`cacheRectIndex`), or its own series `color`
+   * otherwise. */
   setHoverBar(target: unknown): void {
     const hoverColor = this.chart.theme('timelineHoverBarBackgroundColor')
     const activeColor = this.chart.theme('timelineActiveBarBackgroundColor')
@@ -168,6 +188,13 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Arrow-function class field overriding `Draw`'s optional `drawBefore` lifecycle hook (same
+   * shape as `CoreBrush.drawAfter`). Runs once before `draw()`: creates the brush's own `<g>`,
+   * caches `axis.get('padding')`, the y-axis's ordinal `domain()`/`rangeBand()` (row keys and row
+   * height), the x-axis's tick list, the current `active`/`activeType` config, and the row-title
+   * start/x offset (`startX`/`titleX`, `0` when `hideTitle` is set). Also (re-)builds
+   * `keyToIndex` by overwriting each domain key's index - see this file's header comment for why
+   * stale keys from a prior draw are never cleared first. */
   drawBefore = (): void => {
     this.g = this.svg.group()
     this.padding = this.axis.get('padding') as { left: number; top: number; right: number; bottom: number }
@@ -196,6 +223,12 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Draws each row's background band: a full-width rect per domain key (the header row at index
+   * `0` gets `timelineColumnBackgroundColor`, the rest alternate `timelineEvenRowBackgroundColor`/
+   * `timelineOddRowBackgroundColor`, with a hover-color swap wired in for every row after the
+   * header), plus - when `startX > 0` (titles not hidden) - the row's title text, formatted via
+   * `axis.get('y').format` when it's a function, with a `mouseover` handler that emits
+   * `'timeline.title'`. */
   drawGrid(): void {
     const yFormat = (this.axis.get('y') as Record<string, unknown>).format
     const rowWidth = this.axis.area('width') + this.startX
@@ -256,6 +289,11 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Draws the column grid: one vertical line per x-axis tick (the first tick's line uses
+   * `timelineHorizontalLineColor` and is hidden when titles are also hidden, i.e. `startX === 0`;
+   * every other tick uses `timelineVerticalLineColor`; the last tick draws no line), a column
+   * header text per non-first tick (formatted via `axis.get('x').format` when it's a function),
+   * and one closing horizontal baseline under the header row. */
   drawLine(): void {
     const y = (this.axis.y as BrushAxisScale)(0) - this.height / 2
     const xFormat = (this.axis.get('x') as Record<string, unknown>).format
@@ -308,6 +346,17 @@ export class TimelineBrush extends CoreBrush {
     this.g.append(hline)
   }
 
+  /** Draws each data row's timeline bar: `r1` (the visible, colored bar sized by `barSize`,
+   * spanning `stime`..`etime` - `etime` defaults to the x-axis max when absent), `t1` (a
+   * right-aligned tooltip text, hidden by default, filled from `activeTooltip` when it's a
+   * function), and `r2` (an invisible full-row overlay used as the click/hover target in
+   * `'rect'` mode). Rows whose computed end is before their start, or resolve to `NaN` (e.g. an
+   * unparsable `stime`), are skipped entirely. When the next row shares a contiguous start, a
+   * connecting `line` is drawn from this row's end to the next row's start. Wires each row's
+   * `activeEvent` (default `click`) and `mouseover` to `setActiveRect`/`setHoverRect` or
+   * `setActiveBar`/`setHoverBar` depending on `activeType`, and finally applies the `active`
+   * config's initial highlighted row, if any (negative or non-integer `active` values are
+   * ignored - see the `< 0` early return and the `Number.isInteger` guard). */
   drawData(): void {
     const bg_height = this.axis.area('height')
     const startY = this.axis.area('y')
@@ -424,6 +473,10 @@ export class TimelineBrush extends CoreBrush {
     }
   }
 
+  /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Runs
+   * `drawGrid()`, `drawLine()`, and `drawData()` in that order, wires the group's `mouseout` to
+   * clear the hover highlight (via `setHoverRect`/`setHoverBar`, whichever `activeType` is
+   * active, called with `null` so no row matches), and returns the brush's `<g>` element. */
   draw = (): any => {
     this.drawGrid()
     this.drawLine()
@@ -440,6 +493,8 @@ export class TimelineBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own config defaults (`TIMELINE_BRUSH_OWN_DEFAULTS`) for
+   * `builder.ts`'s `defineOptions()` merge chain. */
   static setup(): Record<string, unknown> {
     return TIMELINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

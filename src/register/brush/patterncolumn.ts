@@ -16,6 +16,11 @@ export class PatternColumnBrush extends PatternBarBrush {
   private zeroY = 0
   private halfWidth = 0
 
+  /** Column-axis counterpart to `PatternBarBrush.drawBefore`: caches the zero-value y coordinate
+   * (`zeroY`) instead of `zeroX`, and the combined width of one column's stacked tiles
+   * (`halfWidth`) instead of `halfHeight`. Also calls `axis.x.rangeBand()` without storing its
+   * result - dead in the legacy source too, see this line's own inline comment and `hudbar.ts`'s
+   * identical convention note. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
 
@@ -29,6 +34,9 @@ export class PatternColumnBrush extends PatternBarBrush {
     this.halfWidth = this.colWidth * this.targets.length + (this.targets.length - 1) * this.padding
   }
 
+  /** Column-axis counterpart to `PatternBarBrush.draw`: fills each column-oriented `<rect>` with a
+   * fresh tiling pattern, sized/positioned so it grows vertically from `zeroY` toward the resolved
+   * value's y coordinate. Rows whose value is `0` skip `addEvent()`, same as `PatternBarBrush.draw`. */
   draw = (): any => {
     this.eachData((data, i) => {
       const row = data as BrushData

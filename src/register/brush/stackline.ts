@@ -13,6 +13,9 @@ import type { LineBrushOptions } from './line'
 export type StackLineBrushOptions = LineBrushOptions
 
 export class StackLineBrush extends LineBrush {
+  /** Arrow-function class field overriding `LineBrush.draw` - the only override this class makes
+   * (see header comment): draws stacked series via the inherited `CoreBrush.getStackXY()` instead
+   * of `getXY()`, reusing `LineBrush.drawLine()` unchanged. */
   draw = (): any => {
     return this.drawLine(this.getStackXY())
   }

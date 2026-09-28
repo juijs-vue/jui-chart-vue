@@ -12,6 +12,9 @@ import type { ScatterBrushOptions } from './scatter'
 export type StackScatterBrushOptions = ScatterBrushOptions
 
 export class StackScatterBrush extends ScatterBrush {
+  /** Arrow-function class field overriding `ScatterBrush.draw` - the only override this class
+   * makes (see header comment): draws stacked series via the inherited `CoreBrush.getStackXY()`
+   * instead of `getXY()`, reusing `ScatterBrush.drawScatter()` unchanged. */
   draw = (): any => {
     return this.drawScatter(this.getStackXY())
   }
