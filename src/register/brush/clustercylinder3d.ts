@@ -23,10 +23,15 @@ export const CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS: ClusterCylinder3DBrushOptions
 }
 
 export class ClusterCylinder3DBrush extends ClusterColumn3DBrush {
+  /** Overrides `ClusterColumn3DBrush.drawMain()`'s box shape with a `chart.svg.cylinder3d()`, using
+   * `brush.topRate` for the top ellipse's radius ratio; all other layout/event logic in the
+   * inherited `draw()` is unchanged. */
   drawMain(color: string, width: number, height: number, degree: unknown, depth: number): any {
     return this.chart.svg.cylinder3d(color, width, height, degree as number, depth, (this.brush as Record<string, unknown>).topRate as number)
   }
 
+  /** Returns this brush's own default options (`topRate`/`outerPadding`/`innerPadding`), merged by
+   * `defineOptions()` on top of the inherited `ClusterColumn3DBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

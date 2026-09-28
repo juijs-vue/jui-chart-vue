@@ -52,6 +52,11 @@ export const ARCGAUGE_BRUSH_OWN_DEFAULTS: ArcGaugeBrushOptions = {
 export class ArcGaugeBrush extends FullGaugeBrush {
   private arcG: any
 
+  /** Reads the shared "panel" axis area (`axis.c(0)`, row-independent since the whole gauge occupies
+   * one fixed circular region) and derives the arc's `radius` (shrunk inward by `brush.size` to
+   * leave room for the stroke width), stroke `width` (`brush.size` itself), and center
+   * (`centerX`/`centerY`, offset by half the width/height difference so the circle stays centered
+   * within a non-square panel). */
   private calculateArea(): ArcArea {
     const area = (this.axis.c as unknown as CAxis)(0)
     const dist = Math.abs(area.width - area.height)
@@ -65,6 +70,8 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     }
   }
 
+  /** Converts a polar coordinate (`radius`/`angleInDegrees`, measured clockwise from the 12 o'clock
+   * position) around `centerX,centerY` into a cartesian `{x, y}` point. */
   private polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number): { x: number; y: number } {
     const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
 
@@ -74,6 +81,12 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     }
   }
 
+  /** Converts a `[startAngle, endAngle)` degree span at `radius` around `centerX,centerY` into the
+   * two endpoints (`sx,sy` at `startAngle`, `ex,ey` at `endAngle`) plus a large-arc flag (`sweep`,
+   * true once the span exceeds 180°) consumed by `drawStroke()`'s SVG `Arc()` calls. A full-circle
+   * span (360°) is nudged down to 359.9° first, since an SVG arc degenerates to a single point when
+   * its two endpoints coincide. Same algorithm as `arcequalizer.ts`'s module-scope `describeArc()`,
+   * kept as a private instance method here instead since it also needs a caller-supplied center. */
   private describeArc(centerX: number, centerY: number, radius: number, startAngle: number, endAngle: number): { sx: number; sy: number; ex: number; ey: number; sweep: boolean } {
     const endAngleOriginal = endAngle
 
@@ -88,6 +101,11 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     return { sx: end.x, sy: end.y, ex: start.x, ey: start.y, sweep: arcSweep }
   }
 
+  /** Appends a filled arc "stroke" segment to path `p`, spanning `[startAngle, endAngle)` between
+   * `radius` and `radius + width`: moves to the inner arc's start point, arcs along the inner
+   * radius, draws a straight line out to the outer arc, arcs back along the outer radius, then
+   * closes the path. `drawUnit()` uses this to draw the single value-arc segment (from `startAngle`
+   * to `startAngle + currentAngle`) of each row's gauge. */
   private drawStroke(p: any, radius: number, width: number, startAngle: number, endAngle: number): void {
     const area = this.calculateArea()
     const arc1 = this.describeArc(area.centerX, area.centerY, radius, startAngle, endAngle)
@@ -101,10 +119,18 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     p.ClosePath()
   }
 
-  // Public (not `private`), matching the inherited `FullGaugeBrush.drawUnit(index, data)`'s own
-  // visibility/signature exactly - a `private` override here would be a TS2415 error (narrower
-  // visibility than the base class member), same category `donut.ts`/`pie.ts` already document
-  // for this exact method name across the gauge/pie family.
+  /**
+   * Draws one row's tick-marked arc gauge: a ring of short radial tick lines every 5° across
+   * `[startAngle, endAngle)`, one filled value-arc segment (via `drawStroke()`) spanning
+   * `startAngle` to `startAngle + (endAngle - startAngle) * rate` where `rate = (value - min) /
+   * (max - min)`, and, when `brush.showText` is truthy, a centered value label plus (when `title`
+   * is non-empty) a title label - both scaled by `mathUtil.scaleValue(area.radius, 40, 400, 1,
+   * 1.5)` so labels shrink/grow with the gauge's radius. Public (not `private`), matching the
+   * inherited `FullGaugeBrush.drawUnit(index, data)`'s own visibility/signature exactly - a
+   * `private` override here would be a TS2415 error (narrower visibility than the base class
+   * member), same category `donut.ts`/`pie.ts` already document for this exact method name across
+   * the gauge/pie family.
+   */
   drawUnit(index: number, data: unknown): void {
     const row = data as BrushData
     const brush = this.brush as Record<string, unknown>
@@ -154,6 +180,9 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     }
   }
 
+  /** Creates the shared group and delegates to `drawUnit()` once per data row (there is normally
+   * just one row, since the gauge area is shared/non-repeating, but every row is still drawn into
+   * the same group/area). */
   draw = (): any => {
     this.arcG = this.chart.svg.group()
 
@@ -164,6 +193,9 @@ export class ArcGaugeBrush extends FullGaugeBrush {
     return this.arcG
   }
 
+  /** Returns this brush's own default options (`size`/`startAngle`/`endAngle`/`showText`/`titleX`/
+   * `titleY`/`format`), merged by `defineOptions()` on top of the inherited `FullGaugeBrush`/
+   * `CoreBrush` defaults. */
   static setup(): Record<string, unknown> {
     return ARCGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

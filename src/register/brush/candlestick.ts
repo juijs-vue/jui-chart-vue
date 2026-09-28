@@ -19,6 +19,9 @@ export class CandleStickBrush extends CoreBrush {
   private barWidth = 0
   private barPadding = 0
 
+  /** Computes this render pass's fixed candle geometry from the x-axis's row band width
+   * (`rangeBand()`): `barWidth` is 70% of the band (leaving a visible gap between candles) and
+   * `barPadding` is half of that, used to center each candle's body rect on its row's x position. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     const width = (this.axis.x as BrushAxisScale).rangeBand!()
@@ -26,6 +29,11 @@ export class CandleStickBrush extends CoreBrush {
     this.barPadding = this.barWidth / 2
   }
 
+  /** Draws one candle per row: a thin high-low wick line plus a body rect spanning open/close,
+   * reading `high`/`low`/`open`/`close` directly off each row (defaulting to `0`) rather than a
+   * configured `target` array. When `open > close` ("bearish"/down candle) the body is drawn from
+   * `open` down to `close` in the invert theme colors; otherwise it's drawn from `close` down to
+   * `open` in the normal theme colors - only the body rect gets click/hover events, not the wick. */
   draw = (): any => {
     this.eachData((data, i) => {
       const row = data as BrushData
@@ -94,6 +102,8 @@ export class CandleStickBrush extends CoreBrush {
     return this.g
   }
 
+  /** Declares no options of its own (see this file's header comment) - returns `{}`, relying
+   * entirely on `defineOptions()`'s chain walk for the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return {}
   }

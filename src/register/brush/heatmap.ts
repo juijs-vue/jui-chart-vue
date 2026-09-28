@@ -37,6 +37,14 @@ export const HEATMAP_BRUSH_OWN_DEFAULTS: HeatmapBrushOptions = {
 }
 
 export class HeatmapBrush extends CoreBrush {
+  /** Draws one cell per `axis.data` row (never reads `brush.target` - see this file's header
+   * comment), positioned at `(axis.x(i), axis.y(i))` (the row's own index, not a data value), sized
+   * to the axis's row band minus the border width on each axis. Each cell's fill comes from
+   * `this.color(i, null)` (see header comment for the real quirk this triggers when `brush.colors`
+   * isn't a function: every cell falls through to the SAME `heatmapBackgroundColor`, not a
+   * per-row color), with a hover effect that raises its `fill-opacity` to
+   * `heatmapHoverBackgroundOpacity`. Each cell's label is `brush.format(data)` when `format` is a
+   * function, otherwise the row's own `text` field. */
   draw = (): any => {
     const bw = this.chart.theme('heatmapBorderWidth') as number
     const fs = this.chart.theme('heatmapFontSize') as number
@@ -99,6 +107,8 @@ export class HeatmapBrush extends CoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`format`), merged by `defineOptions()` on top of the
+   * inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return HEATMAP_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

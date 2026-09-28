@@ -66,6 +66,10 @@ export class HeatmapScatterBrush extends CoreBrush {
   private xDist = 0
   private xSize = 0
 
+  /** Maps a real x/y domain value pair to its bucket cell in `cellMap`: divides the offset from each
+   * axis's own `min()` by `xInterval`/`yInterval` and rounds to the nearest integer index, then
+   * clamps into `[0, xDist)`/`[0, yDist)` so an out-of-range point (e.g. right at the axis's max)
+   * still lands in the last valid cell instead of overflowing `cellMap`. */
   private getTableData(xValue: unknown, yValue: unknown): { map: HeatmapCell; rowIndex: number; columnIndex: number } {
     let xIndex = Number((((xValue as number) - (this.axis.x as BrushAxisScale & { min(): number }).min()) / ((this.brush as Record<string, unknown>).xInterval as number)).toFixed(0))
     let yIndex = Number((((yValue as number) - (this.axis.y as BrushAxisScale & { min(): number }).min()) / ((this.brush as Record<string, unknown>).yInterval as number)).toFixed(0))
@@ -82,6 +86,15 @@ export class HeatmapScatterBrush extends CoreBrush {
     }
   }
 
+  /** Registers one scatter point into its density-grid cell (found via `getTableData()`, after
+   * converting the pixel position `pos` back to domain values via `axis.x.invert()`/
+   * `axis.y.invert()`): pushes the point's row onto the cell's `data` and overwrites the cell's
+   * `color` with THIS point's color (so a multi-point cell ends up colored by whichever point was
+   * bucketed into it LAST, not an aggregate). Creates the cell's `<rect>` the first time a point
+   * lands in it (`element == null`); every SUBSEQUENT point into the same cell instead flips
+   * `draw = true` so `drawScatter()` knows not to re-append/re-bind an event for an already-drawn
+   * cell. Returns `null` (via the `try`/`catch`) if the resolved cell doesn't exist in `cellMap` -
+   * a defensive guard against indices `getTableData()`'s own clamping didn't already prevent. */
   createScatter(pos: { x: number; y: number }, dataIndex: number, targetIndex: number): { data: unknown[]; element: any; draw: boolean; rowIndex: number; columnIndex: number } | null {
     let result: { data: unknown[]; element: any; draw: boolean; rowIndex: number; columnIndex: number } | null = null
 
@@ -121,6 +134,11 @@ export class HeatmapScatterBrush extends CoreBrush {
     return result
   }
 
+  /** Buckets every `(row, target)` point (position from `axis.x(i)`/`axis.y(value)`, the ROW INDEX
+   * for x per this brush's per-row-not-per-value x positioning) into its density-grid cell via
+   * `createScatter()`, appending each cell's `<rect>` to `g` and binding its click/hover event
+   * exactly once - only when `obj.draw == false`, i.e. the FIRST point that lands in a given cell -
+   * since later points into the same cell just update its color/data without re-appending it. */
   drawScatter(g: any): void {
     const data = this.axis.data as BrushData[]
     const target = this.brush.target ?? []
@@ -141,6 +159,11 @@ export class HeatmapScatterBrush extends CoreBrush {
     }
   }
 
+  /** Rebuilds the empty `cellMap` grid for this render pass (each cell pre-positioned at its own
+   * `xPos`/`yPos - ySize`, so `createScatter()` only ever needs to fill in `element`/`color`/`data`
+   * later - not compute geometry) and delegates to `drawScatter()` to bucket and draw every actual
+   * point. Each cell's domain value is resolved via a real `Date` when the corresponding axis is
+   * `type === 'date'`, per this file's header comment on real date-axis support. */
   draw = (): any => {
     this.g = this.chart.svg.group()
 
@@ -177,6 +200,10 @@ export class HeatmapScatterBrush extends CoreBrush {
     return this.g
   }
 
+  /** Computes this render pass's density-grid dimensions from each axis's own domain span
+   * (`max() - min()`) divided by the configured `xInterval`/`yInterval`: `xDist`/`yDist` (how many
+   * buckets fit along each axis) and `xSize`/`ySize` (each bucket's pixel width/height, the plot
+   * area divided by that bucket count). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
 
@@ -189,6 +216,8 @@ export class HeatmapScatterBrush extends CoreBrush {
     this.xSize = this.axis.area('width') / this.xDist
   }
 
+  /** Returns this brush's own default options (`xInterval`/`yInterval`/`clip`), merged by
+   * `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return HEATMAP_SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

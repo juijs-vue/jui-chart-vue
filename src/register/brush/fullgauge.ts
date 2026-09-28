@@ -51,6 +51,10 @@ export const FULL_GAUGE_BRUSH_OWN_DEFAULTS: FullGaugeBrushOptions = {
 export class FullGaugeBrush extends DonutBrush {
   private group: any
 
+  /** Builds a centered value label at `(centerX, centerY)`, formatted via `this.format(value,
+   * index)`, colored with this row's `color(index)`, and scaled by `textScale` (so labels shrink or
+   * grow with the ring's own radius - see `drawUnit()`'s/`ArcGaugeBrush.drawUnit()`'s
+   * `mathUtil.scaleValue()` call). Reused unmodified by `ArcGaugeBrush.drawUnit()`. */
   createText(value: unknown, index: number, centerX: number, centerY: number, textScale: number): any {
     const g = this.svg.group().translate(centerX, centerY)
     const size = this.chart.theme('gaugeFontSize') as number
@@ -76,6 +80,12 @@ export class FullGaugeBrush extends DonutBrush {
   // `index` is a confirmed-dead legacy parameter (legacy `createTitle(title, index, centerX,
   // centerY, dx, dy, textScale)` never reads it in its own body) - kept in the signature (matching
   // the real call-site argument order/count) but prefixed `_` to satisfy `noUnusedParameters`.
+  /** Builds a title label offset from `(centerX, centerY)` by `(dx, dy)` (`brush.titleX`/`titleY`),
+   * text-anchored based on `dx`'s sign (`middle` at `0`, `end` when negative, `start` when
+   * positive) so the label leans away from center in the direction it's offset. Scaled by
+   * `textScale`, same as `createText()`. `index` is a confirmed-dead parameter (see the inline
+   * comment above), kept only to match the real call-site's argument shape. Reused unmodified by
+   * `ArcGaugeBrush.drawUnit()`. */
   createTitle(title: unknown, _index: number, centerX: number, centerY: number, dx: number, dy: number, textScale: number): any {
     const g = this.svg.group().translate(centerX + dx, centerY + dy)
     const anchor = dx == 0 ? 'middle' : dx < 0 ? 'end' : 'start'
@@ -99,6 +109,20 @@ export class FullGaugeBrush extends DonutBrush {
     return g
   }
 
+  /**
+   * Draws one row's ring-gauge into the shared `axis.c(index)` panel: a value-proportional
+   * foreground arc (`currentAngle = endAngle * rate`, `rate = (value - min) / (max - min)`, clamped
+   * to at most `endAngle` so an over-`max` value can't overshoot the ring) drawn via `drawDonut()`
+   * with `color(index)` and `brush.symbol` as its line cap, plus a background "track" ring covering
+   * the REMAINING span (`startAngle + currentAngle + paddingAngle` to `endAngle - currentAngle -
+   * paddingAngle * 2`), drawn first so the value arc renders on top. `paddingAngle` (from the theme's
+   * `gaugePaddingAngle`) only applies for `symbol === 'butt'`, leaving a small visible gap between
+   * the two rings' flat-capped ends; round caps (`symbol === 'round'`) get no padding since the caps
+   * themselves already round off the seam. `endAngle` is clamped to 359.99999° when configured as a
+   * full circle (`>= 360`), matching `drawDonut()`'s own "can't close a literal 360° arc" fix. Value
+   * and title labels (via `createText()`/`createTitle()`) are added when `brush.showText`/a non-empty
+   * `title` apply, positioned slightly above center (`centerY - outerRadius * 0.1`).
+   */
   drawUnit(index: number, data: unknown): void {
     const row = data as BrushData
     const obj = (this.axis.c as unknown as (i: number) => { width: number; height: number; x: number; y: number })(index)
@@ -160,6 +184,9 @@ export class FullGaugeBrush extends DonutBrush {
     }
   }
 
+  /** Creates the shared group and delegates to `drawUnit()` once per data row - unlike
+   * `DonutBrush.draw()` (inherited from `PieBrush`), there's no no-data placeholder branch: zero
+   * rows simply draws nothing. */
   draw = (): any => {
     this.group = this.chart.svg.group()
 
@@ -170,6 +197,9 @@ export class FullGaugeBrush extends DonutBrush {
     return this.group
   }
 
+  /** Returns this brush's own default options (`symbol`/`size`/`startAngle`/`endAngle`/`showText`/
+   * `titleX`/`titleY`/`format`), merged by `defineOptions()` on top of the inherited `DonutBrush`/
+   * `PieBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FULL_GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

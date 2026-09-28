@@ -20,6 +20,11 @@ export class ColumnBrush extends BarBrush {
   private col_width = 0
   private half_width = 0
 
+  /** Vertical counterpart to `BarBrush.drawBefore()`: computes `zeroY` (the y pixel position of
+   * value `0`), `width` (the full x-axis row band from `rangeBand()`), and, per `brush.size`,
+   * either a fixed `col_width` (with `half_width` the total span of all targets' columns stacked
+   * with `innerPadding` gaps) or an auto-computed `col_width` fitting every target into the row
+   * width minus `outerPadding` on each side (clamped to `0` rather than going negative). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const op = brush.outerPadding as number
@@ -40,6 +45,14 @@ export class ColumnBrush extends BarBrush {
     }
   }
 
+  /** Vertical counterpart to `BarBrush.draw()`: draws every row's columns, one per target, laid out
+   * side by side within the row band using `drawBefore()`'s `col_width`/`half_width`. Each column's
+   * length is `|zeroY - tooltipY|`, where `tooltipY` is pushed at least `minSize` away from `zeroY`
+   * when it would otherwise be shorter, keeping near-zero values visible/clickable. Corners on the
+   * outward end are rounded by `borderRadius` unless the column is too thin or too short. Columns
+   * pointing above `zeroY` get their top corners rounded and are translated to their computed top;
+   * columns pointing below get their bottom corners rounded and sit at `zeroY`. Finishes by calling
+   * the inherited `drawETC()` for tooltips/highlighting. */
   draw = (): any => {
     const points: BrushSeriesXY[] = this.getXY()
     const style = this.getBarStyle()
@@ -94,6 +107,10 @@ export class ColumnBrush extends BarBrush {
     return this.g
   }
 
+  /** Vertical counterpart to `BarBrush.drawAnimate()`: fades the whole group in over 1.4s, then
+   * slides each rendered column path (identified via `Element.is('util.svg.element.path')`) in from
+   * an offset position toward its real `translate()` position over 0.7s. The offset is one column
+   * height away, above when `brush.animate === 'top'` and below otherwise. */
   drawAnimate = (root: any): void => {
     const svg = this.chart.svg
     const type = (this.brush as Record<string, unknown>).animate

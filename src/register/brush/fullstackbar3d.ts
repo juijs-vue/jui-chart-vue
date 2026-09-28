@@ -31,6 +31,9 @@ export class FullStackBar3DBrush extends CoreBrush {
   private barHeight = 0
   private zeroXY = { x: 0, y: 0, depth: 0 }
 
+  /** Computes this render pass's shared geometry: `barHeight` (the y-axis row band minus twice
+   * `outerPadding`) and `zeroXY` (the "grid3d" axis's projection of value `0` at row `0`, used as
+   * every row's shared x/depth origin since a 100%-stacked row always starts at the same place). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const height = (this.axis.y as unknown as { rangeBand(): number }).rangeBand()
@@ -40,6 +43,8 @@ export class FullStackBar3DBrush extends CoreBrush {
     this.zeroXY = (this.axis.c as unknown as CAxis)(0, 0)
   }
 
+  /** Builds one segment's `"<percent>%"` label centered at `(x, y)`. New in `FullStackBar3DBrush`,
+   * reused unchanged by `FullStackColumn3DBrush`. */
   drawText(percent: number, x: number, y: number): any {
     return this.chart.text(
       {
@@ -52,6 +57,17 @@ export class FullStackBar3DBrush extends CoreBrush {
     )
   }
 
+  /** Draws every row's 100%-normalized 3D box stack: each target's box width comes from
+   * `xScale.rate(list[j], sum)` - its share of THAT ROW's own value sum, not the axis's global max
+   * - so every row's stack always spans the same total width regardless of its raw totals, same
+   * normalization as `fullstackbar.ts`'s 2D version. Boxes are placed left-to-right from the shared
+   * `zeroXY.x` origin, each shifted vertically by the isometric depth compensation (`sin(radian) *
+   * depth`). Click/hover events are skipped for exactly-zero values per-box, but the row's whole
+   * `group` also gets its own `addEvent(group, index, j)` AFTER the loop - `j` there is
+   * `target.length` (one past the last valid index), not a real target index, since `j` is the
+   * loop counter left over from the `for` loop rather than something explicitly reset. When
+   * `brush.showText` is set, each segment gets a `round(list[j] / sum * xScale.max())` percentage
+   * label via `drawText()`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -108,6 +124,8 @@ export class FullStackBar3DBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`outerPadding`/`showText`), merged by
+   * `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -151,10 +151,19 @@ export class FlameBrush extends CoreBrush {
   private newData: TreemapNode[] = []
   private activeDepth: number | null = null
 
+  /** Full opacity when nothing is drilled into (`activeDepth == null`) or `depth` is at/past the
+   * active node's depth; dims to `disableOpacity` (theme `flameDisableBackgroundOpacity`) for
+   * shallower depths - i.e. once a node is drilled into, only its own subtree stays fully visible. */
   private getNodeAndTextOpacity(depth: number): number {
     return this.activeDepth == null ? 1 : depth < this.activeDepth ? this.disableOpacity : 1
   }
 
+  /** Builds one node's box `<rect>` at its already-laid-out `x`/`y`/`width`/`height`, filled with
+   * `color` and faded per `getNodeAndTextOpacity()`. Wires a hover effect that highlights the
+   * border with the node's own fill color, plus the standard click/hover dispatch (`addEvent()`,
+   * called with the WHOLE node object cast as `BrushData` rather than a row index - flame nodes
+   * aren't backed by a flat `target` array). Stashes the created rect onto `node.element.rect` so
+   * `createTextElement()`'s own hover handlers can restyle it later. */
   private createNodeElement(node: TreemapNode, color: unknown): any {
     const newColor = this.chart.color(color as string | number)
 
@@ -186,6 +195,13 @@ export class FlameBrush extends CoreBrush {
     return r
   }
 
+  /** Builds one node's label text, but ONLY when `brush.format` is a function - returns `null`
+   * otherwise, so a flame graph shows no labels at all unless a `format` is explicitly configured.
+   * Horizontal position follows `textAlign` (`'middle'` centers, `'end'` right-aligns inset by
+   * `TEXT_MARGIN`, otherwise left-aligns inset by `TEXT_MARGIN`); vertical position is centered on
+   * the node's own row band (`node.y + fontSize / 3 + height / 2`). Mirrors `createNodeElement()`'s
+   * hover effect in reverse (restyling the already-created `node.element.rect`'s stroke) and gets
+   * its own `addEvent()` binding, then stashes itself onto `node.element.text`. */
   private createTextElement(node: TreemapNode, color: unknown): any {
     const format = (this.brush as Record<string, unknown>).format
     if (typeof format !== 'function') {
@@ -235,6 +251,16 @@ export class FlameBrush extends CoreBrush {
     return t
   }
 
+  /** Recursively lays out and draws `node` and its whole subtree (see this file's header comment
+   * for the layout algorithm summary). Sets `node.width`/`height`/`x`/`y` from the caller-supplied
+   * `width`/`sx` and the brush's fixed per-depth `height` band (growing up from the bottom when
+   * `nodeOrient === 'bottom'`, down from the top otherwise), resolves its color (`brush.nodeColor`
+   * when configured, else `color(0)` - always index `0`, not depth/sibling-index-based), draws its
+   * box/label via `createNodeElement()`/`createTextElement()`, then recurses into `node.children`,
+   * splitting `width` among them proportional to `child.value / node.value` - left-to-right when
+   * `nodeAlign === 'start'`, right-to-left (iterating children in REVERSE) otherwise. Appends the
+   * box/label to `g` only AFTER recursing, so a parent box/label z-orders above its own children's
+   * elements in the SVG. */
   private drawNodeAll(g: any, node: TreemapNode, width: number, sx: number): void {
     let color: unknown = this.color(0)
 
@@ -288,6 +314,8 @@ export class FlameBrush extends CoreBrush {
     }
   }
 
+  /** Returns the deepest `depth` value across all of `nodes` (or `0` for an empty list); used by
+   * `drawBefore()` to auto-derive the per-depth row height when `brush.maxDepth` isn't configured. */
   private getMaxDepth(nodes: TreemapNode[]): number {
     let maxDepth = 0
 
@@ -298,6 +326,11 @@ export class FlameBrush extends CoreBrush {
     return maxDepth
   }
 
+  /** Part of `createFilteredNodes()`'s drill-down rebuild: walks UP from a node toward the real
+   * root, overwriting each ancestor's `value` to the drilled-into node's own `value` (so the
+   * degenerate ancestor chain shows as 100% width, since it's no longer meant to represent its real
+   * proportion) and collecting every ancestor with `depth > 0` into `newData`. See
+   * `createFilteredNodes()`'s own doc comment for the preserved "never cleared" `newData` quirk. */
   private setCacheParents(node: TreemapNode, value: number): void {
     if (node.depth > 0) {
       node.value = value
@@ -309,6 +342,9 @@ export class FlameBrush extends CoreBrush {
     }
   }
 
+  /** Part of `createFilteredNodes()`'s drill-down rebuild: recursively collects every descendant of
+   * `node` (its real, unmodified subtree - values are left untouched, unlike `setCacheParents()`)
+   * into `newData`. */
   private setCacheChildren(node: TreemapNode): void {
     for (let i = 0; i < node.children.length; i++) {
       const cNode = node.children[i]
@@ -320,6 +356,8 @@ export class FlameBrush extends CoreBrush {
     }
   }
 
+  /** Sorts `newData` in place by ascending `depth` via the literal `QuickSort` port above, so
+   * `createIndexData()` can walk it as a breadth-by-depth ordered list. */
   private sortingCacheNodes(): void {
     const qs = new QuickSort(this.newData)
 
@@ -328,6 +366,9 @@ export class FlameBrush extends CoreBrush {
     qs.run()
   }
 
+  /** Recursively flattens `node`'s subtree into `result` as `FlameFilterRow`s, synthesizing each
+   * descendant's new dot-separated `index` path (`parentIndex + '.' + childPosition`) relative to
+   * the drilled-into node's own new position at `index`. */
   private createChildIndexData(node: TreemapNode, index: string, result: FlameFilterRow[]): void {
     result.push({ index, value: node.value as number, text: node.text })
 
@@ -337,6 +378,11 @@ export class FlameBrush extends CoreBrush {
     }
   }
 
+  /** Builds the full rebuilt-tree row list for `createFilteredNodes()`: walks the depth-sorted
+   * `newData`, giving each entry SHALLOWER than `node.depth` (the degenerate ancestor chain) a
+   * synthetic single-child index path (`'0'`, `'0.0'`, `'0.0.0'`, ...), until it reaches an entry
+   * at or past `node.depth` - at that point it stops and delegates `node` plus its real subtree to
+   * `createChildIndexData()`, continuing the index path from wherever the ancestor chain left off. */
   private createIndexData(node: TreemapNode): FlameFilterRow[] {
     const tmpData: FlameFilterRow[] = []
     let index = ''
@@ -359,6 +405,17 @@ export class FlameBrush extends CoreBrush {
     return tmpData
   }
 
+  /**
+   * Rebuilds the visible tree re-rooted at `activeNode` for drill-down (`brush.activeIndex`):
+   * collects the degenerate ancestor chain (`setCacheParents()`) and the real subtree
+   * (`setCacheChildren()`) into `newData`, sorts it by depth (`sortingCacheNodes()`), converts it
+   * into flat index/value/text rows (`createIndexData()`), and re-inserts every row into a brand
+   * new `NodeManager` (`tmpNodes`). Stashes `tmpNodes` onto `this.axis.cacheNodes` (read back by
+   * `draw()` on a later render if `activeIndex` ever points at a node that only exists in a
+   * previously-filtered tree, not the real data) and returns its root node for `draw()` to lay out.
+   * See the inline comment below for the preserved quirk that `newData` is never cleared between
+   * calls.
+   */
   private createFilteredNodes(activeNode: TreemapNode): TreemapNode {
     // **PRESERVED QUIRK**: the legacy `newData` closure variable is never cleared anywhere in the
     // original module (declared once, only ever pushed onto by `setCacheParents`/
@@ -392,6 +449,11 @@ export class FlameBrush extends CoreBrush {
     return (tmpNodes.getNode() as TreemapNode[])[0]
   }
 
+  /** Builds this render pass's `NodeManager` tree from every axis data row (each row's `index`
+   * field is its dot-separated tree path, per this file's header comment), then derives the
+   * per-depth row `height` (`axis.area('height') / maxDepth`, auto-computing `maxDepth` via
+   * `getMaxDepth()` when `brush.maxDepth` is `null`) and caches `maxHeight`/`disableOpacity` for
+   * `drawNodeAll()`/`getNodeAndTextOpacity()` to use. */
   drawBefore = (): void => {
     this.g = this.svg.group()
 
@@ -417,6 +479,13 @@ export class FlameBrush extends CoreBrush {
     this.disableOpacity = this.chart.theme('flameDisableBackgroundOpacity') as number
   }
 
+  /** Renders the flame graph. Always reads `nodes.getNode()[0]` as THE single root (see this file's
+   * header comment: a real call stack has exactly one root, so any additional top-level row past
+   * the first is silently never drawn, matching the legacy behavior exactly). When `brush.activeIndex`
+   * names a node, looks it up (falling back to a previous drill-down's `axis.cacheNodes` when it's
+   * not in the real tree - i.e. drilling further into an already-filtered view), rebuilds the tree
+   * via `createFilteredNodes()`, and remembers `activeDepth` for `getNodeAndTextOpacity()`'s
+   * dimming. Delegates the actual recursive layout/draw to `drawNodeAll()`. */
   draw = (): any => {
     const area = this.axis.area()
     let root = (this.nodes.getNode() as TreemapNode[])[0]
@@ -440,6 +509,9 @@ export class FlameBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`maxDepth`/`nodeOrient`/`nodeAlign`/`textAlign`/
+   * `nodeColor`/`activeIndex`/`clip`/`format`), merged by `defineOptions()` on top of the inherited
+   * `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FLAME_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

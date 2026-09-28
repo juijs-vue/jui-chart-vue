@@ -41,6 +41,12 @@ export class HUDBarBrush extends CoreBrush {
   // config flags as unused), matching this project's existing "confirmed-dead-in-legacy" field-
   // omission convention (e.g. `equalizercolumn.ts`'s own `zeroY`).
 
+  /** Computes this render pass's shared geometry: `zeroX` (the x pixel position of value `0`,
+   * nudged right by `innerPadding`, where every top/bottom bar starts from), `height` (the y-axis
+   * row band from `rangeBand()`), `domains` (the y-axis's category labels, for `drawGrid()`'s side
+   * labels), `halfHeight` (the row height minus `outerPadding` on each side), `colHeight` (half of
+   * `halfHeight` minus one `innerPadding` gap between the top/bottom bars, clamped to `0`), and
+   * `x1` (the plot area's left edge, where `drawGrid()`'s side grid attaches). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const op = brush.outerPadding as number
@@ -59,6 +65,10 @@ export class HUDBarBrush extends CoreBrush {
     this.x1 = this.axis.area('x')
   }
 
+  /** Draws each row's top and bottom range bars (both anchored at the shared `zeroX`, extending to
+   * their own `top`/`bottom` value's pixel position, stacked within the row using `drawBefore()`'s
+   * `colHeight`), plus a connector line and value label reading out from each bar's outer end. After
+   * every row is drawn, appends the independent side grid via `drawGrid()`. */
   draw = (): any => {
     const data = this.axis.data as BrushData[]
     const padding = (this.brush as Record<string, unknown>).innerPadding as number
@@ -118,6 +128,12 @@ export class HUDBarBrush extends CoreBrush {
     return this.g
   }
 
+  /** Draws the HUD's own side grid, independent of the axis's own x/y grid lines: for each y-axis
+   * `domain` label, a shaded chevron/arrow-shaped polygon - full row height at the plot area's left
+   * edge (`x1`), tapering through two "shoulder" points at `x1 - barWidth` to a single point at
+   * `x1 - barWidth * 2` - pointing away from the plot area, plus a short connector line and the
+   * domain's own text label further out at `x1 - barWidth * 3`. `barWidth` (`height / 3.5`) is a
+   * fixed fraction of the row height, not configurable. */
   private drawGrid(): void {
     const barWidth = this.height / 3.5
 
@@ -170,6 +186,8 @@ export class HUDBarBrush extends CoreBrush {
     }
   }
 
+  /** Returns this brush's own default options (`outerPadding`/`innerPadding`/`clip`/`format`),
+   * merged by `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return HUDBAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

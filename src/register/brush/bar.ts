@@ -87,6 +87,9 @@ export class BarBrush extends CoreBrush {
   private half_height = 0
   private bar_height = 0
 
+  /** Reads the current theme's bar-related styling (border color/width/opacity/radius, the
+   * dimmed-state opacity used by `setActiveEffect()`, and the tooltip marker's border color) into
+   * one snapshot object, re-read fresh by every method that draws or restyles a bar. */
   getBarStyle(): BarStyle {
     return {
       borderColor: this.chart.theme('barBorderColor'),
@@ -98,6 +101,12 @@ export class BarBrush extends CoreBrush {
     }
   }
 
+  /** Creates one bar's `<rect>`-like path element (via `pathRect()`, styled with `getBarStyle()`'s
+   * border settings and this bar's own `color()`), wires up its click/hover events (skipped when
+   * the underlying value is exactly `0`, matching the legacy "zero-length bars aren't
+   * interactive" behavior), and records it plus the geometry/tooltip info passed in `info` onto
+   * `this.barList` so `drawETC()`/`setActiveEffect()` can look it back up later. Returns the raw
+   * element so `draw()` can still round its corners and translate it into place. */
   getBarElement(dataIndex: number, targetIndex: number, info: Omit<BarListItem, 'element' | 'color'>): any {
     const style = this.getBarStyle()
     const color = this.color(dataIndex, targetIndex)
@@ -121,6 +130,10 @@ export class BarBrush extends CoreBrush {
     return r
   }
 
+  /** Highlights bar `r` at full opacity while dimming every other bar in `barList` to
+   * `barDisableBackgroundOpacity`, also restyling each dimmed/highlighted bar's own min/max
+   * tooltip (when it has one) to match. Called on each `activeEvent` toggle (e.g. click) and once
+   * up front for `brush.active`'s initial highlighted bar. */
   setActiveEffect(r: BarListItem): void {
     const style = this.getBarStyle()
     const cols = this.barList
@@ -135,6 +148,14 @@ export class BarBrush extends CoreBrush {
     }
   }
 
+  /** Draws every bar's secondary decoration once all bars in `barList` exist: a shared, initially
+   * hidden tooltip element (`this.active`) reused by the `activeEvent` toggle below; a permanent
+   * min/max/every-bar value tooltip per bar, gated by `brush.display` (`'max'`/`'min'` only for
+   * bars flagged `max`/`min`, `'all'` for every bar); a click/hover-driven tooltip toggle wired to
+   * `brush.activeEvent` on every non-zero-value bar (skipped for zero-value bars, same as
+   * `getBarElement()`'s own event skip, plus a `pointer` cursor); and, when `brush.active` names an
+   * initial bar index, that bar's tooltip shown and highlighted immediately via
+   * `setActiveEffect()`. */
   drawETC(group: any): void {
     if (!Array.isArray(this.barList)) return
 
@@ -176,6 +197,12 @@ export class BarBrush extends CoreBrush {
     }
   }
 
+  /** Computes this render pass's shared geometry: `zeroX` (the x pixel position of value `0`,
+   * where every bar starts/ends from), `height` (the full row band height from the y-axis's
+   * `rangeBand()`), and, per `brush.size`, either a fixed `bar_height` (with `half_height` the
+   * total span of all targets' bars stacked with `innerPadding` gaps) or an auto-computed
+   * `bar_height` that fits all targets into the row height minus `outerPadding` on each side
+   * (clamped to `0` rather than going negative when there isn't enough room). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const op = brush.outerPadding as number
@@ -196,6 +223,15 @@ export class BarBrush extends CoreBrush {
     }
   }
 
+  /** Draws every row's bars, one per target, stacked vertically within the row band using
+   * `drawBefore()`'s precomputed `bar_height`/`half_height`. Each bar's length is
+   * `|zeroX - resolvedX|`, where `resolvedX` is the value's x pixel position pushed outward to at
+   * least `minSize` away from `zeroX` when it would otherwise be shorter (so near-zero values stay
+   * visible/clickable); corners on the outward end are rounded by `borderRadius` unless the bar is
+   * too thin or too short for it to fit. Bars pointing right of `zeroX` get their leading corners
+   * rounded and are translated to start at `zeroX`; bars pointing left get their trailing corners
+   * rounded and are positioned so their right edge sits at `zeroX`. Finishes by calling `drawETC()`
+   * for tooltips/highlighting. */
   draw = (): any => {
     const points: BrushSeriesXY[] = this.getXY()
     const style = this.getBarStyle()
@@ -251,6 +287,12 @@ export class BarBrush extends CoreBrush {
     return this.g
   }
 
+  /** Plays the bar entrance animation: fades the whole group in over 1.4s, then, for every rendered
+   * bar path element (identified via `Element.is('util.svg.element.path')` - see the inline
+   * comment above for why this call is genuine, not a dead/throwing legacy check), slides it in
+   * from an offset position toward its real `translate()` position over 0.7s. The offset is one bar
+   * width away, on the right when `brush.animate === 'right'` and on the left otherwise, so bars
+   * appear to grow in from a consistent side. */
   drawAnimate = (root: any): void => {
     const svg = this.chart.svg
     const type = (this.brush as Record<string, unknown>).animate
@@ -301,6 +343,9 @@ export class BarBrush extends CoreBrush {
     })
   }
 
+  /** Returns this brush's own default options (`size`/`minSize`/`outerPadding`/`innerPadding`/
+   * `active`/`activeEvent`/`display`/`format`), merged by `defineOptions()` on top of the inherited
+   * `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

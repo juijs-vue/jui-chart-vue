@@ -23,6 +23,15 @@ export const CIRCLEGAUGE_BRUSH_OWN_DEFAULTS: CircleGaugeBrushOptions = {
 export class CircleGaugeBrush extends CoreBrush {
   private group: any
 
+  /** Draws one row's gauge: a fixed-size background circle (radius = half the shorter side of the
+   * panel-grid cell `axis.c(i)`, centered within it) plus a foreground circle whose RADIUS - not an
+   * arc sweep, unlike `arcgauge.ts`/`fullgauge.ts` - is scaled to `outerRadius * rate` where
+   * `rate = (value - min) / (max - min)`, so the value is encoded purely as circle size. Both
+   * circles use `color(0)` (always the first theme color, regardless of row index). Binds
+   * click/hover events via `addEvent(group, null, null)` on the SAME shared `group` every row draws
+   * into - with more than one row this attaches one redundant, dataless (`dataIndex`/`dataKey`
+   * both `null`) event binding per row onto that one group, rather than a distinct binding per
+   * row's own circles. */
   private drawUnit(i: number, data: BrushData): void {
     const obj = (this.axis.c as unknown as CAxis)(i)
     const value = this.getValue(data, 'value', 0) as number
@@ -61,6 +70,8 @@ export class CircleGaugeBrush extends CoreBrush {
     this.addEvent(this.group, null as unknown as undefined, null)
   }
 
+  /** Creates the shared group and delegates to `drawUnit()` once per data row (all rows share the
+   * same panel grid area/group). */
   draw = (): any => {
     this.group = this.chart.svg.group()
 
@@ -71,6 +82,8 @@ export class CircleGaugeBrush extends CoreBrush {
     return this.group
   }
 
+  /** Returns this brush's own default options (just `clip: false`), merged by `defineOptions()` on
+   * top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return CIRCLEGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -50,6 +50,11 @@ export class EqualizerBrush extends CoreBrush {
   private barWidth = 0
   private half_width = 0
 
+  /** Computes this render pass's shared geometry: `zeroY` (the y pixel position of value `0`),
+   * `eqWidth` (the full x-axis row band from `rangeBand()`), `half_width` (half the usable width
+   * after `outerPadding`, used to center the group of targets), and `barWidth` (per-target
+   * block-stack width, fitting every `target` key into the row width minus `outerPadding` on each
+   * side and `innerPadding` gaps between them). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -61,6 +66,13 @@ export class EqualizerBrush extends CoreBrush {
     this.barWidth = (this.eqWidth - (brush.outerPadding as number) * 2 - (target.length - 1) * (brush.innerPadding as number)) / target.length
   }
 
+  /** Draws every row's target block-stacks (see this file's own header comment for the full
+   * algorithm: fixed-height `unit` blocks separated by a hardcoded 1.5px gap, growing from the
+   * zero baseline toward the value's pixel position, with the final block clipped short to land
+   * exactly on it, and colored in `gap`-sized bands via `color(Math.floor(eIndex / gap))`). Which
+   * `while` loop runs depends on whether the value sits above or below the zero baseline
+   * (`startY <= zeroY` grows upward, otherwise downward); each stack's blocks share one
+   * `addEvent(barGroup, index, j)` binding on their common group rather than per-block events. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = this.brush.target ?? []
@@ -124,6 +136,8 @@ export class EqualizerBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`innerPadding`/`outerPadding`/`unit`/`gap`), merged
+   * by `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return EQUALIZER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

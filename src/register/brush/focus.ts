@@ -30,6 +30,13 @@ export class FocusBrush extends CoreBrush {
   // change, same precedent as every other Batch's field-collision rename.
   private gridAxis: 'x' | 'y' = 'y'
 
+  /** Draws the highlighted band between pixel positions `start`/`end` on `gridAxis`: a
+   * semi-transparent background rect plus a border line at each edge (both lines are built with the
+   * SAME geometry, `(0,0)` to either `(0, height)` or `(width, 0)`, and only differ by which edge
+   * they're translated to). Renders nothing (an empty group callback) when `brush.hide` is set or
+   * there's no data at all. When `gridAxis === 'x'`, the band/lines run vertically and are
+   * translated along x (`start`/`end`) at the axis's own y origin; otherwise they run horizontally,
+   * translated along y at the axis's own x origin. */
   drawFocus(start: number, end: number): any {
     const borderColor = this.chart.theme('focusBorderColor')
     const borderSize = this.chart.theme('focusBorderWidth')
@@ -81,10 +88,18 @@ export class FocusBrush extends CoreBrush {
     })
   }
 
+  /** Picks which axis the focus band highlights: `'x'` when the y-axis is a "range"-typed value
+   * axis (so x is the category/index axis being highlighted), `'y'` otherwise - matching whichever
+   * axis the original engine considers the "index" side for this chart's orientation. */
   drawBefore = (): void => {
     this.gridAxis = (this.axis.y as BrushAxisScale).type == 'range' ? 'x' : 'y'
   }
 
+  /** Renders the focus band, or an empty group when `brush.start`/`brush.end` are both left at `-1`
+   * ("no focus configured"). Converts the configured `start`/`end` values into pixel positions via
+   * `gridAxis`'s own scale; for a `'block'`-typed scale (a discrete category axis), the pixel range
+   * is widened by half a `rangeBand()` on each side so the highlight covers the FULL width of the
+   * start/end categories' cells rather than just their center points. */
   draw = (): any => {
     let start = 0
     let end = 0
@@ -109,6 +124,8 @@ export class FocusBrush extends CoreBrush {
     return this.drawFocus(start, end)
   }
 
+  /** Returns this brush's own default options (`start`/`end`, both `-1`), merged by
+   * `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FOCUS_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

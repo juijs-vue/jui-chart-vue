@@ -18,6 +18,10 @@ export type FullStackColumnBrushOptions = FullStackBarBrushOptions
 export class FullStackColumnBrush extends FullStackBarBrush {
   private fscWidth = 0
 
+  /** Overrides `StackBarBrush.getTargetSize()`'s row-lane-height logic for the vertical orientation:
+   * resolves the shared column WIDTH instead, from `brush.size` when positive, otherwise the x-axis
+   * row band minus twice `outerPadding` (clamped to `0` rather than going negative) - unlike the
+   * inherited version, this doesn't floor the result at `brush.minSize`. */
   getTargetSize(): number {
     const width = (this.axis.x as BrushAxisScale).rangeBand!()
     const brush = this.brush as Record<string, unknown>
@@ -32,11 +36,25 @@ export class FullStackColumnBrush extends FullStackBarBrush {
     return r_width < 0 ? 0 : r_width
   }
 
+  /** Overrides `FullStackBarBrush.drawBefore()`: caches the shared column width via this class's own
+   * `getTargetSize()` override. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.fscWidth = this.getTargetSize()
   }
 
+  /** Overrides `FullStackBarBrush.draw()` for the vertical orientation, same 100%-per-row
+   * normalization via `axis.y.rate(list[j], sum)` (see `fullstackbar.ts`'s header comment), but
+   * iterating targets in REVERSE (`j` counting down) so segments stack upward from the row's
+   * baseline. Unlike `FullStackBarBrush.draw()`, a segment whose geometry comes out `NaN` isn't
+   * skipped outright - its bar element is still created and appended to the group, just without its
+   * `x`/`y`/`width`/`height` attributes set (left at `getBarElement()`'s own defaults). `startY`
+   * still unconditionally advances by that (NaN) height afterward, same as any other segment - so
+   * one bad segment poisons `startY` to `NaN` for every remaining target in that row too, not just
+   * the one segment. Percentage labels
+   * (`brush.showText`, via `drawText()`) and active-bar wiring
+   * (`setActiveEventOption()`/`addBarElement()`/`setActiveEffectOption()`) work the same as the
+   * inherited version. */
   draw = (): any => {
     const target = this.brush.target ?? []
     const chart_height = this.axis.area('height')

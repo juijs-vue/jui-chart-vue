@@ -23,6 +23,10 @@ export class FullStackColumn3DBrush extends FullStackBar3DBrush {
   private barWidth = 0
   private zeroXY2 = { x: 0, y: 0, depth: 0 }
 
+  /** Overrides `FullStackBar3DBrush.drawBefore()` for the vertical orientation: computes `width`
+   * (the x-axis row band) and `barWidth` (that band minus twice `outerPadding`), and `zeroXY2`
+   * (the "grid3d" axis's projection of value `0` at column `0`, this orientation's shared y/depth
+   * origin). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     this.width = (this.axis.x as BrushAxisScale).rangeBand!()
@@ -31,14 +35,32 @@ export class FullStackColumn3DBrush extends FullStackBar3DBrush {
     this.zeroXY2 = (this.axis.c as unknown as CAxis)(0, 0)
   }
 
+  /** Builds one box's 3D shape. New (unrelated to `Column3DBrush.drawMain()`'s method of the same
+   * name), and itself an overridable seam so `fullstackcylinder3d.ts`'s
+   * `FullStackCylinder3DBrush` (`extend: "chart.brush.fullstackcolumn3d"`) can swap in a cylinder
+   * shape while reusing everything else in `draw()`. Here, a plain extruded box via
+   * `chart.svg.rect3d()`. */
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {
     return this.chart.svg.rect3d(this.color(index), width, height, degree as number, depth)
   }
 
+  /** Returns the label position unchanged (`{x, y}`). An overridable seam - `_index`/`_depth` are
+   * unused here but let `fullstackcylinder3d.ts`'s `FullStackCylinder3DBrush` override this to
+   * reposition a segment's percentage label to the cylinder's own visual center instead. */
   getTextXY(_index: number, x: number, y: number, _depth: number): { x: number; y: number } {
     return { x, y }
   }
 
+  /** Draws every row's 100%-normalized 3D box stack, vertical counterpart to
+   * `FullStackBar3DBrush.draw()`: each box's height comes from `zeroXY2.y - yScale.rate(list[j],
+   * sum)` - its share of THAT ROW's own value sum, not the axis's global max - so every column's
+   * stack always spans the same total height. Boxes are placed bottom-to-top from the shared
+   * `zeroXY2.y` origin via `drawMain()`, each shifted by the isometric depth compensation
+   * (`sin(radian) * depth`). When `brush.showText` is set, each segment gets a
+   * `round(list[j] / sum * yScale.max())` percentage label at a position from `getTextXY()` - see
+   * the inline comment below for the preserved quirk that the label position reuses (reassigns)
+   * the same `xy` local the row's own `axis.c(...)` projection was computed into, reading its OLD
+   * `depth` value before the reassignment completes. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]

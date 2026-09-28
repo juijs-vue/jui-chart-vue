@@ -30,11 +30,17 @@ export const FULL_STACK_BAR_BRUSH_OWN_DEFAULTS: FullStackBarBrushOptions = {
 export class FullStackBarBrush extends StackBarBrush {
   private fsBarHeight = 0
 
+  /** Overrides `StackBarBrush.drawBefore()`: caches the shared row lane height via the inherited
+   * `getTargetSize()`. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.fsBarHeight = this.getTargetSize()
   }
 
+  /** Builds one segment's percentage label centered at `(x, y)`, or returns `null` when `percent`
+   * is `0`/`NaN` (nothing worth labeling). `brush.showText` as a function overrides the label text
+   * entirely (called with `percent`); otherwise the label is `"<percent>%"`. New in
+   * `FullStackBarBrush`, reused unchanged by `FullStackColumnBrush`. */
   drawText(percent: number, x: number, y: number): any {
     if (percent === 0 || isNaN(percent)) return null
 
@@ -53,6 +59,18 @@ export class FullStackBarBrush extends StackBarBrush {
     )
   }
 
+  /** Overrides `StackBarBrush.draw()` for 100%-normalized stacking: each row's segment widths come
+   * from `axis.x.rate(list[j], sum)` - the target's share of THAT ROW's own value sum, not a share
+   * of the axis's global max - so every row's bar always fills the full axis width regardless of
+   * its raw totals (see this file's header comment). A segment whose computed `width` is `NaN`
+   * (e.g. `sum === 0`) is skipped entirely (not drawn, no label, but `startX` doesn't advance for
+   * it either). When `brush.showText` isn't `false`, each segment gets a label of
+   * `round(list[j] / sum * axis.x.max())` (via `drawText()`, formatted as `"<value>%"` by
+   * default - genuinely a percentage only when the x-axis's configured max is `100`, which a
+   * full-stack chart's own axis config normally sets up). Each segment group is wired up via the
+   * inherited
+   * `setActiveEventOption()`/`addBarElement()`/`setActiveEffectOption()` for the shared active-bar
+   * highlighting `StackBarBrush` provides. */
   draw = (): any => {
     const target = this.brush.target ?? []
 
@@ -112,6 +130,8 @@ export class FullStackBarBrush extends StackBarBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`outerPadding`/`showText`), merged by
+   * `defineOptions()` on top of the inherited `StackBarBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FULL_STACK_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

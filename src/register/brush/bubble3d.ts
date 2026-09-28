@@ -18,6 +18,11 @@ type CAxis = (i: unknown, v: unknown, j: unknown, count: unknown) => { x: number
 type CScale = { radian: number; degree: unknown }
 
 export class Bubble3DBrush extends BubbleBrush {
+  /** Builds a radial-gradient fill (white center fading to this bubble's own `color(i, j)`) whose
+   * focal point (`dx`/`dy`, as percentages) is offset according to the "grid3d" axis's current
+   * rotation `degree`, so the highlight appears to come from a consistent light direction across
+   * the whole 3D scene. Returns `color(i, j)` unchanged if it's already a radial-gradient color
+   * string (avoids double-wrapping an already-3D-shaded color). */
   getRadialGradient(i: number, j: number): string {
     let color = this.color(i, j)
     const degree = (this.axis.c as unknown as CScale).degree as number
@@ -33,6 +38,14 @@ export class Bubble3DBrush extends BubbleBrush {
     return color
   }
 
+  /** Overrides `BubbleBrush.draw()` for the "grid3d" axis: each row/target's position comes from
+   * `axis.c(index, value, j, count)`'s isometric projection rather than plain `getXY()`, shifted by
+   * half the projection's own depth offset (`dx`/`dy`, from `cos`/`sin` of the axis's rotation
+   * `radian`) so the bubble centers on its projected cell. Each bubble is built via the inherited
+   * `createBubble()` (radius/text unchanged) and then post-adjusted: its circle radius is scaled by
+   * `mathUtil.scaleValue(count - j, 1, count, 0.6, 1)` (targets further "back" in the cluster, i.e.
+   * higher `j`, shrink toward 60% of their base radius) and its fill replaced with
+   * `getRadialGradient()`'s pseudo-3D shading. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const target = ((this.brush as Record<string, unknown>).target ?? []) as string[]

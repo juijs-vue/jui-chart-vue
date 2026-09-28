@@ -40,6 +40,13 @@ export class DonutBrush extends PieBrush {
   // `StackBarBrush.stackGroupList` rename).
   private donutCacheActive: Record<string, any> = {}
 
+  /** Draws one flat ring segment as a single thick-stroked arc `<path>` (transparent fill,
+   * `stroke-width: outerRadius - innerRadius`, traced along the `outerRadius` arc) rather than a
+   * filled wedge like `PieBrush.drawPie()` - the ring "thickness" comes entirely from the stroke
+   * width, not from tracing both inner and outer edges. A 360°-spanning segment is nudged down to
+   * 359.9999° first ("bugfix: if angle is 360, donut can't show" per the original's own comment -
+   * a real fix, not a preserved quirk), since a full-circle arc command can't close cleanly. The
+   * returned group is pre-translated to `(centerX, centerY)` and stamped `order = 1`. */
   drawDonut(centerX: number, centerY: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, attr: Record<string, unknown>): any {
     attr['stroke-width'] = outerRadius - innerRadius
 
@@ -71,6 +78,13 @@ export class DonutBrush extends PieBrush {
     return g
   }
 
+  /** Pseudo-3D "underside" layer for one ring segment, drawn (via `drawUnit()`'s `'3d'` branch)
+   * behind the flat `drawDonut()` top ring. Both `outerRadius`/`innerRadius` are first pushed
+   * outward by half the ring's own thickness (`dist / 2`, keeping the same thickness `dist`) so
+   * this wider, offset ring stands in as the extruded side wall beneath the top ring drawn
+   * afterward. Builds two separate filled paths - an outer-edge bevel (arc plus a short
+   * down-and-right offset closing segment) and a matching inner-edge bevel - both appended to the
+   * same group, stamped `order = 1`. */
   drawDonut3d(centerX: number, centerY: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, attr: Record<string, unknown>): any {
     const g = this.chart.svg.group()
     const path = this.chart.svg.path(attr)
@@ -124,6 +138,12 @@ export class DonutBrush extends PieBrush {
     return g
   }
 
+  /** Companion to `drawDonut3d()` for the same pseudo-3D "underside" layer: draws just the flat
+   * connecting quadrilateral at the segment's END angle (outer edge point, its down-and-right bevel
+   * offset, the matching inner-edge bevel offset, and the inner edge point), closing the ring
+   * segment's side wall where `drawDonut3d()`'s two arcs meet. Same outward radius expansion
+   * (`+ dist / 2`) as `drawDonut3d()`. Drawn in `drawUnit()`'s first `'3d'` pass, before
+   * `drawDonut3d()`'s own pass. */
   drawDonut3dBlock(centerX: number, centerY: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, attr: Record<string, unknown>): any {
     const g = this.chart.svg.group()
     const path = this.chart.svg.path(attr)
@@ -161,6 +181,20 @@ export class DonutBrush extends PieBrush {
     return g
   }
 
+  /**
+   * Overrides `PieBrush.drawUnit()` for rings instead of wedges. Computes each target's angular
+   * span from `value / max` (`max` being the row's target-value sum), skipping any target whose
+   * value is `0`. When `brush['3d']` is enabled, first draws a full pass of darkened
+   * `drawDonut3dBlock()` side-wall pieces, then a full pass of darkened `drawDonut3d()` beveled
+   * underside rings, both behind everything else. Then draws every target's flat `drawDonut()` top
+   * ring plus label (`drawText()`, inherited from `PieBrush`), caching each into its OWN
+   * `donutCacheActive` map (kept separate from `PieBrush`'s `cache_active` to avoid a private-field
+   * collision across the `extends` boundary - see this class's own field comment) keyed by
+   * `centerAngle`. A full/100% single-ring donut (`isOnlyOne`) is excluded from the active/
+   * `activeEvent` wiring, same as `PieBrush.drawUnit()`'s pie case. When `brush.showValue` is set,
+   * finishes with `drawTotalValue()` showing the sum of every drawn target's value in the center
+   * hole.
+   */
   drawUnit(index: number, data: Record<string, unknown>, g: any): void {
     const props = this.getProperty(index)
     const { centerX, centerY, innerRadius, outerRadius } = props
@@ -272,6 +306,9 @@ export class DonutBrush extends PieBrush {
     }
   }
 
+  /** Overrides `PieBrush.drawNoData()` for rings: draws a single full-circle placeholder ring (via
+   * `drawDonut(..., 0, 360, ...)`, themed with `pieNoDataBackgroundColor`) when there are zero data
+   * rows, and, when `brush.showValue` is set, a `drawTotalValue()` of `0` in the center hole. */
   drawNoData(g: any): void {
     const props = this.getProperty(0)
 
@@ -287,6 +324,9 @@ export class DonutBrush extends PieBrush {
     }
   }
 
+  /** Draws `value` (formatted via `this.format()`) as centered text at `(centerX, centerY)` - the
+   * donut's center hole - themed with `pieTotalValueFont*`. New in `DonutBrush`, since `PieBrush`
+   * has no center hole to show a total in. */
   drawTotalValue(g: any, centerX: number, centerY: number, value: number): void {
     const size = this.chart.theme('pieTotalValueFontSize') as number
 
@@ -305,6 +345,12 @@ export class DonutBrush extends PieBrush {
     g.append(text)
   }
 
+  /** Overrides `PieBrush.getProperty()` to also return `innerRadius`, needed since a donut is a
+   * RING (`outerRadius`/`innerRadius`), not a filled wedge. Resolves the center point the same way
+   * (half of whichever of the panel-grid rect's width/height is smaller), then clamps `brush.size`
+   * down to a quarter of that smaller dimension when it's configured to be at least half of it
+   * (mutating `brush.size` in place) so the ring can never eat its own center hole entirely, before
+   * computing `outerRadius`/`innerRadius` from it. */
   getProperty(index: number): { centerX: number; centerY: number; outerRadius: number; innerRadius: number } {
     const obj = (this.axis.c as unknown as (i: number) => { width: number; height: number; x: number; y: number })(index)
 
@@ -333,6 +379,8 @@ export class DonutBrush extends PieBrush {
     }
   }
 
+  /** Returns this brush's own default options (`size`/`showValue`), merged by `defineOptions()` on
+   * top of the inherited `PieBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return DONUT_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

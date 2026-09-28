@@ -47,6 +47,9 @@ export class BubbleBrush extends CoreBrush {
   private bubbleMin: number | null = null
   private bubbleMax: number | null = null
 
+  /** Returns the text to render on a bubble: when `brush.format` is a function, it's called with
+   * the WHOLE row (`this.axis.data[dataIndex]`, not just `value`) via `this.format()`; otherwise
+   * the raw `value` is returned unchanged. */
   getFormatText(value: unknown, dataIndex: number): unknown {
     if (typeof (this.brush as Record<string, unknown>).format === 'function') {
       return this.format(this.axis.data[dataIndex])
@@ -55,6 +58,11 @@ export class BubbleBrush extends CoreBrush {
     return value
   }
 
+  /** Maps a value to a bubble radius between `brush.min`/`brush.max`, scaled against
+   * `drawBefore()`'s cached `bubbleMin`/`bubbleMax` data range. When `brush.scaleKey` names a data
+   * field, that row's own value for that field is used instead of `value` (falling back to `value`
+   * when the field isn't a number) - lets the radius be driven by a different field than whichever
+   * one drives the bubble's y-position. */
   getBubbleRadius(value: number, dataIndex: number): number {
     const scaleKey = (this.brush as Record<string, unknown>).scaleKey as string | null
 
@@ -66,6 +74,10 @@ export class BubbleBrush extends CoreBrush {
     return mathUtil.scaleValue(value, this.bubbleMin as number, this.bubbleMax as number, (this.brush as Record<string, unknown>).min as number, (this.brush as Record<string, unknown>).max as number)
   }
 
+  /** Builds one bubble: a `<circle>` sized by `getBubbleRadius()` and colored/filled per theme,
+   * translated to `pos.x,pos.y`, plus a centered value label (via `getFormatText()`) when
+   * `brush.showText` is enabled. Registers the created group onto `bubbleList` (consumed by
+   * `setActiveEffect()`) before returning it. */
   createBubble(pos: { x: number; y: number; value: unknown }, color: string, dataIndex: number): any {
     const radius = this.getBubbleRadius(pos.value as number, dataIndex)
     const circle = this.svg.group().translate(pos.x, pos.y)
@@ -100,6 +112,12 @@ export class BubbleBrush extends CoreBrush {
     return circle
   }
 
+  /** Highlights bubble `r` at full opacity while dimming every other bubble in `bubbleList` to
+   * `bubbleBackgroundOpacity`. See the inline comment below for a preserved crash: this
+   * unconditionally restyles each bubble's second child (`.get(1)`, the text label), which only
+   * exists when `brush.showText` is `true` - with the default `showText: false`, calling this
+   * (via `activeEvent` or `brush.active`) throws `TypeError: Cannot read properties of null`, a
+   * real bug reachable in the original engine too and preserved rather than silently fixed. */
   setActiveEffect(r: any): void {
     const cols = this.bubbleList
 
@@ -121,6 +139,11 @@ export class BubbleBrush extends CoreBrush {
     }
   }
 
+  /** Draws every target's bubbles from `getXY()`-shaped `points` (`createBubble()` per point), each
+   * wired to click/hover events and, when `brush.activeEvent` is set, a toggle that calls
+   * `setActiveEffect()` on that bubble (with a `pointer` cursor). After all bubbles are drawn, when
+   * `brush.active` names an initial bubble index, that bubble is highlighted immediately via
+   * `setActiveEffect()`. */
   drawBubble(points: BrushSeriesXY[]): any {
     const g = this.svg.group()
 
@@ -151,6 +174,10 @@ export class BubbleBrush extends CoreBrush {
     return g
   }
 
+  /** Computes this render pass's radius-scaling data range (`bubbleMin`/`bubbleMax`) and resets
+   * `bubbleList`. When `brush.scaleKey` names a data field, the range is that field's actual
+   * min/max across every row; otherwise it falls back to the y-axis's own `min()`/`max()`, matching
+   * whichever value already drives the bubble's y-position. */
   drawBefore = (): void => {
     const scaleKey = (this.brush as Record<string, unknown>).scaleKey as string | null
 
@@ -171,10 +198,14 @@ export class BubbleBrush extends CoreBrush {
     this.bubbleList = []
   }
 
+  /** Renders all bubbles from the raw (non-stacked) `getXY()` coordinates. */
   draw = (): any => {
     return this.drawBubble(this.getXY())
   }
 
+  /** Plays the bubble entrance animation: scales each bubble's circle up from `0` to full size and
+   * fades its fill opacity in from `0` to the theme's `bubbleBackgroundOpacity`, both over roughly
+   * a second, on initial render. */
   drawAnimate = (root: any): void => {
     root.each((_i: number, elem: any) => {
       const c = elem.children[0]
@@ -206,6 +237,9 @@ export class BubbleBrush extends CoreBrush {
     })
   }
 
+  /** Returns this brush's own default options (`min`/`max`/`scaleKey`/`showText`/`format`/
+   * `active`/`activeEvent`), merged by `defineOptions()` on top of the inherited `CoreBrush`/`Draw`
+   * defaults. */
   static setup(): Record<string, unknown> {
     return BUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

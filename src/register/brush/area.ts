@@ -42,6 +42,18 @@ export const AREA_BRUSH_OWN_DEFAULTS: AreaBrushOptions = {
 }
 
 export class AreaBrush extends LineBrush {
+  /** Builds one target's filled area, and (per-target) all targets' groups. For each target `k`,
+   * takes `createLine()`'s line segments (its `children` - a series can be split into several
+   * disconnected segments) and closes each one individually into a filled polygon by drawing back
+   * down to the baseline y (`0` when `startZero`, else the axis's minimum value) and back to its
+   * own start x, then fills it with that segment's own stroke color at `fill-opacity` (a fixed
+   * `brush.opacity` number, a per-segment value read back off the just-drawn line's own
+   * `stroke-opacity` when `opacity` is a function, or the theme's `areaBackgroundOpacity`
+   * otherwise) and zeroes the stroke width so only the fill shows. When `brush.line` is truthy, a
+   * second, undecorated line is drawn on top as the visible boundary and wired up via
+   * `addLineElement()` (hover behavior) and, when `brush.display` requests it, `createTooltip()`
+   * (permanent min/max markers). Each target's whole group also gets its own click/hover events via
+   * `addEvent(g, undefined, k)`. */
   drawArea(path: BrushSeriesXY[]): any {
     const g = this.chart.svg.group()
     const startZero = (this.brush as Record<string, unknown>).startZero
@@ -91,10 +103,13 @@ export class AreaBrush extends LineBrush {
     return g
   }
 
+  /** Overrides `LineBrush.draw()`: renders filled areas via `drawArea()` instead of plain
+   * boundary lines, from the same `getXY()` coordinates `LineBrush.draw()` itself uses. */
   draw = (): any => {
     return this.drawArea(this.getXY())
   }
 
+  /** Fades the whole rendered area group in from `opacity: 0` to `1` over 1.5s on initial render. */
   drawAnimate = (root: any): void => {
     root.append(
       this.chart.svg.animate({

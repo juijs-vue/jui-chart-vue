@@ -29,12 +29,25 @@ export class ClusterBar3DBrush extends CoreBrush {
   private g: any
   private height = 0
 
+  /** Computes this render pass's shared box height: the y-axis row band (`rangeBand()`) shrunk by
+   * `outerPadding` on both top and bottom. Unlike `bar3d.ts`, this height is NOT further divided
+   * per target - each target gets its own lane along the depth axis instead (via the "grid3d" axis's
+   * `axis.c(value, index, targetIndex, targetCount)`), so every box in a row shares this same
+   * height. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     this.g = this.chart.svg.group()
     this.height = (this.axis.y as unknown as { rangeBand(): number }).rangeBand() - (brush.outerPadding as number) * 2
   }
 
+  /** Draws every row's clustered 3D boxes, one lane per target, iterating rows and targets in
+   * REVERSE order (`i--`/`j--`) so later-appended boxes are the ones drawn earlier in normal
+   * reading order - matching the original's draw order so the isometric layering (which box visually
+   * sits in front of which) comes out the same. Each box's depth is `xy.depth - padding`, where
+   * `padding` is `innerPadding` clamped to at most the projection's own `depth` (so the gap between
+   * lanes never exceeds a lane's own thickness), and its width is the horizontal span between the
+   * value's and zero's projected x positions at that lane. Click/hover events are skipped for
+   * exactly-zero values, same convention as `bar3d.ts`'s `draw()`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -68,6 +81,8 @@ export class ClusterBar3DBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`outerPadding`/`innerPadding`), merged by
+   * `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return CLUSTERBAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

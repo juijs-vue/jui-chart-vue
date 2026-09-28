@@ -57,6 +57,14 @@ export class GaugeBrush extends DonutBrush {
   private gOuterRadius = 0
   private gInnerRadius = 0
 
+  /** Draws the gauge's text overlay: the big center `value` label (positioned lower, at `y: 70`,
+   * when `brush.arrow` is truthy, to leave room for an arrow needle above it - via raw
+   * `chart.svg.text()`, unthemed, per this file's header comment), an optional `unit` label below
+   * it (skipped when `unit === ''`), and `min`/`max` labels positioned at the arc's own start/end
+   * points (`mathUtil.rotate()` at `startAngle`/`endAngle` from the top of the gauge, offset
+   * inward by a fixed 30/20px so they sit just inside the arc's ends). `unit`/`brush.arrow` have no
+   * `setup()` default - they're read straight off the row/brush options with no declared default,
+   * same as the legacy source. */
   private createText(startAngle: number, endAngle: number, min: unknown, max: unknown, value: unknown, unit: unknown): any {
     const g = this.chart.svg.group({ class: 'gauge text' }).translate(this.gCenterX, this.gCenterY)
 
@@ -129,8 +137,22 @@ export class GaugeBrush extends DonutBrush {
     return g
   }
 
+  /** Explicit empty no-op override, needed to stop the inherited `PieBrush.drawBefore()` (which
+   * `DonutBrush` never overrides) from running and creating an unused group - matching the legacy
+   * source's own explicit empty override for the same reason. */
   drawBefore = (): void => {}
 
+  /**
+   * Overrides `DonutBrush.drawUnit()` (a different signature too - `(index, data, group)`, drawing
+   * directly into a caller-supplied `group` rather than the inherited `(index, data, g)` shape)
+   * with the gauge-specific rendering: a value-proportional foreground arc
+   * (`currentAngle = endAngle * rate`, `rate = (value - min) / (max - min)`, clamped to at most
+   * `endAngle`) drawn via the inherited `drawDonut()` with `color(index)`, plus a background track
+   * ring covering the remaining span (`startAngle + currentAngle` to `endAngle - currentAngle`),
+   * drawn first so the value arc renders on top. `endAngle` is clamped to 359.99999° when
+   * configured as a full circle (`>= 360`), matching `drawDonut()`'s own "can't close a literal
+   * 360° arc" fix. Finishes with `createText()`'s value/unit/min/max labels.
+   */
   drawUnit(index: number, data: unknown, group: any): any {
     const row = data as BrushData
     const obj = (this.axis.c as unknown as CAxis)(index)
@@ -186,6 +208,9 @@ export class GaugeBrush extends DonutBrush {
     return group
   }
 
+  /** Creates the shared group and delegates to `drawUnit()` once per data row (there is normally
+   * just one row, since the gauge area is shared/non-repeating - same convention as
+   * `ArcGaugeBrush.draw()`/`FullGaugeBrush.draw()`). */
   draw = (): any => {
     const group = this.chart.svg.group()
 
@@ -196,6 +221,8 @@ export class GaugeBrush extends DonutBrush {
     return group
   }
 
+  /** Returns this brush's own default options (`size`/`startAngle`/`endAngle`), merged by
+   * `defineOptions()` on top of the inherited `DonutBrush`/`PieBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

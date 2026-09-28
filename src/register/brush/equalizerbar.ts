@@ -45,12 +45,22 @@ export class EqualizerBarBrush extends StackBarBrush {
   private ebBarHeight = 0
   private ebReverse = false
 
+  /** Overrides `StackBarBrush.drawBefore()`: caches the shared row lane height (via the inherited
+   * `getTargetSize()`) and whether the x-axis is reversed (`axis.get('x').reverse`), which flips
+   * which direction the block "train" advances in `draw()`. */
   drawBefore = (): void => {
     this.g = this.svg.group()
     this.ebBarHeight = this.getTargetSize()
     this.ebReverse = !!(this.axis.get('x') as Record<string, unknown>).reverse
   }
 
+  /** Overrides `StackBarBrush.draw()` with the "block-train" rendering: each row's stacked segments
+   * become a sequence of small fixed-size blocks (width `unit = band / (brush.unit * padding)`,
+   * spaced by `padding`) filling each target's pixel span, reusing the inherited `getBarElement()`
+   * for each block's own styling. See this file's header comment for the preserved quirk that the
+   * running pixel cursor `x` is one variable shared across the WHOLE row (never reset per target,
+   * only the remaining-capacity `targetX` is), so each target's blocks continue exactly where the
+   * previous target's left off rather than realigning to that target's own true boundary. */
   draw = (): any => {
     const targets = this.brush.target ?? []
     const padding = (this.brush as Record<string, unknown>).innerPadding as number
@@ -101,6 +111,8 @@ export class EqualizerBarBrush extends StackBarBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`unit`), merged by `defineOptions()` on top of the
+   * inherited `StackBarBrush`/`CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return EQUALIZER_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

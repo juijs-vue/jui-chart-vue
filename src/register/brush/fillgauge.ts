@@ -39,6 +39,8 @@ import { CoreBrush, registerBrush } from 'jui-graph-ts'
 
 type CAxis = () => { width: number; height: number; x: number; y: number }
 
+/** Generates a reasonably-unique DOM id (`key-timestamp-random`) for this brush's `<clipPath>`,
+ * so multiple fill gauges on the same page don't collide on the same clip id. */
 function createId(key?: string): string {
   return [key || 'id', +new Date(), Math.round(Math.random() * 100) % 100].join('-')
 }
@@ -81,6 +83,10 @@ export class FillGaugeBrush extends CoreBrush {
   private fgClipId = ''
   private fgRect: any
 
+  /** Sizes/positions the hidden clip rect (`fgRect`) that determines how much of the gauge's shape
+   * is "filled": `rate = (value - min) / (max - min)` of the chart's own plot area, growing upward
+   * from the bottom when `direction === 'vertical'` (a rect anchored at `y = area.height - height`)
+   * or growing rightward from the left otherwise (`'horizontal'`, full height, partial width). */
   private setDirection(direction: unknown): void {
     const brush = this.brush as Record<string, unknown>
     const rate = ((brush.value as number) - (brush.min as number)) / ((brush.max as number) - (brush.min as number))
@@ -106,6 +112,9 @@ export class FillGaugeBrush extends CoreBrush {
     this.fgRect.attr({ x, y, width, height })
   }
 
+  /** Renders a custom `brush.path`-shaped gauge: a background copy of the path (theme background
+   * color) plus a foreground copy filled with `color(0)` and clipped by `fgRect` via the shared
+   * `fgClipId`, so `setDirection()`'s rect reveals only the filled portion of the custom shape. */
   private createPath(group: any, path: unknown): void {
     group.append(
       this.chart.svg.path({
@@ -127,6 +136,13 @@ export class FillGaugeBrush extends CoreBrush {
     )
   }
 
+  /** Sets up this render pass's shared geometry and clip path. First synthesizes a full-chart-area
+   * `axis.c()` panel fallback when none is configured (see header comment item 2 - a fix borrowed
+   * from `stackgauge.ts`'s own identical guard, since the legacy source assumes one always exists).
+   * Then derives the gauge's center (`fgCenterX`/`fgCenterY`) and radius (`fgW`/`fgOuterRadius`,
+   * half of the panel's shorter side) from that panel, and creates a `<clipPath>` (with a
+   * fresh `fgClipId` via `createId()`) containing the zero-sized `fgRect` that `setDirection()`
+   * resizes each render to reveal the "filled" portion of the gauge shape. */
   drawBefore = (): void => {
     // See header comment item 2: the legacy source assumes `axis.c()` already exists
     // unconditionally (no demo actually configures a `c`-type axis panel for this brush) - the
@@ -165,6 +181,14 @@ export class FillGaugeBrush extends CoreBrush {
     ;(this.chart as unknown as { appendDefs(elem: unknown): void }).appendDefs(clip)
   }
 
+  /** Renders the gauge: calls `setDirection()` to size the fill clip rect, then draws either a
+   * custom `brush.path` shape (via `createPath()`; the legacy `brush.svg`-URL-fetch branch is dead
+   * code in the original itself, preserved as such), or a built-in `'circle'`/`'rectangle'` shape -
+   * each as a background copy (theme background color) plus a foreground copy filled with
+   * `color(0)` and clipped to the fill rect. See the inline comment on the circle's foreground fill
+   * for a genuine bug fix: the legacy source's `chart.color(0, brush)` call there always resolved
+   * to `"none"` (permanently invisible), so it's replaced with the same `this.color(0)` form every
+   * other branch/brush already uses. */
   draw = (): any => {
     const group = this.chart.svg.group({ opacity: 0.8 })
     const brush = this.brush as Record<string, unknown>
@@ -240,6 +264,8 @@ export class FillGaugeBrush extends CoreBrush {
     return group
   }
 
+  /** Returns this brush's own default options (`min`/`max`/`value`/`shape`/`direction`/`svg`/
+   * `path`), merged by `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return FILLGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

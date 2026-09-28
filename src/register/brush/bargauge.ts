@@ -34,6 +34,14 @@ export const BAR_GAUGE_BRUSH_OWN_DEFAULTS: BarGaugeBrushOptions = {
 }
 
 export class BarGaugeBrush extends CoreBrush {
+  /** Draws one horizontal track+fill bar per data row, stacked top-to-bottom (`y` advances by
+   * `size + cut` after each row) underneath the shared "panel" axis rect (`axis.c(0)`). Each row's
+   * `value`/`title`/`max`/`min` come from that row's own data (via `getValue()`, not from
+   * `brush`), and the fill width is `width * v / (max - min)` - see this file's header comment for
+   * the preserved quirk that a nonzero `min` only shrinks the value's effective range divisor, it
+   * never shifts the bar's visual start point, and for the track/fill left-edge and width mismatch
+   * that lets the track overshoot the cell's right edge by `cut` px. Each row's title is drawn
+   * left-aligned and its formatted value right-aligned, both vertically centered on the bar. */
   draw = (): any => {
     const group = this.chart.svg.group()
     const brush = this.brush as Record<string, unknown>
@@ -110,6 +118,8 @@ export class BarGaugeBrush extends CoreBrush {
     return group
   }
 
+  /** Returns this brush's own default options (`cut`/`size`/`format`), merged by `defineOptions()`
+   * on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return BAR_GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

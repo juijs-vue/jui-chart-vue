@@ -28,6 +28,10 @@ export class Bar3DBrush extends CoreBrush {
   private height = 0
   private colHeight = 0
 
+  /** Computes this render pass's shared geometry: `height` (the full row band height from the
+   * y-axis's `rangeBand()`) and `colHeight` (per-target box thickness, fitting every `target` key
+   * into the row height minus `outerPadding` on each side and `innerPadding` gaps between them,
+   * clamped to `0` rather than going negative when there isn't enough room). */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -38,6 +42,15 @@ export class Bar3DBrush extends CoreBrush {
     this.colHeight = this.colHeight < 0 ? 0 : this.colHeight
   }
 
+  /** Draws every row's extruded 3D boxes, one per target, stacked vertically within the row band
+   * using `drawBefore()`'s `colHeight`. Per target: `zeroXY`/`xy` are the `"grid3d"` axis's
+   * isometric projections of value `0` and the target's actual value at this row; `width` is the
+   * horizontal span between them; `top` compensates the box's vertical position for the isometric
+   * depth shift (`sin(radian) * depth`) so the extrusion still lines up with `startY`. Each box is
+   * built via `chart.svg.rect3d()` and `prepend()`-ed (not `append()`-ed) to the group so later
+   * targets' boxes layer visually in front of earlier ones, matching the isometric perspective.
+   * Click/hover events are skipped for exactly-zero values, same convention as `bar.ts`'s
+   * `getBarElement()`. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     const target = (brush.target ?? []) as string[]
@@ -72,6 +85,8 @@ export class Bar3DBrush extends CoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`outerPadding`/`innerPadding`), merged by
+   * `defineOptions()` on top of the inherited `CoreBrush`/`Draw` defaults. */
   static setup(): Record<string, unknown> {
     return BAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

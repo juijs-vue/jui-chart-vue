@@ -14,6 +14,11 @@ import type { FullStackColumn3DBrushOptions } from './fullstackcolumn3d'
 export type FullStackCylinder3DBrushOptions = FullStackColumn3DBrushOptions
 
 export class FullStackCylinder3DBrush extends FullStackColumn3DBrush {
+  /** Overrides `FullStackColumn3DBrush.drawMain()`'s box shape with a `chart.svg.cylinder3d()`.
+   * Every segment except the first (`index > 0`) has its height shortened by the isometric depth's
+   * vertical sliver (`sin(radian) * depth`) - the same "shorten every non-first segment's height by
+   * its projected top sliver" trick `stackcylinder3d.ts` uses, so stacked cylinders don't visually
+   * overlap at their seams the way stacked boxes would. */
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {
     const top = Math.sin((this.axis.c as unknown as { radian: number }).radian) * depth
     const h = index > 0 ? height - top : height
@@ -21,6 +26,11 @@ export class FullStackCylinder3DBrush extends FullStackColumn3DBrush {
     return this.chart.svg.cylinder3d(this.color(index), width, h, degree as number, depth)
   }
 
+  /** Overrides `FullStackColumn3DBrush.getTextXY()` to offset a segment's percentage label to the
+   * cylinder's own visual center: shifted right by half the depth's horizontal projection
+   * (`cos(radian) * depth / 2`, centering it within the cylinder's isometric width), and, for every
+   * segment except the first, shifted up by the same vertical sliver `drawMain()` shortens that
+   * segment's height by. */
   getTextXY(index: number, x: number, y: number, depth: number): { x: number; y: number } {
     const radian = (this.axis.c as unknown as { radian: number }).radian
     const top = Math.sin(radian) * depth
