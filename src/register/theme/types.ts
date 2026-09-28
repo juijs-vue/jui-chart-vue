@@ -13,8 +13,23 @@
 // gets `undefined` back from `chart.theme(key)` at runtime (see `mapPathBackgroundColor`'s own
 // comment below for a real case this caused - a thrown, chart-aborting `TypeError`). This
 // interface documents the REAL, full key space (every key that appears in at least one theme
-// file), not a false "every theme has every key" guarantee - fixing the cross-theme
-// inconsistency itself is out of scope here (a content decision, not a typing one).
+// file), not a false "every theme has every key" guarantee.
+//
+// **`pastel.ts`'s 40 missing keys specifically are NOT a porting gap to fix**: `pastel.ts`'s own
+// header comment already establishes it was byte-for-byte extracted from the REAL live
+// `www.jui-vue.io` bundle's own "pastel" theme object, which genuinely has only 318 keys in
+// production - inventing values for the 40 it doesn't have would fabricate configuration that
+// was never real, the opposite of this project's "literal port of real behavior" rule. Checked
+// whether this is actually reachable: `theme="pastel"` is used in exactly one place across the
+// whole site (`web/src/pages/gallery/Fitness.vue`, 6 `<Chart>`s), exclusively with
+// `heatmap`/`pie`/`line`/`scatter` brushes and `tooltip`/`title` widgets - none of which read any
+// of the 40 missing keys directly (`pie.ts`'s own `pieDisableBackgroundOpacity` read has a
+// defensive `|| 0.5` fallback; the other affected types - `guideline`, `ratebar`, `selectbox`,
+// `canvas.bubblecloud`, `canvas.equalizercolumn` - are simply never combined with `pastel`
+// anywhere in this repo's demos or `play/chart` JSON configs, confirmed by grep). `crossBorderDashArray`
+// is additionally dead code everywhere - no widget in this repo ever reads it, not just under
+// `pastel`. So: real inconsistency, currently unreachable in practice, correctly left as `pastel`
+// actually has it - not "fixed" by putting words in the real site's mouth.
 //
 // Every value's type was derived from actually reading all 5 theme files' own literal values
 // (not guessed from the key name) - confirmed there is exactly one consistent type per key across
