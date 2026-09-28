@@ -16,6 +16,7 @@
 //
 // Registered under the same "pattern" name via `jui-graph-ts`'s `registerTheme(name, style)`.
 import { registerTheme } from 'jui-graph-ts'
+import type { ChartThemeOptions } from './types'
 
 const themeColors = [
     'pattern-jennifer-01',
@@ -32,7 +33,7 @@ const themeColors = [
     'pattern-jennifer-12'
 ];
 
-export const patternTheme: Record<string, unknown> = {
+export const patternTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#fff',
   colors: themeColors,

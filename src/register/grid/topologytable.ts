@@ -128,11 +128,22 @@ const SORT_STRATEGIES: Record<string, (data: unknown[], area: { x: number; y: nu
   linear: linearSort,
 }
 
+/** `chart.grid.topologytable`'s own config fields (on top of `jui-graph-ts`'s base grid
+ * options). */
+export interface TopologyTableGridOptions {
+  /** Which `SORT_STRATEGIES` entry scatters each node's initial `{x, y}` position: `'linear'`
+   * spreads nodes across alternating columns (left/right) at a random row each; `'random'`
+   * places every node at a uniformly random position. An unrecognized value leaves positions
+   * unset entirely (see this file's own "PRESERVED QUIRK" comment). */
+  sort?: 'linear' | 'random'
+  /** Margin in px reserved from the axis area's own edges when scattering node positions
+   * (`'random'`), or the row/column pitch nodes are placed on (`'linear'`). */
+  space?: number
+}
+
 /** Own `chart.grid.topologytable.setup()` fields - see legacy `topologytable.js`. */
-export const TOPOLOGYTABLE_GRID_OWN_DEFAULTS = {
-  /** @cfg {String} [sort="linear"] "linear" or "random". */
+export const TOPOLOGYTABLE_GRID_OWN_DEFAULTS: TopologyTableGridOptions = {
   sort: 'linear',
-  /** @cfg {Number} [space=50] */
   space: 50,
 }
 
@@ -239,6 +250,6 @@ export class TopologyTableGrid extends CoreGrid {
   }
 
   static setup(): Record<string, unknown> {
-    return TOPOLOGYTABLE_GRID_OWN_DEFAULTS
+    return TOPOLOGYTABLE_GRID_OWN_DEFAULTS as Record<string, unknown>
   }
 }

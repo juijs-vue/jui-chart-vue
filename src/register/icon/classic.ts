@@ -34,7 +34,7 @@
 // something to keep silently re-attempting fixes for.
 import { registerIcon } from 'jui-graph-ts'
 
-export const classicIcons: Record<string, string> = {
+export const classicIcons = {
   "chevron-left": "\ue90e",
   "iframe": "\ue9be",
   "textbox": "\ue9bf",
@@ -227,6 +227,12 @@ export const classicIcons: Record<string, string> = {
   "trashcan": "\ue9bb",
   "underline": "\ue9bc",
   "unorderedlist": "\ue9bd"
-}
+} as const satisfies Record<string, string>
+
+/** Every icon name available in the `'classic'` icon set (`chart.icon.classic`) - the valid
+ * `{key}` placeholder names `chart.text()`'s `parseIconInText()` resolves against `classicIcons`'
+ * own Private-Use-Area codepoints (see this file's own header comment for the font-file wiring
+ * and the known glyph-rendering issue). */
+export type ClassicIconName = keyof typeof classicIcons
 
 registerIcon('classic', classicIcons)

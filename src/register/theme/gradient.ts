@@ -14,6 +14,7 @@
 //
 // Registered under the same "gradient" name via `jui-graph-ts`'s `registerTheme(name, style)`.
 import { registerTheme } from 'jui-graph-ts'
+import type { ChartThemeOptions } from './types'
 
 const themeColors = [
     'linear(top) #9694e0,0.9 #7977C2',
@@ -37,7 +38,7 @@ const themeColors = [
     'linear(top) #b76fef,0.9 #9228e4'
 ];
 
-export const gradientTheme: Record<string, unknown> = {
+export const gradientTheme: ChartThemeOptions = {
   backgroundColor: '#fff',
   fontFamily: 'arial,Tahoma,verdana',
   colors: themeColors,

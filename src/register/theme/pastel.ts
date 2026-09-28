@@ -10,8 +10,9 @@
 // to this project's own `"classic"` theme - www.jui-vue.io itself already maps that name to
 // `"classic"`, so no separate port of it was needed here.)
 import { registerTheme } from 'jui-graph-ts'
+import type { ChartThemeOptions } from './types'
 
-export const pastelTheme: Record<string, unknown> = {
+export const pastelTheme: ChartThemeOptions = {
   fontFamily: "Caslon540BT-Regular,Times,New Roman,serif",
   backgroundColor: "#fff",
   colors: ["#73e9d2", "#fef92c", "#ff9248", "#b7eef6", "#08c4e0", "#ffb9ce", "#ffd4ba", "#14be9d", "#ebebeb", "#666666", "#cdbfe3", "#bee982", "#c22269"],

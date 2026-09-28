@@ -3,8 +3,9 @@
 // object (colors/fonts/per-brush/per-widget style keys), registered under the same `"classic"`
 // name via `jui-graph-ts`'s `registerTheme(name, style)`.
 import { registerTheme } from 'jui-graph-ts'
+import type { ChartThemeOptions } from './types'
 
-export const classicTheme: Record<string, unknown> = {
+export const classicTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#fff',
   colors: [

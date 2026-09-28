@@ -25,7 +25,32 @@
 // no brush/pattern-specific special-casing - no `jui-graph-ts` gap here).
 import { registerTheme } from 'jui-graph-ts'
 
-export const patternJenniferMap: Record<string, unknown> = {
+/** One `<pattern>` SVG-pattern descriptor - generically consumed by `SVG.createObject()`
+ * (`{type, attr, children}` -> a real SVG element tree, recursively, with no pattern-specific
+ * special-casing - see this file's own header comment). */
+interface SvgPatternDescriptor {
+  type: 'pattern'
+  attr: {
+    id: string
+    width: number
+    height: number
+    patternUnits: string
+  }
+  children: {
+    type: 'image'
+    attr: {
+      'xlink:href': string
+      width: number
+      height: number
+    }
+  }[]
+}
+
+/** `pattern.jennifer`'s 12 named fill patterns (`'01'`..`'12'`), looked up by
+ * `Builder.createPattern()` from a theme color string like `'pattern-jennifer-10'` - see this
+ * file's own header comment for the exact `'pattern-jennifer-10'` -> `'10'` key-resolution path
+ * and why registration under `'pattern.jennifer'`, not `'pattern.classic'`, is required. */
+export const patternJenniferMap: Record<string, SvgPatternDescriptor> = {
   "10": {
       "type": "pattern",
       "attr": {

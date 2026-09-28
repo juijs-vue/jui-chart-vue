@@ -15,6 +15,7 @@
 //
 // Registered under the same "dark" name via `jui-graph-ts`'s `registerTheme(name, style)`.
 import { registerTheme } from 'jui-graph-ts'
+import type { ChartThemeOptions } from './types'
 
 const themeColors = [
     '#12f2e8',
@@ -35,7 +36,7 @@ const themeColors = [
     '#f21d4f'
 ];
 
-export const darkTheme: Record<string, unknown> = {
+export const darkTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#222222',
   colors: themeColors,
