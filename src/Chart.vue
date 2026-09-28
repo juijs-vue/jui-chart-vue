@@ -90,6 +90,14 @@ const props = withDefaults(
      * keys fall back to whatever the base/named theme already set - see
      * `register/theme/types.ts`'s own header comment on why not every theme sets every key). */
     theme?: string | Record<string, unknown>
+    /** Forwarded to `Builder`'s own `style` option (`Builder.setup()`'s default: `{}`) - a partial
+     * style-key override on top of `theme`, same key space as `theme`'s own object form (see
+     * `register/theme/types.ts`'s `ChartThemeOptions`). Useful for tweaking a few style keys
+     * without redeclaring/copying a whole named theme's object. **Precedence depends on `theme`'s
+     * own type, per `Builder.setThemeStyle()`**: when `theme` is a NAME (string), `style` wins over
+     * that named theme's own values for any key both set; when `theme` is an inline OBJECT, it's
+     * the other way around - `theme` wins over `style`, and the merge additionally starts from
+     * whatever the chart's theme already was before this change (not a fresh reset). */
     style?: Record<string, unknown>
     /**
      * Forwarded to `Builder`'s own `render` option (`Builder.setup()`'s own default: `true` -
