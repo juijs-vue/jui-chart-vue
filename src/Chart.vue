@@ -45,12 +45,50 @@ export interface WidgetConfig {
 
 const props = withDefaults(
   defineProps<{
+    /** Forwarded to `Builder`'s own `width` option (`Builder.setup()`'s default: `"100%"`, i.e. the
+     * root `<div>`'s own measured width). An integer number renders the chart at exactly that many
+     * px regardless of the container's real size (`Builder.getCanvasRealSize()`'s own
+     * `typeCheck("integer", ...)` check); a string (e.g. `"100%"`, `"600px"`) is applied as CSS on
+     * the root element and the chart measures whatever that resolves to. */
     width?: number | string
+    /** Forwarded to `Builder`'s own `height` option - same `number` (exact px) vs. `string` (CSS,
+     * measured) split as `width`, defaulting to `"100%"`. */
     height?: number | string
+    /** Forwarded to `Builder`'s own `padding` option (`Builder.setup()`'s default:
+     * `{top:50,bottom:50,left:50,right:50}`) - a single number applies that value to all 4 sides,
+     * an `AxisPadding` sets each side independently (unset sides fall back to the default, merged
+     * in by `jui-graph-ts`'s own `skip:true` "only fill currently-undefined keys" option-merge, not
+     * by this component). Defines the plot area's own inset from the chart's outer `width`/`height`
+     * - axis labels, titles, and widgets like `legend`/`tooltip` are typically drawn in this
+     * margin, not inside the plot area itself. */
     padding?: number | AxisPadding
+    /** Forwarded to `Builder`'s own `axis` option (`Builder.setup()`'s default: `[]`) - one entry
+     * per independent axis GROUP, each with its own `x`/`y`/`z`/`c`/`map` grid config and `data`
+     * array. A single object is equivalent to a 1-element array. A brush/widget's own numeric
+     * `axis` field (`BrushConfig`/`WidgetConfig` below) is the INDEX into this array it reads its
+     * data/grids from - `0` (the default) when omitted, so a chart with only one axis group never
+     * needs to set it explicitly on its brushes/widgets. */
     axis?: AxisConfig | AxisConfig[]
+    /** Forwarded to `Builder`'s own `brush` option (`Builder.setup()`'s default: `[]`) - one entry
+     * per drawn series/shape layer, rendered in array order (later entries draw on top). Each
+     * entry's `type` must be a name registered via `jui-graph-ts`'s `registerBrush()` (see the
+     * `jui-chart-vue (brush/widget/...)` reference section for the full list and each type's own
+     * config fields on top of the `target`/`axis`/`colors`/`clip`/etc. shared by every brush - a
+     * single object is equivalent to a 1-element array. */
     brush?: BrushConfig | BrushConfig[]
+    /** Forwarded to `Builder`'s own `widget` option (`Builder.setup()`'s default: `[]`) - same
+     * array-of-typed-configs shape as `brush` (a single object is equivalent to a 1-element array),
+     * but for non-data-series overlays (titles, legends, tooltips, zoom/pan controls, ...). Each
+     * entry's `type` must be registered via `jui-graph-ts`'s `registerWidget()` - see the
+     * `jui-chart-vue (brush/widget/...)` reference section for the full list. */
     widget?: WidgetConfig | WidgetConfig[]
+    /** Forwarded to `Builder`'s own `theme` option (`Builder.setup()`'s default: `"classic"`).
+     * Either the name of a theme registered via `jui-graph-ts`'s `registerTheme()` (this project
+     * ships `"classic"`/`"dark"`/`"gradient"`/`"pastel"`/`"pattern"` - see
+     * `register/theme/types.ts`'s `ChartThemeOptions` for the full style-key reference) or a plain
+     * style-value object in that same shape, merged over the active theme's own defaults (missing
+     * keys fall back to whatever the base/named theme already set - see
+     * `register/theme/types.ts`'s own header comment on why not every theme sets every key). */
     theme?: string | Record<string, unknown>
     style?: Record<string, unknown>
     /**
