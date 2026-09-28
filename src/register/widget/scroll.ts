@@ -24,6 +24,11 @@ export const SCROLL_WIDGET_OWN_DEFAULTS: ScrollWidgetOptions = {
   orient: 'bottom',
 }
 
+/** `chart.widget.scroll` - a horizontal scrollbar thumb: `axis.origin`/`axis.buffer` drive the
+ * thumb's proportional width, and dragging it calls `axis.zoom(start, end)` on every axis in the
+ * chart to shift the visible data window, re-rendering on every drag `mousemove`. See this file's
+ * header comment on the deliberate mixed `bg.*`/`chart.*` event binding (both bound to the same
+ * handlers, since they're genuinely distinct event sources, not a redundant duplicate). */
 export class ScrollWidget extends CoreWidget {
   private thumbWidth = 0
   private thumbLeft = 0

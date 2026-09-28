@@ -79,6 +79,13 @@ export const ZOOMSCROLL_WIDGET_OWN_DEFAULTS: ZoomScrollWidgetOptions = {
   dy: 0,
 }
 
+/** `chart.widget.zoomscroll` - a "minimap" scrollbar: renders a small detached snapshot chart (a
+ * headless second `Builder` instance, default `area` brush) as a background image, overlaid with
+ * two draggable rounded end-caps and a draggable center window; dragging any of the three calls
+ * `axis.zoom(start, end)` on every axis in the chart, same end effect as `scroll.ts`/`vscroll.ts`
+ * but with a live data-shape preview. See this file's header comment for the headless-render
+ * technique (an unattached `<div>` root), the `extendUndefinedOnly()` merge semantics used to build
+ * the snapshot's x-axis config, and the preserved inert-argument quirk in `preventDragAction()`. */
 export class ZoomScrollWidget extends CoreWidget {
   private zsAxis: any = null
 

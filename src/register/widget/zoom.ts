@@ -42,6 +42,14 @@ export const ZOOM_WIDGET_OWN_DEFAULTS: ZoomWidgetOptions = {
   format: null,
 }
 
+/** `chart.widget.zoom` - a REAL zoom (unlike the passive `zoomselect.ts`): drags a horizontal band
+ * over one or more configured axes and, on release, actually rewrites that axis's domain
+ * (`axis.zoom()` for a `"block"` x-axis, or `axis.updateGrid("x", ...)` for `"date"`/`"dateblock"`),
+ * caching the pre-zoom domain/interval/format so `rollbackZoom()` can restore it via the same
+ * "×" close-button click `zoomselect.ts` also uses. `widget.integrate` shares one drag gesture
+ * across every configured axis (only the first section wires real drag handlers). Shares most of
+ * its drag/update/rollback logic with `zoomselect.ts` (see this file's header comment) but is
+ * ported as its own independent class since neither extends the other in the original source. */
 export class ZoomWidget extends CoreWidget {
   private top = 0
   private left = 0

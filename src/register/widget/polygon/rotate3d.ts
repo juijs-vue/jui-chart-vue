@@ -38,6 +38,10 @@ export const POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS: PolygonRotate3DWidgetOptions 
   axis: [0],
 }
 
+/** `chart.widget.polygon.rotate3d` - a drag-to-rotate interaction widget for 3D (`polygon.*`-brush)
+ * charts: on `mousedown` over a configured axis, tracks the drag delta and maps it to
+ * `axis.degree.x`/`axis.degree.y` (clamped to a `widget.unit`-degree snap grid), re-rendering the
+ * whole chart on every step that actually changes the snapped angle. */
 export class PolygonRotate3DWidget extends PolygonCoreWidget {
   /** Wires the drag-to-rotate gesture for one axis (scoped via `axisIndex`, despite its own
    * "scroll" name - a literal port of the legacy method name, which really drives a rotation, not a

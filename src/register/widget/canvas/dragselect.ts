@@ -49,6 +49,13 @@ export const CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS: CanvasDragSelectWidgetOption
   dataType: 'list',
 }
 
+/** `chart.widget.canvas.dragselect` - the canvas-mode counterpart to plain `dragselect.ts`: drags a
+ * live rubber-band rectangle over one or more configured brushes' axes and, on release, emits the
+ * same `dragselect.end` event with matched data rows (`dataType: "list"`) or just the dragged
+ * value-range (`"area"`) - but paints the rect onto the widget's own canvas layer instead of an SVG
+ * rect, so it renders on top of canvas-drawn brush content (e.g. `canvas.scatter`) rather than
+ * behind it. See this file's header comment for why plain SVG `dragselect` can't be reused here,
+ * and note the event/data-search logic is copied verbatim from `dragselect.ts`. */
 export class CanvasDragSelectWidget extends CanvasCoreWidget {
   // The last rect actually painted, in the SAME "sub" canvas - tracked so `clearThumb()` only
   // ever clears the small region the rubber band occupies (not the whole canvas, which would risk

@@ -42,6 +42,11 @@ export const TITLE_WIDGET_OWN_DEFAULTS: TitleWidgetOptions = {
   color: null,
 }
 
+/** `chart.widget.title` - draws a positioned text title, either against a specific axis
+ * (`widget.axis`, looked up via `chart.axis(axis)`) or against the whole chart area when `axis` is
+ * `null`, placed by `widget.orient`/`align` with optional `dx`/`dy` offsets and font `size`/`color`
+ * overrides. See this file's header comment: `widget.axis` is a distinct lookup from the widget's
+ * own inherited `this.axis`, which `drawWidget()` always wires to axis 0 regardless of config. */
 export class TitleWidget extends CoreWidget {
   // `this.chart` is already typed as `WidgetChart` by `CoreWidget` itself (`widget/core.ts`) - no
   // override needed here.

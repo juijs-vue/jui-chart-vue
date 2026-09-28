@@ -38,6 +38,11 @@ export const TOOLTIP_WIDGET_OWN_DEFAULTS: TooltipWidgetOptions = {
   brush: 0,
 }
 
+/** `chart.widget.tooltip` - a hover balloon overlay: for each configured brush, listens for
+ * `mouseover`/`mousemove`/`mouseout` and shows a positioned balloon (with an optional pointer
+ * anchor and guide `line`) displaying the hovered data key's value, or every target's value when
+ * `widget.all` is set. Supports flipping to the opposite side (`widget.flip`) when the balloon
+ * would otherwise overflow the axis area, and custom `format`ting of the shown key/value. */
 export class TooltipWidget extends CoreWidget {
   // `this.chart` is already typed as `WidgetChart` by `CoreWidget` itself (`widget/core.ts`).
   private tooltips: Record<number, any> = {}

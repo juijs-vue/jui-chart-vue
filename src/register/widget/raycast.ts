@@ -34,6 +34,14 @@ export const RAYCAST_WIDGET_OWN_DEFAULTS: RaycastWidgetOptions = {
   brush: [0],
 }
 
+/** `chart.widget.raycast` - not a visual widget (draws an empty group); instead wires
+ * `axis.click`/`dblclick`/`rclick` listeners onto one or more configured brushes, each re-emitting
+ * a `raycast.click`/`dblclick`/`rclick` event carrying the specific data row under the cursor,
+ * resolved via a cached per-column hit-box (`raycast_area_<col>`, written by some other brush/
+ * widget) intersected against the click position. Requires the brush's axis to cross a "block"-type
+ * axis with a "range"-type axis - see this file's header comment for the silent-skip fallback when
+ * that pairing isn't present, and the legacy internal-name quirk this port deliberately doesn't
+ * reproduce. */
 export class RaycastWidget extends CoreWidget {
   /** Hit-tests a click/dblclick/rclick position against the cached hit-box for the block-axis
    * column under the cursor (`chart.getCache('raycast_area_<col>')`, written by some other brush -

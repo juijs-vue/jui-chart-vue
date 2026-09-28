@@ -57,6 +57,12 @@ interface LegendIconEntry {
   height: number
 }
 
+/** `chart.widget.legend` - draws a row/column of swatch+label entries (one per target across one
+ * or more configured brushes) along a side of the chart area (`widget.orient`/`align`), laying
+ * entries out and wrapping them to fit the available width/height. With `widget.filter` set,
+ * clicking an entry toggles that target's visibility on the referenced brush(es) and caches the
+ * resulting visible-target list under the `legend_target` chart cache key, which other widgets
+ * (e.g. `guideline.ts`) read to stay in sync with whatever the legend last toggled. */
 export class LegendWidget extends CoreWidget {
   // `this.chart` is already typed as `WidgetChart` by `CoreWidget` itself (`widget/core.ts`).
   private columns: Record<number, Record<string, boolean>> = {}

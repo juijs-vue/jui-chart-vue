@@ -42,6 +42,13 @@ export const DRAGSELECT_WIDGET_OWN_DEFAULTS: DragSelectWidgetOptions = {
   dataType: 'list',
 }
 
+/** `chart.widget.dragselect` - drags a live rubber-band rectangle over one or more configured
+ * brushes' axes and, on release, emits `dragselect.end` with either the matched data rows
+ * (`dataType: "list"`, the default) or just the dragged value-range (`dataType: "area"`). Purely a
+ * passive notification widget - never calls `axis.zoom()` or re-renders on its own. See this
+ * file's header comment for the preserved quirk where, with more than one configured brush, every
+ * brush's drag handlers end up drawing into whichever rubber-band rect was created LAST (a single
+ * shared `this.thumb` field, not per-brush state). */
 export class DragSelectWidget extends CoreWidget {
   private thumb: any = null
 

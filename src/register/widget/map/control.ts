@@ -45,6 +45,10 @@ export const MAP_CONTROL_WIDGET_OWN_DEFAULTS: MapControlWidgetOptions = {
   dy: 5,
 }
 
+/** `chart.widget.map.control` - a pan/zoom control panel overlay for a map chart: 4 directional
+ * pan buttons plus a home button and a zoom in/out button pair with a draggable scroll thumb,
+ * anchored via `widget.orient`/`align`. Driving actions rewrite the map's own view/scale through
+ * `axis.updateGrid("map", {...})` and `axis.map.view()`/`.scale()`, clamped to `widget.min`/`max`. */
 export class MapControlWidget extends MapCoreWidget {
   private scale = 1
   private viewX = 0

@@ -80,6 +80,13 @@ function getTextWidth(text: string, font: string): number {
   return metrics.width * 1.5
 }
 
+/** `chart.widget.guideline` - a vertical "scrubber" guide line for a date/range x-axis: on
+ * `axis.mousemove`, inverts the cursor's x position to a time value, snaps it to the nearest data
+ * row, and shows a line plus an optional x-axis balloon tooltip (`xFormat`) and a per-target
+ * content tooltip (point markers + a legend-aware key/value table, `tooltipFormat`) at that row -
+ * all driven through a small custom event bus (`guideline.show`/`hide`/`active`) so other
+ * widgets/code can also trigger it. See this file's header comment for the `legend_target` cache
+ * integration with `legend.ts` and the canvas-based `getTextWidth()`'s jsdom test limitation. */
 export class GuideLineWidget extends CoreWidget {
   private brushCfg: Record<string, unknown> = {}
   private guideAxis: any = null

@@ -17,6 +17,11 @@ export const VSCROLL_WIDGET_OWN_DEFAULTS: VScrollWidgetOptions = {
   orient: 'left',
 }
 
+/** `chart.widget.vscroll` - a vertical scrollbar overlay: draws a track along the left (or, with
+ * `orient: 'right'`, the right) edge of the chart area plus a draggable thumb sized proportionally
+ * to the visible data window, and drags it to call `axis.zoom()` on every axis in the chart. The
+ * vertical twin of `scroll.ts` - see that file's header comment for the shared data-windowing
+ * model and dual `bg.*`/`chart.*` event binding, transposed here to y/height instead of x/width. */
 export class VScrollWidget extends CoreWidget {
   private thumbHeight = 0
   private thumbTop = 0

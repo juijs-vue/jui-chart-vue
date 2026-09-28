@@ -37,6 +37,12 @@ export const ZOOMSELECT_WIDGET_OWN_DEFAULTS: ZoomSelectWidgetOptions = {
   axis: 0,
 }
 
+/** `chart.widget.zoomselect` - drags a horizontal band over one or more configured axes and, on
+ * release, emits `zoomselect.end` with the computed `[start, end]` range (a block-index pair, a
+ * date-value pair, or both concatenated for `"dateblock"` axes), plus an "×" close button that
+ * emits `zoomselect.close`. Purely a passive notification widget - unlike `zoom.ts`'s drag-select,
+ * it never rewrites the axis's own domain or re-zooms on its own. See this file's header comment
+ * for the preserved `rollbackZoom()` inert-argument quirk and the `updateBlockGrid()` no-op branch. */
 export class ZoomSelectWidget extends CoreWidget {
   private top = 0
   private left = 0

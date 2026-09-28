@@ -68,6 +68,12 @@ export const MAP_MINIMAP_WIDGET_OWN_DEFAULTS: MapMinimapWidgetOptions = {
   dy: 1,
 }
 
+/** `chart.widget.map.minimap` - renders a small "you are here" thumbnail of the main map (via a
+ * separate, detached `Builder`/`ChartBuilder` instance rendering the same map path at a smaller
+ * scale, exported as a data-URI `<image>`) overlaid with a draggable viewport rectangle that
+ * reflects/controls the real map's current view. See this file's header comment for why the
+ * detached thumbnail must use this project's own `ChartBuilder` (not the raw `jui-graph-ts`
+ * `Builder`) to avoid a null `axis(0).map` crash. */
 export class MapMinimapWidget extends MapCoreWidget {
   private viewX = 0
   private viewY = 0

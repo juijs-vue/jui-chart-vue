@@ -41,6 +41,13 @@ export const CANVAS_PICKER_WIDGET_OWN_DEFAULTS: CanvasPickerWidgetOptions = {
   brush: [0],
 }
 
+/** `chart.widget.canvas.picker` - a thin event-relay widget: for each configured brush index,
+ * wires `axis.click`/`axis.dblclick` (and `axis.mousemove` when `widget.hover` is set) handlers
+ * that call whatever hit-test function the target brush registered via
+ * `chart.setCache('picker', {obj, func})` (e.g. `canvas.bubblecloud`'s picker), re-emitting
+ * `picker.click`/`picker.dblclick` chart events carrying the hit data. Despite its `canvas.*`
+ * namespace, it extends `CoreWidget` directly (not `CanvasCoreWidget`) and does no canvas drawing
+ * of its own - see this file's header comment. */
 export class CanvasPickerWidget extends CoreWidget {
   /** Wires `axis.<eventType>` (scoped to `brush.axis`) so a click/dblclick on the axis calls
    * whatever hit-test function the target brush cached via `chart.setCache('picker', {obj, func})`

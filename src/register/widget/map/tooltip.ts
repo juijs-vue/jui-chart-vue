@@ -26,6 +26,11 @@ interface MapMouseEvent {
   bgY: number
 }
 
+/** `chart.widget.map.tooltip` - extends `TooltipWidget` but fully overrides `drawBefore()`/`draw()`
+ * with its own hover balloon wired to the Map engine's `"map.mouseover"`/`"map.mousemove"`/
+ * `"map.mouseout"` events instead of `TooltipWidget`'s axis-point-based positioning. Inherits
+ * `TooltipWidgetOptions`/its defaults verbatim, but per this file's header comment only actually
+ * reads `orient` and `format` from them - the other inherited fields have no effect here. */
 export class MapTooltipWidget extends TooltipWidget {
   private g: any
   private text: any

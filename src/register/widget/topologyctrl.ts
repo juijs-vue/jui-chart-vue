@@ -39,6 +39,12 @@ export const TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS: TopologyCtrlWidgetOptions = {
   brush: 0,
 }
 
+/** `chart.widget.topologyctrl` - a pan/zoom/drag-node interaction controller for a `topologynode`
+ * chart. Draws nothing itself (`draw()` returns an empty group); it only wires mouse/wheel event
+ * handlers onto the target `topologynode` brush's axis, reading/writing the same `axis.c(index)`
+ * mutator closures (`setX`/`setY`/`setScale`/`setView`) that `chart.grid.topologytable`'s `scale()`
+ * returns, and debounces re-renders via a 70ms `setTimeout`. See this file's header comment for the
+ * preserved `activeNodeKey`/`nodeKey` naming mismatch (a dead write, not read back anywhere). */
 export class TopologyControlWidget extends CoreWidget {
   private ctrlAxis: any = null
   private targetKey: string | null = null

@@ -37,6 +37,12 @@ export const CROSS_WIDGET_OWN_DEFAULTS: CrossWidgetOptions = {
   yFormat: null,
 }
 
+/** `chart.widget.cross` - a crosshair overlay: two lines that follow the mouse across a configured
+ * axis, each with an optional balloon-tooltip label showing the axis value under the cursor, built
+ * once (hidden) in `drawBefore()` and shown/hidden/moved via `axis.mouseover`/`mouseout`/`mousemove`
+ * listeners in `draw()`. See this file's header comment for the preserved, literal quirk where
+ * `xFormat`/`yFormat` each gate and format the OPPOSITE line's tooltip (named by line orientation,
+ * not by which axis's value it displays). */
 export class CrossWidget extends CoreWidget {
   private pl = 0
   private pt = 0
