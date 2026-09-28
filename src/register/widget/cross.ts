@@ -17,13 +17,24 @@ const TW = 50
 const TH = 18
 const TA = TW / 10
 
+/** `chart.widget.cross`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface CrossWidgetOptions {
+  /** Which axis the crosshair tracks mouse movement over. */
+  axis?: number
+  /** Sets the format for the X-axis value shown on the tooltip - counter-intuitively, this gates
+   * and formats the *horizontal* (y-constant) guide line's balloon, which displays the crosshair's
+   * Y-axis value (see this file's header comment for the full naming explanation). */
+  xFormat?: ((this: unknown, value: unknown) => unknown) | null
+  /** Sets the format for the Y-axis value shown on the tooltip - gates and formats the *vertical*
+   * (x-constant) guide line's balloon, which displays the crosshair's X-axis value. */
+  yFormat?: ((this: unknown, value: unknown) => unknown) | null
+}
+
 /** Own `chart.widget.cross.setup()` fields - see legacy `cross.js`. */
-export const CROSS_WIDGET_OWN_DEFAULTS = {
+export const CROSS_WIDGET_OWN_DEFAULTS: CrossWidgetOptions = {
   axis: 0,
-  /** @cfg {Function} [xFormat=null] Sets the format for the value on the X axis shown on the tooltip. */
-  xFormat: null as ((this: unknown, value: unknown) => unknown) | null,
-  /** @cfg {Function} [yFormat=null] Sets the format for the value on the Y axis shown on the tooltip. */
-  yFormat: null as ((this: unknown, value: unknown) => unknown) | null,
+  xFormat: null,
+  yFormat: null,
 }
 
 export class CrossWidget extends CoreWidget {
@@ -178,7 +189,7 @@ export class CrossWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return CROSS_WIDGET_OWN_DEFAULTS
+    return CROSS_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

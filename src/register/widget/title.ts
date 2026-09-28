@@ -7,16 +7,39 @@ import { CoreWidget, registerWidget } from 'jui-graph-ts'
 const TOP_PADDING = 25
 const PADDING = 20
 
+/** `chart.widget.title`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface TitleWidgetOptions {
+  /** Which axis to position the title relative to (looked up via `chart.axis(axis)` - a
+   * different axis than the widget's own `this.axis`, which is always axis 0). `null` falls
+   * back to positioning against the whole chart area instead of a specific axis. */
+  axis?: number | null
+  /** Vertical placement: above the axis, vertically centered (rotated for start/end align), or
+   * below the axis. */
+  orient?: 'top' | 'center' | 'bottom'
+  /** Horizontal placement within the axis width. */
+  align?: 'start' | 'middle' | 'end'
+  /** The title text itself. */
+  text?: string
+  /** Extra x offset in px, applied after position calculation. */
+  dx?: number
+  /** Extra y offset in px, applied after position calculation. */
+  dy?: number
+  /** Font size override; falls back to the theme's `titleFontSize` when `null`. */
+  size?: number | null
+  /** Font color override; falls back to the theme's `titleFontColor` when `null`. */
+  color?: string | null
+}
+
 /** Own `chart.widget.title.setup()` fields - see legacy `title.js`. */
-export const TITLE_WIDGET_OWN_DEFAULTS = {
-  axis: null as number | null,
-  orient: 'top' as 'top' | 'center' | 'bottom',
-  align: 'middle' as 'start' | 'middle' | 'end',
+export const TITLE_WIDGET_OWN_DEFAULTS: TitleWidgetOptions = {
+  axis: null,
+  orient: 'top',
+  align: 'middle',
   text: '',
   dx: 0,
   dy: 0,
-  size: null as number | null,
-  color: null as string | null,
+  size: null,
+  color: null,
 }
 
 export class TitleWidget extends CoreWidget {
@@ -108,7 +131,7 @@ export class TitleWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return TITLE_WIDGET_OWN_DEFAULTS
+    return TITLE_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

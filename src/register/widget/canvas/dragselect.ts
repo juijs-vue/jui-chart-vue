@@ -31,10 +31,22 @@
 import { CanvasCoreWidget, registerWidget } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
+/** `chart.widget.canvas.dragselect`'s own config fields - same shape/semantics as plain
+ * `"dragselect"` (`register/widget/dragselect.ts`'s `DragSelectWidgetOptions`), just drawn onto
+ * the widget's own canvas layer instead of an SVG rect (see this file's header comment for why). */
+export interface CanvasDragSelectWidgetOptions {
+  /** Which brush(es) to rubber-band select over - a single index or an array. Same "last-created
+   * rect wins with more than one entry" caveat as the plain `dragselect` widget. */
+  brush?: number | number[]
+  /** `'list'` emits the matched data rows on drag-end; `'area'` emits just the dragged
+   * value-range instead. */
+  dataType?: 'list' | 'area'
+}
+
 /** Own `chart.widget.canvas.dragselect.setup()` fields - same shape as plain "dragselect". */
-export const CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS = {
-  brush: [0] as number | number[],
-  dataType: 'list', // or "area"
+export const CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS: CanvasDragSelectWidgetOptions = {
+  brush: [0],
+  dataType: 'list',
 }
 
 export class CanvasDragSelectWidget extends CanvasCoreWidget {
@@ -257,7 +269,7 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS
+    return CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

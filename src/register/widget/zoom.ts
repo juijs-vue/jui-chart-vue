@@ -17,15 +17,29 @@ import { CoreWidget, registerWidget } from 'jui-graph-ts'
 
 const R = 12
 
+/** `chart.widget.zoom`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface ZoomWidgetOptions {
+  /** Which axis (or axes) to draw a drag-to-zoom band over - a single index or an array. */
+  axis?: number | number[]
+  /** When zooming multiple axes, share one drag gesture across all of them (only the first axis
+   * gets real drag handlers; the rest render a static overlay that follows along). */
+  integrate?: boolean
+  /** Sets the tick interval of the rewritten date/dateblock-axis scale after a zoom - a fixed
+   * number, or a function of the zoomed `(stime, etime)` range returning one. Only applies to
+   * `"date"`/`"dateblock"` x-axes (a `"block"` axis zooms via `axis.zoom()` instead, which has no
+   * interval concept). */
+  interval?: number | ((this: unknown, stime: number, etime: number) => number) | null
+  /** Formats the rewritten date-axis scale's tick labels after a zoom, as a function of the
+   * zoomed `(stime, etime)` range. Same `"date"`/`"dateblock"`-only applicability as `interval`. */
+  format?: ((this: unknown, stime: number, etime: number) => unknown) | null
+}
+
 /** Own `chart.widget.zoom.setup()` fields - see legacy `zoom.js`. */
-export const ZOOM_WIDGET_OWN_DEFAULTS = {
-  axis: 0 as number | number[],
-  /** @cfg {Boolean} [integrate=false] When zooming is used on multiple axes, only one drawing option */
+export const ZOOM_WIDGET_OWN_DEFAULTS: ZoomWidgetOptions = {
+  axis: 0,
   integrate: false,
-  /** @cfg {Number} [interval=1000] Sets the interval of the scale displayed on a grid */
-  interval: null as number | ((this: unknown, stime: number, etime: number) => number) | null,
-  /** @cfg {Function} [format=null] Determines whether to format the value on an axis */
-  format: null as ((this: unknown, stime: number, etime: number) => unknown) | null,
+  interval: null,
+  format: null,
 }
 
 export class ZoomWidget extends CoreWidget {
@@ -279,7 +293,7 @@ export class ZoomWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return ZOOM_WIDGET_OWN_DEFAULTS
+    return ZOOM_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

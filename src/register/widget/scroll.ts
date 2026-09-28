@@ -12,8 +12,15 @@
 // so this genuinely listens on two distinct event sources with one shared handler.
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 
+/** `chart.widget.scroll`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface ScrollWidgetOptions {
+  /** Which edge of the chart area the scrollbar track sits along. Only `'top'` is special-cased
+   * (placed above the chart area); any other value places it below. */
+  orient?: 'top' | 'bottom'
+}
+
 /** Own `chart.widget.scroll.setup()` fields - see legacy `scroll.js`. */
-export const SCROLL_WIDGET_OWN_DEFAULTS = {
+export const SCROLL_WIDGET_OWN_DEFAULTS: ScrollWidgetOptions = {
   orient: 'bottom',
 }
 
@@ -133,7 +140,7 @@ export class ScrollWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return SCROLL_WIDGET_OWN_DEFAULTS
+    return SCROLL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

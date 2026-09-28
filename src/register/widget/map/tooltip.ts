@@ -6,6 +6,16 @@
 // `TooltipWidget`'s own axis-point-based positioning).
 import { registerWidget } from 'jui-graph-ts'
 import { TooltipWidget } from '../tooltip'
+import type { TooltipWidgetOptions } from '../tooltip'
+
+/** `chart.widget.map.tooltip` has no `setup()` override of its own - it inherits
+ * `TooltipWidget`'s `TOOLTIP_WIDGET_OWN_DEFAULTS`/`TooltipWidgetOptions` verbatim, but this
+ * subclass's own `drawBefore()`/`draw()` (both fully overridden, wired to `map.*` events instead
+ * of axis/brush ones) only actually reads `orient` and `format` from it - `anchor`/`all`/`line`/
+ * `flip`/`brush` are inherited fields with no effect here. Re-exported under this file's own name
+ * purely so the generated docs for `"map.tooltip"` point at something, not because the shape
+ * differs. */
+export type MapTooltipWidgetOptions = TooltipWidgetOptions
 
 const PADDING = 7
 const ANCHOR = 7

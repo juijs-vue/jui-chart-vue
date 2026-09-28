@@ -45,10 +45,24 @@ interface DragEvent {
   y: number
 }
 
+/** `chart.widget.map.minimap`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface MapMinimapWidgetOptions {
+  /** Which end the minimap is anchored to horizontally. */
+  align?: 'start' | 'end'
+  /** Which edge the minimap is anchored to vertically. */
+  orient?: 'top' | 'bottom'
+  /** Scale of the thumbnail map relative to the real map's own path dimensions. */
+  scale?: number
+  /** Extra x offset in px, applied after position calculation. */
+  dx?: number
+  /** Extra y offset in px, applied after position calculation. */
+  dy?: number
+}
+
 /** Own `chart.widget.map.minimap.setup()` fields - see legacy `widget/map/minimap.js`. */
-export const MAP_MINIMAP_WIDGET_OWN_DEFAULTS = {
-  align: 'end' as 'start' | 'end',
-  orient: 'top' as 'top' | 'bottom',
+export const MAP_MINIMAP_WIDGET_OWN_DEFAULTS: MapMinimapWidgetOptions = {
+  align: 'end',
+  orient: 'top',
   scale: 0.2,
   dx: -1,
   dy: 1,
@@ -232,7 +246,7 @@ export class MapMinimapWidget extends MapCoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_MINIMAP_WIDGET_OWN_DEFAULTS
+    return MAP_MINIMAP_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

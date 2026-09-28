@@ -5,8 +5,15 @@
 // right edge of the chart rather than the top or bottom).
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 
+/** `chart.widget.vscroll`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface VScrollWidgetOptions {
+  /** Which edge of the chart area the scrollbar track sits along. Only `'right'` is
+   * special-cased; any other value places it on the left. */
+  orient?: 'left' | 'right'
+}
+
 /** Own `chart.widget.vscroll.setup()` fields - see legacy `vscroll.js`. */
-export const VSCROLL_WIDGET_OWN_DEFAULTS = {
+export const VSCROLL_WIDGET_OWN_DEFAULTS: VScrollWidgetOptions = {
   orient: 'left',
 }
 
@@ -126,7 +133,7 @@ export class VScrollWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return VSCROLL_WIDGET_OWN_DEFAULTS
+    return VSCROLL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

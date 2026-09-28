@@ -23,8 +23,17 @@ interface AxisMouseEvent {
   chartY: number
 }
 
+/** `chart.widget.polygon.rotate3d`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface PolygonRotate3DWidgetOptions {
+  /** Degree-snap grid for the drag-to-rotate gesture - a render only happens when the drag delta
+   * crosses a multiple of this many degrees on both axes. */
+  unit?: number
+  /** Which axis (or axes) to wire the rotate-drag gesture onto - a single index or an array. */
+  axis?: number | number[]
+}
+
 /** Own `chart.widget.polygon.rotate3d.setup()` fields - see legacy `polygon/rotate3d.js`. */
-export const POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS = {
+export const POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS: PolygonRotate3DWidgetOptions = {
   unit: 5,
   axis: [0],
 }
@@ -102,7 +111,7 @@ export class PolygonRotate3DWidget extends PolygonCoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS
+    return POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

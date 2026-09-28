@@ -24,10 +24,22 @@
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
+/** `chart.widget.dragselect`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface DragSelectWidgetOptions {
+  /** Which brush(es) to rubber-band select over - a single index or an array. **Preserved quirk**:
+   * with more than one entry, every configured brush's drag handlers end up drawing into
+   * whichever rubber-band rect was created for the LAST one (see this file's header comment) -
+   * not a per-brush bug fix opportunity, a faithfully-reproduced upstream limitation. */
+  brush?: number | number[]
+  /** `'list'` emits the matched data rows on drag-end; `'area'` emits just the dragged
+   * value-range instead. */
+  dataType?: 'list' | 'area'
+}
+
 /** Own `chart.widget.dragselect.setup()` fields - see legacy `dragselect.js`. */
-export const DRAGSELECT_WIDGET_OWN_DEFAULTS = {
-  brush: [0] as number | number[],
-  dataType: 'list', // or "area"
+export const DRAGSELECT_WIDGET_OWN_DEFAULTS: DragSelectWidgetOptions = {
+  brush: [0],
+  dataType: 'list',
 }
 
 export class DragSelectWidget extends CoreWidget {
@@ -246,7 +258,7 @@ export class DragSelectWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return DRAGSELECT_WIDGET_OWN_DEFAULTS
+    return DRAGSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

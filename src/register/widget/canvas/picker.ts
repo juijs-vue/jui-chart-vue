@@ -24,8 +24,19 @@ interface AxisMouseEvent {
   chartY: number
 }
 
+/** `chart.widget.canvas.picker`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface CanvasPickerWidgetOptions {
+  /** Also hit-test (and call the target brush's cached picker function) on `axis.mousemove`, not
+   * just click/dblclick. */
+  hover?: boolean
+  /** Which brush(es) to relay click/dblclick(/mousemove) hit-testing for - a single index or an
+   * array. Each referenced brush must register its own hit-test function via
+   * `chart.setCache('picker', {obj, func})` (e.g. `canvas.bubblecloud`) - this widget only relays. */
+  brush?: number | number[]
+}
+
 /** Own `chart.widget.canvas.picker.setup()` fields - see legacy `canvas/picker.js`. */
-export const CANVAS_PICKER_WIDGET_OWN_DEFAULTS = {
+export const CANVAS_PICKER_WIDGET_OWN_DEFAULTS: CanvasPickerWidgetOptions = {
   hover: false,
   brush: [0],
 }
@@ -85,7 +96,7 @@ export class CanvasPickerWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_PICKER_WIDGET_OWN_DEFAULTS
+    return CANVAS_PICKER_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

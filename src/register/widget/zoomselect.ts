@@ -24,9 +24,17 @@ import { CoreWidget, registerWidget } from 'jui-graph-ts'
 
 const R = 12
 
+/** `chart.widget.zoomselect`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface ZoomSelectWidgetOptions {
+  /** Which axis (or axes) to draw a drag-to-select band over - a single index or an array.
+   * Unlike `zoom.ts`, this widget only emits `zoomselect.end`/`zoomselect.close` - it never
+   * rewrites the axis domain itself. */
+  axis?: number | number[]
+}
+
 /** Own `chart.widget.zoomselect.setup()` fields - see legacy `zoomselect.js`. */
-export const ZOOMSELECT_WIDGET_OWN_DEFAULTS = {
-  axis: 0 as number | number[],
+export const ZOOMSELECT_WIDGET_OWN_DEFAULTS: ZoomSelectWidgetOptions = {
+  axis: 0,
 }
 
 export class ZoomSelectWidget extends CoreWidget {
@@ -223,7 +231,7 @@ export class ZoomSelectWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return ZOOMSELECT_WIDGET_OWN_DEFAULTS
+    return ZOOMSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

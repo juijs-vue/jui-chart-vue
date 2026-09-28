@@ -45,10 +45,26 @@ const LRP = 5
  * an integer - so by default, this widget's mouseout/mousemove handlers fire for EVERY axis in the
  * chart, not just one. Confirmed by reading the real source, not assumed; not "fixed" by inventing
  * a default here. */
-export const GUIDELINE_WIDGET_OWN_DEFAULTS = {
+export interface GuidelineWidgetOptions {
+  /** Index into `chart.get("brush", ...)` - which brush's axis/target list this guide line reads
+   * (its own axis lookup, `axis.mousemove` targeting, and point markers all derive from this
+   * brush's config, not from a directly-configured `axis`). */
+  brush?: number
+  /** Formats the time value shown in the x-axis balloon tooltip; the balloon itself only renders
+   * when this is a function. */
+  xFormat?: ((this: unknown, value: unknown) => unknown) | null
+  /** Formats each target's `{key, value}` row in the content tooltip table; rows only populate
+   * when this is a function. */
+  tooltipFormat?: ((this: unknown, data: unknown, key: string) => { key: unknown; value: unknown }) | null
+  /** When true, point markers/tooltip values accumulate across targets (stacked-series reading)
+   * instead of each showing its own raw value. */
+  stackPoint?: boolean
+}
+
+export const GUIDELINE_WIDGET_OWN_DEFAULTS: GuidelineWidgetOptions = {
   brush: 0,
-  xFormat: null as ((this: unknown, value: unknown) => unknown) | null,
-  tooltipFormat: null as ((this: unknown, data: unknown, key: string) => { key: unknown; value: unknown }) | null,
+  xFormat: null,
+  tooltipFormat: null,
   stackPoint: false,
 }
 
@@ -295,7 +311,7 @@ export class GuideLineWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return GUIDELINE_WIDGET_OWN_DEFAULTS
+    return GUIDELINE_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

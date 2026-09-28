@@ -8,18 +8,47 @@ const RADIUS = 5.5
 const RATIO = 1.2
 const POINT = 2
 
+/** `chart.widget.legend`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface LegendWidgetOptions {
+  /** Which side of the chart area the legend sits along. */
+  orient?: 'bottom' | 'top' | 'left' | 'right'
+  /** Alignment of the legend entries along that side. */
+  align?: 'start' | 'center' | 'end'
+  /** When true, clicking a legend entry toggles that target's visibility on the referenced
+   * brush(es) (and caches the visible-target list under `legend_target`, read by other widgets
+   * like `guideline`). */
+  filter?: boolean
+  /** Overrides the legend swatch's icon: a fixed icon name, or a function of the target name
+   * returning one. `null` uses the default color-box swatch. */
+  icon?: string | ((this: unknown, target: string) => string) | null
+  /** Extra x offset in px, applied after position calculation. */
+  dx?: number
+  /** Extra y offset in px, applied after position calculation. */
+  dy?: number
+  /** Overrides the per-entry swatch colors (falls back to the referenced brush's own `colors`,
+   * then the chart's theme palette). */
+  colors?: unknown[] | null
+  /** When true and `brush` names multiple brush indexes, a filter toggle applies to all of them
+   * together instead of just the first. */
+  brushSync?: boolean
+  /** Which brush(es) this legend reflects/controls - a single index or an array of indexes. */
+  brush?: number | number[]
+  /** Formats each entry's label text; defaults to the raw target name when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.widget.legend.setup()` fields - see legacy `legend.js`. */
-export const LEGEND_WIDGET_OWN_DEFAULTS = {
-  orient: 'bottom' as 'bottom' | 'top' | 'left' | 'right',
-  align: 'center' as 'start' | 'center' | 'end',
+export const LEGEND_WIDGET_OWN_DEFAULTS: LegendWidgetOptions = {
+  orient: 'bottom',
+  align: 'center',
   filter: false,
-  icon: null as string | ((this: unknown, target: string) => string) | null,
+  icon: null,
   dx: 0,
   dy: 0,
-  colors: null as unknown[] | null,
+  colors: null,
   brushSync: false,
-  brush: 0 as number | number[],
-  format: null as ((...args: unknown[]) => unknown) | null,
+  brush: 0,
+  format: null,
 }
 
 interface LegendIconEntry {
@@ -323,7 +352,7 @@ export class LegendWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return LEGEND_WIDGET_OWN_DEFAULTS
+    return LEGEND_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -6,15 +6,36 @@ const PADDING = 7
 const ANCHOR = 7
 const RATIO = 1.2
 
+/** `chart.widget.tooltip`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface TooltipWidgetOptions {
+  /** Which side of the cursor the balloon appears on (auto-flips per-side when `flip` is set and
+   * it would overflow the axis area). */
+  orient?: 'top' | 'bottom' | 'left' | 'right'
+  /** Draws the balloon's pointer triangle when true; a plain rectangle when false. */
+  anchor?: boolean
+  /** Shows every target's value in one tooltip instead of just the hovered data key's row. */
+  all?: boolean
+  /** Draws a guide line from the axis edge to the cursor alongside the balloon. */
+  line?: boolean
+  /** Flips the balloon to the opposite side when it would otherwise overflow the axis area. */
+  flip?: boolean
+  /** Formats the `{key, value}` (or bare value, when no key applies) shown per row; the raw
+   * value/key are used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** Which brush(es) this tooltip listens to `mouseover`/`mousemove`/`mouseout` on - a single
+   * index or an array of indexes. */
+  brush?: number | number[]
+}
+
 /** Own `chart.widget.tooltip.setup()` fields - see legacy `tooltip.js`. */
-export const TOOLTIP_WIDGET_OWN_DEFAULTS = {
-  orient: 'top' as 'top' | 'bottom' | 'left' | 'right',
+export const TOOLTIP_WIDGET_OWN_DEFAULTS: TooltipWidgetOptions = {
+  orient: 'top',
   anchor: true,
   all: false,
   line: false,
   flip: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
-  brush: 0 as number | number[],
+  format: null,
+  brush: 0,
 }
 
 export class TooltipWidget extends CoreWidget {
@@ -290,7 +311,7 @@ export class TooltipWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return TOOLTIP_WIDGET_OWN_DEFAULTS
+    return TOOLTIP_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

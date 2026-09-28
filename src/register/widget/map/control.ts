@@ -19,10 +19,26 @@ interface DragEvent {
   y: number
 }
 
+/** `chart.widget.map.control`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface MapControlWidgetOptions {
+  /** Which edge the control panel is anchored to vertically. */
+  orient?: 'top' | 'bottom'
+  /** Which end the control panel is anchored to horizontally. */
+  align?: 'start' | 'end'
+  /** Minimum zoom scale the +/- buttons and scroll thumb clamp to. */
+  min?: number
+  /** Maximum zoom scale the +/- buttons and scroll thumb clamp to. */
+  max?: number
+  /** Extra x offset in px, applied after position calculation. */
+  dx?: number
+  /** Extra y offset in px, applied after position calculation. */
+  dy?: number
+}
+
 /** Own `chart.widget.map.control.setup()` fields - see legacy `widget/map/control.js`. */
-export const MAP_CONTROL_WIDGET_OWN_DEFAULTS = {
-  orient: 'top' as 'top' | 'bottom',
-  align: 'start' as 'start' | 'end',
+export const MAP_CONTROL_WIDGET_OWN_DEFAULTS: MapControlWidgetOptions = {
+  orient: 'top',
+  align: 'start',
   min: 1,
   max: 3,
   dx: 5,
@@ -275,7 +291,7 @@ export class MapControlWidget extends MapCoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_CONTROL_WIDGET_OWN_DEFAULTS
+    return MAP_CONTROL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

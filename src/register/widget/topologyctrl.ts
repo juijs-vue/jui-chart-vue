@@ -22,13 +22,20 @@
 // replaces the brush's DOM nodes, invalidating the previously-bound per-node `mousedown` handlers).
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 
+/** `chart.widget.topologyctrl`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface TopologyCtrlWidgetOptions {
+  /** Enables panning (drag-to-move) the point of view of the topology map. */
+  move?: boolean
+  /** Enables mousewheel zoom in/out of the topology map. */
+  zoom?: boolean
+  /** Which `topologynode` brush index this widget controls. */
+  brush?: number
+}
+
 /** Own `chart.widget.topologyctrl.setup()` fields - see legacy `topologyctrl.js`. */
-export const TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS = {
-  /** @cfg {Boolean} [move=false] Set to be moved to see the point of view of the topology map. */
+export const TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS: TopologyCtrlWidgetOptions = {
   move: false,
-  /** @cfg {Boolean} [zoom=false] Set the zoom-in / zoom-out features of the topology map. */
   zoom: false,
-  /** @cfg {Number} [brush=0] Specifies a brush index for which a widget is used. */
   brush: 0,
 }
 
@@ -220,7 +227,7 @@ export class TopologyControlWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS
+    return TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

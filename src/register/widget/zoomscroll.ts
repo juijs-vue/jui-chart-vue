@@ -49,12 +49,31 @@ function extendUndefinedOnly(origin: Record<string, unknown>, add: Record<string
   return origin
 }
 
+/** `chart.widget.zoomscroll`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface ZoomScrollWidgetOptions {
+  /** Brush type used to render the headless snapshot preview chart (e.g. `'area'`, `'line'`). */
+  symbol?: string
+  /** Data key the snapshot chart's brush targets. */
+  key?: string | null
+  /** Color (theme palette index or a CSS color string) for the snapshot brush and the center
+   * window's border. */
+  color?: string | number
+  /** Formats the snapshot chart's x-axis tick labels. */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** Which axis this minimap reflects/controls. */
+  axis?: number
+  /** Extra x offset in px, applied after position calculation. */
+  dx?: number
+  /** Extra y offset in px, applied after position calculation. */
+  dy?: number
+}
+
 /** Own `chart.widget.zoomscroll.setup()` fields - see legacy `zoomscroll.js`. */
-export const ZOOMSCROLL_WIDGET_OWN_DEFAULTS = {
+export const ZOOMSCROLL_WIDGET_OWN_DEFAULTS: ZoomScrollWidgetOptions = {
   symbol: 'area',
-  key: null as string | null,
-  color: 0 as string | number,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  key: null,
+  color: 0,
+  format: null,
   axis: 0,
   dx: 0,
   dy: 0,
@@ -325,7 +344,7 @@ export class ZoomScrollWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return ZOOMSCROLL_WIDGET_OWN_DEFAULTS
+    return ZOOMSCROLL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

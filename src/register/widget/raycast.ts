@@ -21,9 +21,17 @@
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
+/** `chart.widget.raycast`'s own config fields (on top of `WidgetConfig`'s `render`/`type`/`index`). */
+export interface RaycastWidgetOptions {
+  /** Which brush(es) to wire click/dblclick/rclick hit-testing onto - a single index or an array
+   * of indexes. Each referenced brush's axis must cross a "block"-type axis with a "range"-type
+   * axis, or wiring is silently skipped for it. */
+  brush?: number | number[]
+}
+
 /** Own `chart.widget.raycast.setup()` fields - see legacy `raycast.js`. */
-export const RAYCAST_WIDGET_OWN_DEFAULTS = {
-  brush: [0] as number | number[],
+export const RAYCAST_WIDGET_OWN_DEFAULTS: RaycastWidgetOptions = {
+  brush: [0],
 }
 
 export class RaycastWidget extends CoreWidget {
@@ -100,7 +108,7 @@ export class RaycastWidget extends CoreWidget {
   }
 
   static setup(): Record<string, unknown> {
-    return RAYCAST_WIDGET_OWN_DEFAULTS
+    return RAYCAST_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 
