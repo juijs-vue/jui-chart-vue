@@ -35,6 +35,12 @@ export const RAYCAST_WIDGET_OWN_DEFAULTS: RaycastWidgetOptions = {
 }
 
 export class RaycastWidget extends CoreWidget {
+  /** Hit-tests a click/dblclick/rclick position against the cached hit-box for the block-axis
+   * column under the cursor (`chart.getCache('raycast_area_<col>')`, written by some other brush -
+   * see this file's header comment), and if the cursor position actually falls inside that box,
+   * re-emits `eventType` (`'raycast.click'`/`'raycast.dblclick'`/`'raycast.rclick'`) carrying the
+   * matched data row. `_rangeAxis` is accepted but unused - the hit-box itself already encodes the
+   * range-axis bounds, so only `blockAxis.invert()` is needed to find which column/row was hit. */
   private emitBlockAndRangeEvent(
     eventType: string,
     datas: BrushData[],
@@ -60,6 +66,11 @@ export class RaycastWidget extends CoreWidget {
     }
   }
 
+  /** Wires `axis.click`/`axis.dblclick`/`axis.rclick` (scoped to `brush.axis`) for one brush, each
+   * delegating to `emitBlockAndRangeEvent()` - but only when the brush's axis actually crosses a
+   * "block"-type dimension with a "range"-type one (checked once here via `axis.x`/`axis.y`'s own
+   * `type`); when neither pairing is found, this silently registers no listeners at all, per this
+   * file's header comment. */
   private setRayCastEvent(brush: Record<string, unknown>): void {
     const axis = this.chart.axis(brush.axis as number)
     const xType = axis.x?.type
@@ -94,6 +105,8 @@ export class RaycastWidget extends CoreWidget {
     }
   }
 
+  /** Wires `setRayCastEvent()` for every brush index in `widget.brush`, and returns an empty group -
+   * this widget draws nothing visible of its own (see this file's header comment). */
   draw = (): any => {
     const g = this.chart.svg.group()
     const bIndex = (this.widget as Record<string, unknown>).brush
@@ -107,6 +120,7 @@ export class RaycastWidget extends CoreWidget {
     return g
   }
 
+  /** Supplies `RAYCAST_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return RAYCAST_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

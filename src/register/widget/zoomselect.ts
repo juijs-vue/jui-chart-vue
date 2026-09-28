@@ -41,6 +41,15 @@ export class ZoomSelectWidget extends CoreWidget {
   private top = 0
   private left = 0
 
+  /** Wires the drag-to-select gesture for `axisIndex`: `axis.mousedown` starts tracking (caching
+   * `startDate` via `axis.x.invert()` for `"date"`/`"dateblock"` axes), `axis.mousemove` resizes the
+   * drag `thumb` rect and, once dragging (`bg != null`), shows/repositions the highlighted `bg`
+   * band's close-button. On release (`axis.mouseup`/`chart.mouseup`/`bg.mouseup`/`bg.mouseout`),
+   * computes the selected range - a block-index pair via `updateBlockGrid()` for a `"block"` x-axis,
+   * or a date-value pair via `updateDateObj()` for `"date"`/`"dateblock"` (concatenated with a block
+   * range too for `"dateblock"`) - reveals the close-button overlay (`renderChart()`), and emits
+   * `zoomselect.end` with the computed range. Unlike `zoom.ts`'s twin, never rewrites the axis's own
+   * domain - purely a passive notification (see this file's header comment). */
   private setDragEvent(axisIndex: number, thumb: any, bg: any): void {
     const axis = this.chart.axis(axisIndex)
     const xtype = (axis.get('x') as Record<string, unknown>).type
@@ -161,6 +170,11 @@ export class ZoomSelectWidget extends CoreWidget {
     this.on('bg.mouseout', endZoomAction)
   }
 
+  /** Draws one axis's select overlay: a semi-transparent drag-band `thumb` plus a hidden highlighted
+   * `bg` group (a filled rect + "×" close-button) that becomes visible once a drag completes, and
+   * wires the drag gesture via `setDragEvent()`. Unlike `zoom.ts`'s `drawSection()`, there's no
+   * `widget.integrate` concept here - every configured axis always gets its own independent drag
+   * handlers. */
   drawSection(axisIndex: number): any {
     const axis = this.chart.axis(axisIndex)
     const cw = axis.area('width')
@@ -205,20 +219,28 @@ export class ZoomSelectWidget extends CoreWidget {
     })
   }
 
+  /** Just emits `zoomselect.close` - unlike `zoom.ts`'s `rollbackZoom()`, does no actual domain
+   * restoration itself (there's no domain to restore - this widget never rewrote one). Per this
+   * file's header comment, real callers pass an (unused) `axisIndex` argument despite this method
+   * taking none. */
   rollbackZoom(): void {
     this.chart.emit('zoomselect.close')
   }
 
+  /** Normalizes `widget.axis` into an array (a single index becomes a one-element array). */
   private getAxisList(): number[] {
     const widgetAxis = (this.widget as Record<string, unknown>).axis
     return Array.isArray(widgetAxis) ? widgetAxis : [widgetAxis as number]
   }
 
+  /** Caches the chart's top/left padding, used to offset every axis section's drawn position in
+   * `drawSection()`/`setDragEvent()`. */
   drawBefore = (): void => {
     this.top = this.chart.padding('top')
     this.left = this.chart.padding('left')
   }
 
+  /** Draws one select overlay section (`drawSection()`) per axis in `widget.axis`. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const axisList = this.getAxisList()
@@ -230,6 +252,7 @@ export class ZoomSelectWidget extends CoreWidget {
     return g
   }
 
+  /** Supplies `ZOOMSELECT_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return ZOOMSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

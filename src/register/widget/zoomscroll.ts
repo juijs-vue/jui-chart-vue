@@ -98,6 +98,16 @@ export class ZoomScrollWidget extends CoreWidget {
   private r_ctrl: any = null
   private c_rect: any = null
 
+  /** Wires one draggable handle's mouse behavior. Called three times from `draw()`: once for the
+   * left end-cap (`bg = l_rect`, `isLeft = true`), once for the right end-cap (`bg = r_rect`,
+   * `isLeft = false`), and once for the center window (`bg = null`, which is how `isCenter` is
+   * detected on `mousedown`). Center dragging moves `l_rect`/`r_rect`/`c_rect` together and shifts
+   * `this.start`/`this.end` by the same delta; end-cap dragging resizes just that one rounded end
+   * (guarded by `preventDragAction()` so the two end-caps can never cross past a
+   * half-`tick`-width gap - see this file's own header comment on `preventDragAction`'s inert `tw`
+   * argument) and recomputes `this.start`/`this.end` from the new width. `endZoomAction` (on
+   * `chart.mouseup`/`bg.mouseup`) commits the drag by calling `axis.zoom(start, end)` on every axis
+   * in the chart, emitting `zoomscroll.dragend` before rendering and `zoomscroll.render` after. */
   private setDragEvent(bg: any, ctrl: any, isLeft?: boolean): void {
     let isMove = false
     let isCenter = false
@@ -212,6 +222,13 @@ export class ZoomScrollWidget extends CoreWidget {
     this.on('bg.mouseup', endZoomAction)
   }
 
+  /** Renders a headless snapshot chart (a detached `Builder` instance - see this file's header
+   * comment on the real, confirmed-safe `document.createElement('div')`-as-root technique) showing
+   * the full dataset as a `widget.symbol`-type brush (default `'area'`) targeting `widget.key`, and
+   * returns it as a `data:image/svg+xml` URI for `draw()`'s background `<image>`. The snapshot's
+   * x-axis config is built via `extendUndefinedOnly()` from the real x-axis's own config, with
+   * `hide`/`line`/`format` hardcoded to widget-controlled values that (per `extendUndefinedOnly()`'s
+   * own doc comment) always win over whatever the real axis already defines for those three keys. */
   private createChartImage(): string {
     const widget = this.widget as Record<string, unknown>
     const size = this.chart.theme('zoomScrollGridFontSize') as number
@@ -256,6 +273,9 @@ export class ZoomScrollWidget extends CoreWidget {
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(image.svg.toXML())
   }
 
+  /** Caches `widget.axis`'s current zoom window (`start`/`end`) and every geometry constant
+   * (`w`/`h`/`tick`/`size`/`radius`/`b`) `draw()`/`setDragEvent()`/`createChartImage()` need, derived
+   * from the chart's theme (`zoomScroll*` keys) and area size. */
   drawBefore = (): void => {
     const widget = this.widget as Record<string, unknown>
     this.zsAxis = this.chart.axis(widget.axis as number)
@@ -270,6 +290,11 @@ export class ZoomScrollWidget extends CoreWidget {
     this.tick = this.w / this.count
   }
 
+  /** Draws the minimap: the snapshot background `<image>` (`createChartImage()`), the two rounded
+   * end-caps (`l_rect`/`r_rect`, sized from the current zoom window's `start`/`end` via `this.tick`)
+   * with their pill-shaped drag handles (`l_ctrl`/`r_ctrl`), and the transparent, bordered center
+   * window (`c_rect`) between them - then wires all three as draggable via `setDragEvent()`. Draws
+   * nothing when the computed end-cap widths are `NaN` (an empty/zero-length dataset). */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
     const areaStyle = {
@@ -343,6 +368,7 @@ export class ZoomScrollWidget extends CoreWidget {
       .translate((widget.dx as number) + this.chart.area('x'), (widget.dy as number) + this.chart.area('y2') - this.b)
   }
 
+  /** Supplies `ZOOMSCROLL_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return ZOOMSCROLL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

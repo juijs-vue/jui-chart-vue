@@ -49,6 +49,10 @@ export class TopologyControlWidget extends CoreWidget {
   private boxX = 0
   private boxY = 0
 
+  /** Debounces re-renders during a continuous drag/wheel interaction: fires `chart.render()` (and
+   * re-wires the brush's per-node handlers via `setBrushEvent()`, since a render replaces the
+   * brush's DOM) at most once per 70ms, per this file's header comment. Additional calls while a
+   * render is already pending (`renderWait`) are silently dropped. */
   private renderChart(): void {
     if (this.renderWait === false) {
       setTimeout(() => {
@@ -62,6 +66,12 @@ export class TopologyControlWidget extends CoreWidget {
     }
   }
 
+  /** Wires per-node dragging (scoped to `this.ctrlAxis.index`, so `axis.mousemove` only fires for
+   * `ctrlAxis`): while `this.targetKey` is set (by `setBrushEvent()`'s own node `mousedown`
+   * handler), each move recomputes that node's `x`/`y` via the axis's `axis.c(key)` mutator
+   * closures (`setX`/`setY`) and debounces a re-render through `renderChart()`. `axis.mouseup`/
+   * `bg.mouseup`/`bg.mouseout` clear `targetKey`, ending the drag. Always wired in `draw()`
+   * regardless of `widget.move`/`widget.zoom` - node dragging is unconditional. */
   private initDragEvent(): void {
     const endDragAction = () => {
       if (typeof this.targetKey !== 'string') return
@@ -91,6 +101,15 @@ export class TopologyControlWidget extends CoreWidget {
     this.on('bg.mouseout', endDragAction)
   }
 
+  /** Only wired when `widget.zoom` is enabled: `axis.mousewheel` nudges `this.scale` by ±0.1
+   * (clamped to `[0.6, 2]`) per wheel notch (`e.wheelDelta`, falling back to the negated legacy
+   * `e.detail` for browsers without it) and applies it via `axis.c(this.targetKey).setScale()`,
+   * debouncing a re-render through `renderChart()`. This writes a GLOBAL scale, not a per-node one,
+   * regardless of `this.targetKey`'s value: `chart.grid.topologytable`'s own `setScale()` mutator
+   * (see `register/grid/topologytable.ts`) never actually reads its enclosing `axis.c(index)` call's
+   * `index` argument, so calling it with `targetKey` still `null` (no node currently being dragged)
+   * works identically to calling it with a real key - confirmed by reading that grid's `scale()`
+   * factory directly, not assumed. */
   private initZoomEvent(): void {
     this.on(
       'axis.mousewheel',
@@ -115,6 +134,14 @@ export class TopologyControlWidget extends CoreWidget {
     )
   }
 
+  /** Only wired when `widget.move` is enabled: `axis.mousedown` starts a pan (skipped while a node
+   * drag is in progress, i.e. `this.targetKey` is already a string), tracking the mouse's start
+   * offset against the CURRENT box offset (`this.boxX`/`this.boxY`); `axis.mousemove` updates
+   * `boxX`/`boxY` from the drag delta and applies the pan via `axis.c(this.targetKey).setView()` -
+   * like `initZoomEvent()`'s `setScale()`, this writes a global view offset regardless of
+   * `targetKey`'s value, since `setView()` also ignores its enclosing call's index argument (see
+   * `register/grid/topologytable.ts`). `chart.mouseup`/`chart.mouseout`/`bg.mouseup`/`bg.mouseout`
+   * end the pan. */
   private initMoveEvent(): void {
     let startX: number | null = null
     let startY: number | null = null
@@ -159,6 +186,11 @@ export class TopologyControlWidget extends CoreWidget {
     this.on('bg.mouseout', endMoveAction)
   }
 
+  /** Finds the root SVG group for `widget.brush`'s `topologynode` brush among the chart root's
+   * children, by counting only children whose `class` attribute contains `'topologynode'` (since
+   * `widget.brush` is a brush-type-relative index, not a direct child index - other brush types'
+   * elements are skipped when counting) until the `widget.brush`-th one is found. `null` when no
+   * such element exists yet. */
   private getBrushElement(): any {
     const children = this.svg.root.get(0).children
     let index = 0
@@ -180,6 +212,15 @@ export class TopologyControlWidget extends CoreWidget {
     return element
   }
 
+  /** (Re-)wires per-node `mousedown` handlers on every child of the brush element found by
+   * `getBrushElement()`, keyed by each node's own `index` attribute. On `mousedown` (only when no
+   * other node is already being dragged, i.e. `this.targetKey` is unset), resolves that node's data
+   * key via `ctrlAxis.getValue(...)`, caches its current unscaled `x`/`y` as the drag's start
+   * position, and sets `this.targetKey` - which `initDragEvent()`'s `axis.mousemove` handler then
+   * reads. Also writes `axis.cache.activeNodeKey` - a real, but dead, write per this file's own
+   * header comment (nothing ever reads that key back; the grid's own `nodeKey` field is different
+   * and unaffected). Must be re-run after every re-render (see `renderChart()`'s own doc comment)
+   * since a render replaces the brush's DOM nodes, invalidating these handlers. */
   private setBrushEvent(): void {
     const element = this.getBrushElement()
     if (element == null) return
@@ -206,6 +247,10 @@ export class TopologyControlWidget extends CoreWidget {
     })
   }
 
+  /** Resolves `widget.brush`'s axis, conditionally wires panning/zoom (`initMoveEvent()`/
+   * `initZoomEvent()`, gated on `widget.move`/`widget.zoom`), always wires node dragging
+   * (`initDragEvent()`) and the per-node click targets (`setBrushEvent()`), and returns an empty
+   * group - this widget draws nothing visible of its own, per this file's header comment. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
     const brush = this.chart.get('brush', widget.brush)
@@ -226,6 +271,7 @@ export class TopologyControlWidget extends CoreWidget {
     return this.chart.svg.group()
   }
 
+  /** Supplies `TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return TOPOLOGYCTRL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

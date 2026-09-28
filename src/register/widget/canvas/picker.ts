@@ -42,6 +42,11 @@ export const CANVAS_PICKER_WIDGET_OWN_DEFAULTS: CanvasPickerWidgetOptions = {
 }
 
 export class CanvasPickerWidget extends CoreWidget {
+  /** Wires `axis.<eventType>` (scoped to `brush.axis`) so a click/dblclick on the axis calls
+   * whatever hit-test function the target brush cached via `chart.setCache('picker', {obj, func})`
+   * (see this file's header comment), and - only when it returns non-null data - re-emits
+   * `picker.<eventType>` carrying `{brush, data}`. A no-op click when no brush has registered a
+   * picker function yet. */
   private emitActiveEvent(brush: Record<string, unknown>, eventType: string): void {
     this.on(
       `axis.${eventType}`,
@@ -60,6 +65,11 @@ export class CanvasPickerWidget extends CoreWidget {
     )
   }
 
+  /** Wires this brush's click/dblclick relaying (`emitActiveEvent()`, always) and, only when
+   * `widget.hover` is set, an `axis.mousemove` handler too - unlike `emitActiveEvent()`, that hover
+   * handler calls the cached picker function purely for its side effect (e.g. updating a hover
+   * highlight inside the brush itself) and never re-emits a `picker.*` event of its own, regardless
+   * of what the function returns. */
   private setCanvasEvents(brush: Record<string, unknown>): void {
     const widget = this.widget as Record<string, unknown>
 
@@ -81,6 +91,9 @@ export class CanvasPickerWidget extends CoreWidget {
     this.emitActiveEvent(brush, 'dblclick')
   }
 
+  /** Wires `setCanvasEvents()` for every brush index in `widget.brush`, and returns an empty
+   * group - this widget only relays events, drawing nothing of its own visible content (see this
+   * file's header comment). */
   draw = (): any => {
     const g = this.chart.svg.group()
     const widget = this.widget as Record<string, unknown>
@@ -95,6 +108,7 @@ export class CanvasPickerWidget extends CoreWidget {
     return g
   }
 
+  /** Supplies `CANVAS_PICKER_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return CANVAS_PICKER_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -54,6 +54,9 @@ export class MapControlWidget extends MapCoreWidget {
   private scrollY = 0
   private btn: Record<string, any> = { top: null, right: null, bottom: null, left: null, home: null, up: null, down: null, thumb: null }
 
+  /** Builds and caches (onto `this.btn[type]`) one square button: a rounded background rect at
+   * `opacity`, plus a centered icon `<image>` from `url` when given (a plain draggable handle, e.g.
+   * the scroll thumb, otherwise). Positioned at `(x, y)` relative to its own group. */
   private createBtnGroup(type: string, opacity: number, x: number, y: number, url: unknown = null): any {
     this.btn[type] = this.chart.svg
       .group({ cursor: url != null ? 'pointer' : 'move' }, () => {
@@ -86,6 +89,8 @@ export class MapControlWidget extends MapCoreWidget {
     return this.btn[type]
   }
 
+  /** Draws the 6 evenly-spaced horizontal tick lines behind the zoom scroll track (purely
+   * decorative - no interaction of its own). */
   private createScrollThumbLines(): any {
     return this.chart.svg.group({}, () => {
       for (let i = 0; i < 6; i++) {
@@ -104,16 +109,29 @@ export class MapControlWidget extends MapCoreWidget {
     })
   }
 
+  /** Converts a map zoom `scale` (within `[widget.min, widget.max]`) into the scroll thumb's y
+   * position (within `[SCROLL_MIN_Y, SCROLL_MAX_Y]`), via the inherited `getScaleToValue()` -
+   * despite that method's own "scale to value" naming, here the roles are inverted: `scale` is
+   * passed as the value-domain input and the pixel range as the "scale" output, since the scroll
+   * track's pixel axis is inverted relative to zoom level (dragging the thumb UP increases zoom). */
   private getScrollThumbY(scale: number): number {
     const widget = this.widget as Record<string, unknown>
     return this.getScaleToValue(scale, widget.min as number, widget.max as number, SCROLL_MIN_Y, SCROLL_MAX_Y)
   }
 
+  /** Inverse of `getScrollThumbY()`: converts a scroll thumb y position back into a map zoom scale,
+   * via the inherited `getValueToScale()`. */
   private getScrollScale(y: number): number {
     const widget = this.widget as Record<string, unknown>
     return this.getValueToScale(y, SCROLL_MIN_Y, SCROLL_MAX_Y, widget.min as number, widget.max as number)
   }
 
+  /** Wires click handlers for the 4 directional pan buttons (each nudges `viewX`/`viewY` by one
+   * `blockX`/`blockY` step, `1/10` of the map's own size), the home button (restores the view
+   * captured in `drawBefore()`), and the +/- zoom buttons (step `this.scale` by ±0.1, clamped to
+   * `[widget.min, widget.max]`). Every handler pushes its change onto the axis via
+   * `axis.updateGrid('map', ...)` and, for pan, `axis.map.view()`, or for zoom, `axis.map.scale()`
+   * plus repositioning the scroll thumb - then force-renders if a render isn't already pending. */
   private setButtonEvents(): void {
     const originViewX = this.viewX
     const originViewY = this.viewY
@@ -178,6 +196,12 @@ export class MapControlWidget extends MapCoreWidget {
     })
   }
 
+  /** Wires the scroll thumb's own drag behavior (separate from the +/- buttons): `mousedown` on the
+   * thumb starts tracking, `mousemove` (on either the thumb or the whole `bar`) clamps the resulting
+   * thumb y to `[SCROLL_MIN_Y, SCROLL_MAX_Y]`, converts it back to a zoom scale via
+   * `getScrollScale()`, and applies it the same way `setButtonEvents()`'s zoom handlers do;
+   * `mouseup`/`mouseout` (on the thumb or the bar) commit the drag by folding the accumulated
+   * `moveY` into `this.scrollY`. */
   private setScrollEvent(bar: any): void {
     const axis = this.axis as unknown as { updateGrid(type: string, value: unknown): void; map: MapScale }
     let startY = 0
@@ -223,6 +247,9 @@ export class MapControlWidget extends MapCoreWidget {
     bar.on('mouseout', endMoveThumb)
   }
 
+  /** Caches the map's current scale/view (so the home button in `setButtonEvents()` can restore
+   * this exact starting point) and derives the pan step size (`blockX`/`blockY`, 1/10 of the map's
+   * own width/height) and initial scroll-thumb position (`scrollY`, via `getScrollThumbY()`). */
   drawBefore = (): void => {
     const axis = this.axis as unknown as { map: MapScale }
 
@@ -234,6 +261,11 @@ export class MapControlWidget extends MapCoreWidget {
     this.scrollY = this.getScrollThumbY(this.scale)
   }
 
+  /** Assembles the full control panel (4 pan buttons + home in the `top` group, the zoom scroll bar
+   * + up/down buttons + thumb in the `bottom` group), wires both groups' interactions
+   * (`setButtonEvents()`/`setScrollEvent()`), then translates the whole panel into its corner per
+   * `widget.orient`/`widget.align` (with hardcoded panel-size offsets, `60`/`273`) plus
+   * `widget.dx`/`widget.dy`. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
 
@@ -290,6 +322,7 @@ export class MapControlWidget extends MapCoreWidget {
     return g
   }
 
+  /** Supplies `MAP_CONTROL_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return MAP_CONTROL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -46,6 +46,15 @@ export class ZoomWidget extends CoreWidget {
   private top = 0
   private left = 0
 
+  /** Wires the drag-to-zoom gesture for one axis. `thumb`/`bg` are `null` for a non-first axis
+   * under `widget.integrate` (see `drawSection()`) - in that case this only tracks state, drawing
+   * nothing of its own, since the first axis's own drag handlers drive the shared gesture. On
+   * `axis.mouseup`/`chart.mouseup`/`bg.mouseup`, resolves the drag into a real domain rewrite: a
+   * `"block"` x-axis calls `axis.zoom(start, end)` via `updateBlockGrid()`; a `"date"`/`"dateblock"`
+   * one rewrites the x-grid's `domain`/`interval`/`format` via `updateDateObj()`, caching the
+   * PRE-zoom domain/interval/format the first time a given axis is zoomed (`zoomDepth === 0`) so
+   * `rollbackZoom()` can restore it; `"dateblock"` additionally re-applies `updateBlockGrid()` on
+   * top. Always force-renders and emits `zoom.end` with whatever range was computed. */
   private setDragEvent(axisIndex: number, thumb: any, bg: any): void {
     const axis = this.chart.axis(axisIndex)
     const xtype = (axis.get('x') as Record<string, unknown>).type
@@ -190,6 +199,13 @@ export class ZoomWidget extends CoreWidget {
     this.on('bg.mouseout', endZoomAction)
   }
 
+  /** Draws one axis's zoom overlay: a semi-transparent drag-band `thumb` plus a hidden "×"
+   * close-button group (`bg`) that appears after a zoom and, on click, calls `rollbackZoom()` -
+   * for every configured axis when `widget.integrate` is set (restoring all of them together),
+   * or just this `axisIndex` otherwise. Real drag handlers are only wired
+   * (`setDragEvent(axisIndex, thumb, bg)`) for the first axis when `widget.integrate` is true
+   * (`axisSeq === 0`); every other integrated axis gets `setDragEvent(axisIndex, null, null)` -
+   * state tracking only, per this file's header comment on `integrate` sharing one gesture. */
   drawSection(axisIndex: number, axisSeq: number): any {
     const widget = this.widget as Record<string, unknown>
     const integrate = widget.integrate
@@ -237,6 +253,12 @@ export class ZoomWidget extends CoreWidget {
     })
   }
 
+  /** Restores every axis in `axisList` to its pre-zoom state: a `"block"` axis just calls
+   * `axis.screen(1)`; a `"date"`/`"dateblock"` one restores the `domain`/`interval`/`format` cached
+   * by `setDragEvent()`'s `updateDateObj()` (under `prevDomain_<axisIndex>` etc) and resets
+   * `zoomDepth_<axisIndex>` back to 0 so the next zoom re-caches fresh "pre-zoom" values;
+   * `"dateblock"` additionally calls `axis.screen(1)` too. Force-renders and emits `zoom.close`
+   * once per axis restored. */
   rollbackZoom(axisList: number[]): void {
     for (let i = 0; i < axisList.length; i++) {
       const axisIndex = axisList[i]
@@ -271,16 +293,20 @@ export class ZoomWidget extends CoreWidget {
     }
   }
 
+  /** Normalizes `widget.axis` into an array (a single index becomes a one-element array). */
   private getAxisList(): number[] {
     const widgetAxis = (this.widget as Record<string, unknown>).axis
     return Array.isArray(widgetAxis) ? widgetAxis : [widgetAxis as number]
   }
 
+  /** Caches the chart's top/left padding, used to offset every axis section's drawn position in
+   * `drawSection()`/`setDragEvent()`. */
   drawBefore = (): void => {
     this.top = this.chart.padding('top')
     this.left = this.chart.padding('left')
   }
 
+  /** Draws one zoom overlay section (`drawSection()`) per axis in `widget.axis`. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const axisList = this.getAxisList()
@@ -292,6 +318,7 @@ export class ZoomWidget extends CoreWidget {
     return g
   }
 
+  /** Supplies `ZOOM_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return ZOOM_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -43,6 +43,11 @@ export class TooltipWidget extends CoreWidget {
   private tooltips: Record<number, any> = {}
   private lineHeight = 0
 
+  /** Resolves the `{key, value}` pair to render for one tooltip row. When `widget.format` is a
+   * function, delegates to it (via `this.format`, `CoreWidget`'s fallback wrapper) and accepts
+   * either a plain value or a `{key, value}` object back; otherwise falls back to a raw value-only
+   * row when there's no data key (`k` with no `d`), or a `{key, value}` row read straight off `d`
+   * when both are present. */
   private getFormat(k: string | null, d: Record<string, unknown> | null): { key: string | null; value: unknown } {
     let key: string | null = null
     let value: unknown = null
@@ -71,6 +76,10 @@ export class TooltipWidget extends CoreWidget {
     return { key, value }
   }
 
+  /** Fills in the given brush's tooltip text rows (one row per target, or just `obj.dataKey`'s row
+   * when `widget.all` is false) and measures the resulting balloon size. `onlyValue` comes back
+   * true when at least one row had no key text (centers that row's value instead of right-aligning
+   * it against a key column). */
   private printTooltip(obj: { brush: any; dataKey?: string | null; data?: Record<string, unknown> | null }): { width: number; height: number; onlyValue: boolean } {
     const tooltip = this.tooltips[obj.brush.index]
     const texts = tooltip.get(1).get(1)
@@ -116,11 +125,16 @@ export class TooltipWidget extends CoreWidget {
     }
   }
 
+  /** Whether the given brush index is one of the brush(es) `widget.brush` configures this tooltip
+   * to listen to - gates `mouseover` so hovering a non-listened brush is ignored. */
   private existBrush(index: number): boolean {
     const list = this.getIndexArray((this.widget as Record<string, unknown>).brush)
     return list.includes(index)
   }
 
+  /** Looks up `obj.dataKey`'s position within the brush's own `target` list and returns that
+   * target's lightened series color (see the inline note on the `ColorUtil.lighten()` rate-0
+   * default this relies on); `null` when the key isn't one of the brush's targets. */
   private getColorByKey(obj: { brush: any; dataKey?: string | null }): string | null {
     const targets: string[] = obj.brush.target
 
@@ -136,6 +150,10 @@ export class TooltipWidget extends CoreWidget {
     return null
   }
 
+  /** Computes the balloon's top-left `{x, y}` (positioned relative to the cursor's background
+   * coordinates `e.bgX`/`e.bgY`, offset by the balloon's own size/`ANCHOR`/`PADDING`) for the given
+   * `orient`, plus `c` - the guide line's x-offset from the cursor (flipped to `-2` for `'right'`,
+   * `2` otherwise) used by the caller's `line` element. */
   private getTooltipXY(e: any, size: { width: number; height: number }, orient: string | null): { x: number; y: number; c: number } {
     let x = e.bgX - size.width / 2
     let y = e.bgY - size.height - ANCHOR - PADDING / 2
@@ -157,6 +175,14 @@ export class TooltipWidget extends CoreWidget {
     return { x, y, c: lineX }
   }
 
+  /** Wires the `mouseover`/`mousemove`/`mouseout` handlers (from `CoreWidget.on()`, unscoped to any
+   * one axis) that drive every brush's tooltip group built in `draw()`. `mouseover` re-measures and
+   * repositions the balloon for the hovered brush/data, applying `widget.flip`'s side-swap when the
+   * balloon would otherwise overflow the axis area; `mousemove` just retranslates the already-shown
+   * balloon and guide line to follow the cursor; `mouseout` hides it. `isActive`/`size`/`orient`/
+   * `axis` are shared closure state across all three handlers, so only one brush's tooltip can be
+   * "active" (shown) at a time even though the same handler is wired once per widget instance for
+   * every configured brush. */
   private setTooltipEvent(): void {
     let isActive = false
     let size: { width: number; height: number; onlyValue: boolean } | null = null
@@ -253,10 +279,16 @@ export class TooltipWidget extends CoreWidget {
     )
   }
 
+  /** Caches the per-row line height (`tooltipFontSize` theme value scaled by `RATIO`) used to lay
+   * out each tooltip's text rows in `draw()`/`setTooltipEvent()`. */
   drawBefore = (): void => {
     this.lineHeight = (this.chart.theme('tooltipFontSize') as number) * RATIO
   }
 
+  /** Builds one hidden tooltip group per brush in `widget.brush` (a guide `line`, a balloon
+   * `polygon`, and one `text` row per target - or just one extra row when `widget.all` is true and
+   * the brush has multiple targets), then wires the shared hover handlers via
+   * `setTooltipEvent()`. */
   draw = (): any => {
     const chart = this.chart
     const widget = this.widget as Record<string, unknown>
@@ -310,6 +342,7 @@ export class TooltipWidget extends CoreWidget {
     return group
   }
 
+  /** Supplies `TOOLTIP_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return TOOLTIP_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -39,6 +39,16 @@ export const POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS: PolygonRotate3DWidgetOptions 
 }
 
 export class PolygonRotate3DWidget extends PolygonCoreWidget {
+  /** Wires the drag-to-rotate gesture for one axis (scoped via `axisIndex`, despite its own
+   * "scroll" name - a literal port of the legacy method name, which really drives a rotation, not a
+   * scroll). `mousedown` captures the drag start position and the axis's own starting
+   * `degree.x`/`degree.y`; `mousemove` maps the drag delta (as a fraction of the axis area's own
+   * `width`/`height`) onto a `±DEGREE_LIMIT` (180°) degree change, floors it to a multiple of
+   * `widget.unit`, and only actually writes `axis.set('degree', ...)` + re-renders when that snapped
+   * `dx`/`dy` pair differs from the last one applied (`cacheXY`) - both AND'd together via `dx % unit
+   * != 0 && dy % unit != 0`, i.e. a render is skipped only when NEITHER axis has crossed a fresh
+   * `unit`-degree boundary (crossing on just one axis still renders). `mouseup`/`bg.mouseup`/
+   * `chart.mouseup` end the drag. */
   private setScrollEvent(axisIndex: number): void {
     const axis = this.chart.axis(axisIndex) as RotatableAxis
     const widget = this.widget as Record<string, unknown>
@@ -101,6 +111,8 @@ export class PolygonRotate3DWidget extends PolygonCoreWidget {
     this.on('chart.mouseup', mouseup)
   }
 
+  /** Wires `setScrollEvent()` for every axis index in `widget.axis`. Returns `void`, not a group -
+   * this widget only attaches interaction handlers, drawing nothing visible of its own. */
   draw = (): void => {
     const widget = this.widget as Record<string, unknown>
     const indexes = Array.isArray(widget.axis) ? (widget.axis as number[]) : [widget.axis as number]
@@ -110,6 +122,7 @@ export class PolygonRotate3DWidget extends PolygonCoreWidget {
     }
   }
 
+  /** Supplies `POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return POLYGON_ROTATE3D_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

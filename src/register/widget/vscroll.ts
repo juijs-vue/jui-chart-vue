@@ -26,6 +26,8 @@ export class VScrollWidget extends CoreWidget {
   private piece = 0
   private rate = 0
 
+  /** Vertical twin of `scroll.ts`'s `setScrollEvent()` - see that file's own doc comment for the
+   * shared drag/clamp/zoom logic, transposed here to track `bgY`/height instead of `bgX`/width. */
   private setScrollEvent(thumb: any): void {
     let isMove = false
     let mouseStart = 0
@@ -88,6 +90,8 @@ export class VScrollWidget extends CoreWidget {
     this.on('chart.mouseup', mouseup)
   }
 
+  /** Vertical twin of `scroll.ts`'s `drawBefore()` - computes the thumb's proportional height/scale
+   * from `this.axis`'s `origin`/`buffer`, using `chart.area('height')` in place of `width`. */
   drawBefore = (): void => {
     const axis = this.axis as unknown as { origin: unknown[]; buffer: number }
 
@@ -99,6 +103,9 @@ export class VScrollWidget extends CoreWidget {
     this.thumbHeight = this.chart.area('height') * (this.bufferCount / (this.dataLength || 1)) + 2
   }
 
+  /** Vertical twin of `scroll.ts`'s `draw()` - draws the track + thumb to the left (or, for
+   * `widget.orient === 'right'`, the right) of the chart area, wiring drag behavior via
+   * `setScrollEvent()`. Returns an empty group when there's no data (`dataLength === 0`). */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
     const bgSize = this.chart.theme('scrollBackgroundSize') as number
@@ -132,6 +139,7 @@ export class VScrollWidget extends CoreWidget {
       .translate(bgX, this.chart.area('y'))
   }
 
+  /** Supplies `VSCROLL_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return VSCROLL_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

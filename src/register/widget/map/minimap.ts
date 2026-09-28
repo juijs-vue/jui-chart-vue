@@ -73,6 +73,11 @@ export class MapMinimapWidget extends MapCoreWidget {
   private viewY = 0
   private scale = 0
 
+  /** Computes the pixel offset introduced by a map's own zoom scale relative to its unscaled
+   * `width`/`height` - `((w * s - w) / 2, (h * s - h) / 2)` - i.e. how far the scaled map's edges
+   * extend past its origin-anchored unscaled bounds on each axis. Used both to center the offscreen
+   * thumbnail's own view (`createMapImage()`) and to position the real map's viewport rect on the
+   * thumbnail (`createCtrlButton()`). */
   private getScaleXY(axis: { map: MapScale; get(key: string): unknown }): { x: number; y: number } {
     const s = axis.map.scale()
     const map = axis.get('map') as MapConfig
@@ -84,6 +89,11 @@ export class MapMinimapWidget extends MapCoreWidget {
     return { x: px, y: py }
   }
 
+  /** Renders the "you are here" thumbnail: a detached `ChartBuilder` instance (see this file's
+   * header comment on why `ChartBuilder`, not the raw `Builder`, is required here) mounted onto a
+   * never-appended `<div>`, showing the SAME map path at `widget.scale`, re-centered via
+   * `getScaleXY()` so the whole path is visible, then exported as a data-URI `<image>` sized to
+   * `map.width * scale` / `map.height * scale`. */
   createMapImage(): any {
     const map = (this.axis as unknown as { get(key: string): unknown }).get('map') as MapConfig
     const scale = (this.widget as Record<string, unknown>).scale as number
@@ -129,6 +139,14 @@ export class MapMinimapWidget extends MapCoreWidget {
     })
   }
 
+  /** Draws the draggable viewport-rectangle overlay on top of the thumbnail (`attr` is the
+   * thumbnail `<image>`'s own `width`/`height`), sized/positioned to represent the real map's
+   * current visible area at thumbnail scale (`getScaleXY()` plus the real map's own current
+   * `viewX`/`viewY`, both scaled down by `widget.scale`). Dragging it (`mousedown`/`mousemove`)
+   * moves the rect live, clamped so it can never leave the thumbnail's bounds; releasing
+   * (`mouseup`/`mouseout`) converts the accumulated drag distance back into a real map `viewX`/
+   * `viewY` delta and applies it via `axis.updateGrid('map', ...)` + `axis.map.view()`, force-
+   * rendering the real chart. */
   createCtrlButton(attr: Record<string, number>): any {
     const area = (this.axis as unknown as { get(key: string): unknown }).get('area') as { width: number; height: number }
     const map = (this.axis as unknown as { get(key: string): unknown }).get('map') as MapConfig
@@ -211,6 +229,8 @@ export class MapMinimapWidget extends MapCoreWidget {
     return rect
   }
 
+  /** Caches the real map's current `viewX`/`viewY`/`scale`, read by `createCtrlButton()` to
+   * position the viewport overlay. */
   drawBefore = (): void => {
     const axis = this.axis as unknown as { map: MapScale }
     this.viewX = axis.map.view().x
@@ -218,6 +238,10 @@ export class MapMinimapWidget extends MapCoreWidget {
     this.scale = axis.map.scale()
   }
 
+  /** Draws the minimap's background rect, thumbnail (`createMapImage()`), and viewport overlay
+   * (`createCtrlButton()`), then anchors the whole group to whichever corner `widget.align`/
+   * `widget.orient` select (`'end'`/`'bottom'` measure from the chart's own width/height minus the
+   * thumbnail's size), offset by `widget.dx`/`widget.dy`. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
     const g = this.svg.group()
@@ -245,6 +269,7 @@ export class MapMinimapWidget extends MapCoreWidget {
     return g
   }
 
+  /** Supplies `MAP_MINIMAP_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return MAP_MINIMAP_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

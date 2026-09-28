@@ -48,6 +48,9 @@ export class CrossWidget extends CoreWidget {
   private tspan: any[] = []
   private crossAxis: any = null
 
+  /** Writes `message` into the balloon `text` element's `index`-th `<tspan>`, creating that
+   * `<tspan>` on first use (`index` 0 for the y-tooltip, 1 for the x-tooltip - see `draw()`'s two
+   * call sites) and reusing it on subsequent calls rather than re-appending. */
   private printTooltip(index: number, text: any, message: unknown): void {
     if (!this.tspan[index]) {
       const elem = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
@@ -58,6 +61,10 @@ export class CrossWidget extends CoreWidget {
     this.tspan[index].textContent = message
   }
 
+  /** Builds the (initially hidden) crosshair group: the horizontal `xline` + its `yTooltip` balloon
+   * only when `widget.yFormat` is a function, and the vertical `yline` + `xTooltip` balloon only
+   * when `widget.xFormat` is a function (see this file's header comment for why the naming is
+   * swapped this way). Positioned once against `widget.axis`'s own area/padding. */
   drawBefore = (): void => {
     const widget = this.widget as Record<string, unknown>
     const axis = (this.crossAxis = this.chart.axis(widget.axis as number))
@@ -130,6 +137,12 @@ export class CrossWidget extends CoreWidget {
       .translate(this.pl, this.pt)
   }
 
+  /** Wires `axis.mouseover`/`axis.mouseout`/`axis.mousemove` (scoped to `widget.axis`) that show,
+   * hide, and reposition the crosshair group built in `drawBefore()`. On each `mousemove`, inverts
+   * the cursor position through each line's own axis dimension (`crossAxis.y.invert()` for the
+   * horizontal `xline`'s tooltip, `crossAxis.x.invert()` for the vertical `yline`'s) and formats it
+   * via `widget.yFormat`/`widget.xFormat` respectively - the same swapped-naming pairing documented
+   * in this file's header comment. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
 
@@ -188,6 +201,7 @@ export class CrossWidget extends CoreWidget {
     return this.g
   }
 
+  /** Supplies `CROSS_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return CROSS_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

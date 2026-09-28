@@ -62,6 +62,9 @@ export class LegendWidget extends CoreWidget {
   private columns: Record<number, Record<string, boolean>> = {}
   private colorIndex: Record<string, string> = {}
 
+  /** A private, functionally-identical copy of `CoreWidget.getIndexArray()` (normalizes
+   * `widget.brush` into an array, defaulting to `[0]`) - kept as its own local helper rather than
+   * calling the inherited one, matching the legacy `legend.js` source's own duplicate copy. */
   private getIndexArrayLocal(brush: unknown): number[] {
     let list = [0]
 
@@ -74,6 +77,9 @@ export class LegendWidget extends CoreWidget {
     return list
   }
 
+  /** Resolves every brush index in `widget.brush` (via `getIndexArrayLocal`) to its actual brush
+   * config object (`chart.get('brush', index)`) - used by `widget.brushSync` to apply a filter
+   * toggle to all referenced brushes at once. */
   private getBrushAll(): any[] {
     const list = this.getIndexArrayLocal((this.widget as Record<string, unknown>).brush)
     const result: any[] = []
@@ -85,6 +91,14 @@ export class LegendWidget extends CoreWidget {
     return result
   }
 
+  /** When `widget.filter` is enabled, marks every one of `brush.target`'s CURRENT entries visible
+   * (`true`) in `this.columns[brush.index]` - the per-target on/off map the click-to-toggle
+   * swatches in `getLegendIcon()` flip. Runs on every `draw()`, not just the first: since toggling
+   * a swatch off calls `updateBrush()` with a `target` array that already excludes the hidden
+   * entry (see `changeTargetOption()`), a re-render's `brush.target` only ever contains the
+   * still-visible targets, so this re-sync never resurrects an already-hidden one - it just seeds
+   * `true` for whatever's currently in the (possibly already-filtered) target list. A no-op when
+   * `widget.filter` is off. */
   private setLegendStatus(brush: any): void {
     if (!(this.widget as Record<string, unknown>).filter) return
 
@@ -97,6 +111,13 @@ export class LegendWidget extends CoreWidget {
     }
   }
 
+  /** Applies the current filter toggle state to every brush in `brushList`: rebuilds a `target`/
+   * `colors` pair from whichever keys are still marked `true` in `this.columns[brushList[0].index]`
+   * (all brushes in the list share the SAME column map - the one keyed by the first brush's index,
+   * relevant when `widget.brushSync` passes multiple brushes here), pushes it onto each brush via
+   * `chart.updateBrush()`, force-renders if a render isn't already pending, caches the surviving
+   * target list under `'legend_target'` (read back by `guideline.ts`'s content tooltip - see this
+   * file's own reference from there), and emits `'legend.filter'` with that same list. */
   private changeTargetOption(brushList: any[]): void {
     const target: string[] = []
     const colors: string[] = []
@@ -124,6 +145,13 @@ export class LegendWidget extends CoreWidget {
     this.chart.emit('legend.filter', [target])
   }
 
+  /** Builds one legend entry (an icon/swatch + label group, plus its measured `width`/`height`) per
+   * target in `brush.target`. When `widget.filter` is true, the swatch is a toggle switch (a
+   * rounded pill + sliding circle knob) wired with a `click` handler that flips
+   * `this.columns[brush.index][target]`, restyles the knob, and calls `changeTargetOption()` (on
+   * every referenced brush when `widget.brushSync`, otherwise just this one). Otherwise the swatch
+   * is a plain color dot, or `widget.icon`'s custom glyph/generator when set. Label text goes
+   * through `widget.format` when it's a function. */
   getLegendIcon(brush: any): LegendIconEntry[] {
     const chart = this.chart
     const widget = this.widget as Record<string, unknown>
@@ -260,6 +288,13 @@ export class LegendWidget extends CoreWidget {
     return arr
   }
 
+  /** Lays out every configured brush's legend entries (`getLegendIcon()`) in a flow: for a
+   * horizontal `orient` (`'top'`/`'bottom'`), entries wrap onto a new row once they'd overflow the
+   * chart's right edge (`chart.area('x2')`); for a vertical `orient`, entries stack in a single
+   * column. `widget.brushSync` only actually draws the FIRST configured brush's entries (later ones
+   * are skipped via `continue`) even though a sync'd filter toggle still updates every brush. The
+   * whole flow is then translated into position per `widget.orient`/`widget.align` plus
+   * `widget.dx`/`widget.dy`, and `setLegendStatus()` seeds each drawn brush's filter state. */
   draw = (): any => {
     const chart = this.chart
     const widget = this.widget as Record<string, unknown>
@@ -351,6 +386,7 @@ export class LegendWidget extends CoreWidget {
     return group
   }
 
+  /** Supplies `LEGEND_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return LEGEND_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

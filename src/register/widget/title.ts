@@ -49,6 +49,10 @@ export class TitleWidget extends CoreWidget {
   private y = 0
   private anchor = 'middle'
 
+  /** Computes `this.x`/`this.y`/`this.anchor` from `widget.orient`/`widget.align` before `draw()`
+   * runs. When `widget.axis` resolves to a real axis, positions relative to that axis's own area/
+   * padding (see this file's own header comment on the `widget.axis` vs `this.axis` distinction);
+   * otherwise falls back to the deprecated whole-chart-area positioning branch below. */
   drawBefore = (): void => {
     const chart = this.chart
     const widget = this.widget as Record<string, unknown>
@@ -99,6 +103,10 @@ export class TitleWidget extends CoreWidget {
     }
   }
 
+  /** Draws `widget.text` at the position `drawBefore()` computed, colored/sized from
+   * `widget.color`/`widget.size` (falling back to the theme's `titleFontColor`/`titleFontSize`).
+   * When `orient` is `'center'` and `align` is `'start'`/`'end'`, additionally rotates the text
+   * -90°/90° around its own midpoint so it reads vertically alongside the axis. */
   draw = (): any => {
     const chart = this.chart
     const widget = this.widget as Record<string, unknown>
@@ -130,6 +138,7 @@ export class TitleWidget extends CoreWidget {
     return text
   }
 
+  /** Supplies `TITLE_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return TITLE_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

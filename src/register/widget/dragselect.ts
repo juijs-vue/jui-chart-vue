@@ -45,6 +45,9 @@ export const DRAGSELECT_WIDGET_OWN_DEFAULTS: DragSelectWidgetOptions = {
 export class DragSelectWidget extends CoreWidget {
   private thumb: any = null
 
+  /** Resizes/repositions the shared rubber-band `thumb` rect to span `(x,y)` to `(x+w, y+h)`,
+   * normalizing a negative `w`/`h` (dragging up/left) so the rect's origin is always its top-left
+   * corner rather than the drag's start point. */
   private onDrawStart(x: number, y: number, w: number, h: number): void {
     this.thumb.attr({
       width: w >= 0 ? w : Math.abs(w),
@@ -54,10 +57,21 @@ export class DragSelectWidget extends CoreWidget {
     this.thumb.translate(w >= 0 ? x : x + w, h >= 0 ? y : y + h)
   }
 
+  /** Collapses the shared rubber-band `thumb` rect back to zero size, hiding it. */
   private onDrawEnd(): void {
     this.thumb.attr({ width: 0, height: 0 })
   }
 
+  /** Wires the full drag-to-select gesture for one configured brush: `axis.mousedown` starts
+   * tracking (caching the drag-start value via `axis.x.invert()`/`axis.y.invert()`), `axis.mousemove`
+   * redraws the rubber-band rect on every move via `onDrawStart()`, and `axis.mouseup`/`chart.mouseup`/
+   * `bg.mouseup` finish the drag: normalize start/end so start <= end on both axes, then either emit
+   * `dragselect.end` with just the dragged value-range (`widget.dataType === 'area'`) or with the
+   * actual matched data rows, resolved by `emitDataList()` against whichever real axis-type pairing
+   * (`date`+`range`, `range`+`date`, `block`+`range`, `range`+`block`) the brush's axis actually has -
+   * see this file's header comment on why all four pairs are reachable here. **Note the shared
+   * `this.thumb` quirk documented in this file's header comment**: this method's own rect updates
+   * always target that single shared field, not a rect scoped to this particular `brush`. */
   private setDragEvent(brush: Record<string, unknown>): void {
     const axis = this.chart.axis(brush.axis as number)
     let isMove = false
@@ -223,6 +237,12 @@ export class DragSelectWidget extends CoreWidget {
     this.on('bg.mouseup', endZoomAction)
   }
 
+  /** Creates one rubber-band `thumb` rect and wires `setDragEvent()` for each brush index in
+   * `widget.brush` that resolves to a real brush config (see this file's own note on
+   * `Builder.get('brush', key)`'s "never actually null" fallback quirk - in practice this only ever
+   * skips iterations when `widget.brush` itself is empty). Per this file's header comment, with
+   * more than one brush configured, `this.thumb` ends up pointing at whichever rect was created
+   * LAST by the time any of them drag. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const bIndex = (this.widget as Record<string, unknown>).brush
@@ -257,6 +277,7 @@ export class DragSelectWidget extends CoreWidget {
     return g
   }
 
+  /** Supplies `DRAGSELECT_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return DRAGSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

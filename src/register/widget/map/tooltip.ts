@@ -31,6 +31,10 @@ export class MapTooltipWidget extends TooltipWidget {
   private text: any
   private rect: any
 
+  /** Resolves the tooltip's message for a hovered map feature: `widget.format` when it's a
+   * function (called via the inherited `Draw.format()` wrapper), otherwise the feature's own `id`
+   * field. Unlike the base `TooltipWidget`'s `getFormat()`, there's no key/value row concept here -
+   * just one label string per feature. */
   private mapGetFormat(data: Record<string, unknown>): unknown {
     if (typeof (this.widget as Record<string, unknown>).format === 'function') {
       return this.format(data)
@@ -39,6 +43,11 @@ export class MapTooltipWidget extends TooltipWidget {
     return data.id
   }
 
+  /** Resolves and writes the label text for the hovered feature `obj` into `this.text` (via
+   * `mapGetFormat()`), repositioning it below the balloon's anchor point when `widget.orient` is
+   * `'bottom'`, and center-aligning it once there's real, non-empty text. Returns the resolved
+   * message so `draw()`'s `map.mouseover` handler can skip showing the balloon entirely when it's
+   * falsy. */
   private mapPrintTooltip(obj: Record<string, unknown>): unknown {
     const msg = this.mapGetFormat(obj)
     const widget = this.widget as Record<string, unknown>
@@ -55,6 +64,9 @@ export class MapTooltipWidget extends TooltipWidget {
     return msg
   }
 
+  /** Fully overrides the base `TooltipWidget.drawBefore()`: builds a single hidden balloon group
+   * (one `polygon` background + one `text` label) rather than one per brush/target, since this
+   * widget positions off `map.*` events instead of axis/brush data. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group({ visibility: 'hidden' }, () => {
       this.rect = this.chart.svg.polygon({
@@ -72,6 +84,13 @@ export class MapTooltipWidget extends TooltipWidget {
     })
   }
 
+  /** Fully overrides the base `TooltipWidget.draw()`: wires `map.mouseover`/`map.mousemove`/
+   * `map.mouseout` (the Map engine's own hover events, not axis/brush ones) to show, follow, and
+   * hide the balloon built in `drawBefore()`. `map.mouseover` measures the resolved label
+   * (`mapPrintTooltip()`) and re-shapes the balloon polygon via `balloonPoints(widget.orient, ...)`;
+   * `map.mousemove` repositions it around the cursor (`e.bgX`/`e.bgY`), applying the same
+   * `widget.orient`-based offset logic as the base widget's own `getTooltipXY()`, just inlined here
+   * instead of shared. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
     let isActive = false

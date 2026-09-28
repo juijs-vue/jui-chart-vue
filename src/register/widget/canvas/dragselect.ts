@@ -56,6 +56,9 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
   // that, not needing any dependency on the chart's overall width/height.
   private lastRect: { x: number; y: number; w: number; h: number } | null = null
 
+  /** Clears just the region `this.lastRect` occupies (padded 2px on every side to also erase the
+   * stroke drawn just outside the fill rect - see this field's own doc comment) rather than the
+   * whole canvas, and resets `lastRect` to `null`. No-ops when nothing has been drawn yet. */
   private clearThumb(): void {
     const ctx = this.canvas as CanvasRenderingContext2D
     if (this.lastRect == null) return
@@ -67,6 +70,12 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
     this.lastRect = null
   }
 
+  /** Erases the previous frame's rubber-band rect (`clearThumb()`) and paints a new one spanning
+   * `(x,y)` to `(x+w, y+h)` directly onto the widget's own canvas layer, normalizing a negative
+   * `w`/`h` the same way the SVG version's `onDrawStart` does - `(x,y)` is treated as the FAR corner
+   * when dragging up/left. Styled from the `dragSelectBackgroundColor`/`dragSelectBackgroundOpacity`/
+   * `dragSelectBorderColor`/`dragSelectBorderWidth` theme keys, then records the painted rect as
+   * `this.lastRect` so the next frame (or `onDrawEnd()`) knows what to erase. */
   private onDrawStart(x: number, y: number, w: number, h: number): void {
     this.clearThumb()
 
@@ -91,11 +100,15 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
     this.lastRect = { x: rx, y: ry, w: rw, h: rh }
   }
 
+  /** Erases the currently-painted rubber-band rect (`clearThumb()`) when a drag ends. */
   private onDrawEnd(): void {
     this.clearThumb()
   }
 
   // --- Everything below is a verbatim copy of dragselect.ts's setDragEvent - see that file. ---
+  /** Verbatim copy of `dragselect.ts`'s `setDragEvent()` (see that file's own doc comment for the
+   * full mousedown/mousemove/mouseup gesture and the `emitDataList()`/`emitDragArea()` split) -
+   * only the SVG-vs-canvas-specific `onDrawStart()`/`onDrawEnd()` calls it makes differ. */
   private setDragEvent(brush: Record<string, unknown>): void {
     const axis = this.chart.axis(brush.axis as number)
     let isMove = false
@@ -253,6 +266,11 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
     this.on('bg.mouseup', endZoomAction)
   }
 
+  /** Wires `setDragEvent()` for each brush index in `widget.brush` that resolves to a real brush
+   * config (same `Builder.get('brush', key)` fallback quirk `dragselect.ts` documents). Returns
+   * `void`, not a group - this widget paints directly onto its own canvas layer rather than
+   * returning an SVG element tree (see this file's header comment on why a canvas-drawn overlay is
+   * needed for canvas-mode charts). */
   draw = (): void => {
     const bIndex = (this.widget as Record<string, unknown>).brush
     const bIndexes = Array.isArray(bIndex) ? bIndex : [bIndex as number]
@@ -268,6 +286,7 @@ export class CanvasDragSelectWidget extends CanvasCoreWidget {
     }
   }
 
+  /** Supplies `CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return CANVAS_DRAGSELECT_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -92,6 +92,9 @@ export class GuideLineWidget extends CoreWidget {
   private points: Record<string, any> = {}
   private tspan: any[] = []
 
+  /** Writes `message` into the x-axis balloon's `index`-th `<tspan>` (created lazily on first use,
+   * reused afterward) - the same one-`<tspan>`-per-call-site technique `cross.ts`'s `printTooltip()`
+   * uses. Only ever called with `index === 1` from `drawGuildLine()` below. */
   private printXAxisTooltip(index: number, text: any, message: unknown): void {
     if (!this.tspan[index]) {
       const elem = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
@@ -102,6 +105,12 @@ export class GuideLineWidget extends CoreWidget {
     this.tspan[index].textContent = message
   }
 
+  /** Builds the (initially hidden) guide-line group: the vertical `line`, an x-axis balloon
+   * (`xTooltip`, only when `widget.xFormat` is a function), one point marker per `widget.brush`'s
+   * target, and the content-tooltip skeleton (`contentTooltip` - a background rect plus one text
+   * row + point per target, filled in later by `drawContentTooltip()`). Reads `widget.brush`'s own
+   * axis (not a directly-configured `widget.axis` - see this file's header comment on why this
+   * widget has no `axis` default of its own) via `this.brushCfg`. */
   drawBefore = (): void => {
     const widget = this.widget as Record<string, unknown>
     this.brushCfg = this.chart.get('brush', widget.brush)
@@ -186,6 +195,9 @@ export class GuideLineWidget extends CoreWidget {
       .translate(this.pl, this.pt)
   }
 
+  /** Moves the vertical guide `line` to x-position `left` and, when `widget.xFormat` is configured,
+   * repositions/relabels the x-axis balloon with `value` formatted through it. Called from `draw()`'s
+   * `'guideline.show'` handler with the snapped-to-row x position and time value. */
   drawGuildLine(left: number, value: unknown): void {
     const widget = this.widget as Record<string, unknown>
 
@@ -200,6 +212,17 @@ export class GuideLineWidget extends CoreWidget {
     }
   }
 
+  /** Populates and positions the content tooltip for the data row at `data` (the row snapped to by
+   * `draw()`'s `'guideline.show'` handler), at guide-line x position `left`. Reads
+   * `chart.getCache('legend_target', ...)` (written by `legend.ts` when its filter toggles change -
+   * see this file's header comment) to decide each target's row/point index and visibility: a
+   * target no longer in that cached list gets its text/point/marker hidden (`fill: 'transparent'`)
+   * rather than removed. Point marker y-positions use `data[target]` directly, or - when
+   * `widget.stackPoint` is true - a running sum across targets (in `brushCfg.target` order), so
+   * points read as a stacked series. Each visible row's text comes from `widget.tooltipFormat`
+   * (a no-op when unset - see this file's header comment on `getTextWidth()`'s canvas dependency
+   * and jsdom limitation, which this text-width measurement triggers). No-ops entirely when the
+   * tooltip hasn't been built yet or `data` is `null` (e.g. the snapped index has no matching row). */
   drawContentTooltip(left: number, data: BrushData | null): void {
     const widget = this.widget as Record<string, unknown>
     if (this.contentTooltip == null || data == null) return
@@ -253,6 +276,15 @@ export class GuideLineWidget extends CoreWidget {
     this.contentTooltip.translate(left + width > this.guideAxis.area('width') ? left - width - CP - LRP : left + LRP, this.guideAxis.area('height') / 2 - height / 2)
   }
 
+  /** Wires the guideline's whole event surface: the custom `'guideline.show'`/`'guideline.hide'`
+   * chart-level events (so other code can trigger the scrubber directly, per this file's header
+   * comment) snap a given time value to the nearest data row index (`Math.floor((time - domain[0])
+   * / interval)`) and delegate to `drawGuildLine()`/`drawContentTooltip()`, caching the shown time
+   * under `'guideline_time'`; a `'render'` handler re-emits `'guideline.show'` with that cached time
+   * so the scrubber survives a full chart re-render; and `axis.mouseout`/`axis.mousemove` (scoped to
+   * `widget.axis`, which per this file's header comment defaults to unscoped/every-axis unless a
+   * caller sets one) drive it from real mouse interaction, only re-emitting `'guideline.show'` when
+   * the inverted time actually changed since the last cached value. */
   draw = (): any => {
     const widget = this.widget as Record<string, unknown>
 
@@ -310,6 +342,7 @@ export class GuideLineWidget extends CoreWidget {
     return this.g
   }
 
+  /** Supplies `GUIDELINE_WIDGET_OWN_DEFAULTS` to the widget registry's default-merge step. */
   static setup(): Record<string, unknown> {
     return GUIDELINE_WIDGET_OWN_DEFAULTS as Record<string, unknown>
   }
