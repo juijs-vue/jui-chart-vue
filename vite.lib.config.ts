@@ -27,10 +27,20 @@ export default defineConfig({
       formats: ['umd', 'es'],
     },
     rollupOptions: {
-      external: ['vue'],
+      // jui-graph-ts external too, not just vue: this package's own registerBrush/registerWidget/
+      // etc calls (setup.ts's side-effect imports) mutate jui-graph-ts's own module-level registry
+      // object - bundling a private copy of jui-graph-ts in here would give consumers who ALSO
+      // import jui-graph-ts directly (e.g. to register their own custom brush/widget types, or to
+      // use its Core/util exports) a SEPARATE registry instance from the one this package's own
+      // <Chart>/Builder actually reads from, so anything registered through the consumer's copy
+      // would silently never be found - confirmed as a real bug (not just a theoretical hazard):
+      // www.jui-vue.io's gallery/gps and gallery/svgpen demos register their own custom widgets
+      // this way, and calling registerWidget from a fresh `jui-graph-ts` import (correctly, per its
+      // own public API) had zero effect until this package started sharing the same instance.
+      external: ['vue', 'jui-graph-ts'],
       output: {
         exports: 'named',
-        globals: { vue: 'Vue' },
+        globals: { vue: 'Vue', 'jui-graph-ts': 'JuiGraphTs' },
         assetFileNames: (asset) => (asset.names?.[0]?.endsWith('.css') ? 'style.css' : 'assets/[name][extname]'),
       },
     },
