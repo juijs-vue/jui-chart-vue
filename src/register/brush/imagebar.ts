@@ -7,13 +7,29 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.imagebar`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface ImageBarBrushOptions {
+  /** Gap in px between adjacent bars within the same row. */
+  innerPadding?: number
+  /** Fixed image width in px, used when `fixed: true`. */
+  width?: number
+  /** Fixed image height in px, used when `fixed: true`. */
+  height?: number
+  /** Keeps the image at its configured `width`/`height` with the remaining bar length filled by
+   * a plain colored rect (`true`), or stretches the image to the bar's full length (`false`). */
+  fixed?: boolean
+  /** Image URL: a fixed string, or a function of `(key, value)` returning one; `null` renders no
+   * image. */
+  uri?: string | ((this: unknown, key: string, value: unknown) => string) | null
+}
+
 /** Own `chart.brush.imagebar.setup()` fields - see legacy `imagebar.js`. */
-export const IMAGEBAR_BRUSH_OWN_DEFAULTS = {
+export const IMAGEBAR_BRUSH_OWN_DEFAULTS: ImageBarBrushOptions = {
   innerPadding: 2,
   width: 0,
   height: 0,
   fixed: true,
-  uri: null as string | ((this: unknown, key: string, value: unknown) => string) | null,
+  uri: null,
 }
 
 export class ImageBarBrush extends CoreBrush {
@@ -120,7 +136,7 @@ export class ImageBarBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return IMAGEBAR_BRUSH_OWN_DEFAULTS
+    return IMAGEBAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

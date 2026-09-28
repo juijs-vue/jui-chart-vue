@@ -5,8 +5,19 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.hudcolumn`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface HUDColumnBrushOptions {
+  /** Padding reserved at the left/right of each row's HUD column group. */
+  outerPadding?: number
+  /** Gap in px between adjacent columns within the same row. */
+  innerPadding?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `hudcolumn.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.hudcolumn.setup()` fields - see legacy `hudcolumn.js`. */
-export const HUDCOLUMN_BRUSH_OWN_DEFAULTS = {
+export const HUDCOLUMN_BRUSH_OWN_DEFAULTS: HUDColumnBrushOptions = {
   outerPadding: 5,
   innerPadding: 5,
   clip: false,
@@ -176,7 +187,7 @@ export class HUDColumnBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return HUDCOLUMN_BRUSH_OWN_DEFAULTS
+    return HUDCOLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -9,6 +9,12 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { StackBarBrush } from './stackbar'
+import type { StackBarBrushOptions } from './stackbar'
+
+/** `chart.brush.stackcolumn` has no `setup()` of its own - it inherits `StackBarBrush`'s options
+ * verbatim. Re-exported under this name purely so a generated doc page for `"stackcolumn"` has
+ * something to point at. */
+export type StackColumnBrushOptions = StackBarBrushOptions
 
 export class StackColumnBrush extends StackBarBrush {
   private stackColWidth = 0

@@ -7,6 +7,12 @@
 import { registerBrush, mathUtil } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 import { BubbleBrush } from './bubble'
+import type { BubbleBrushOptions } from './bubble'
+
+/** `chart.brush.bubble3d` has no `setup()` of its own - it inherits `BubbleBrush`'s options
+ * verbatim. Re-exported under this name purely so a generated doc page for `"bubble3d"` has
+ * something to point at. */
+export type Bubble3DBrushOptions = BubbleBrushOptions
 
 type CAxis = (i: unknown, v: unknown, j: unknown, count: unknown) => { x: number; y: number; depth: number }
 type CScale = { radian: number; degree: unknown }

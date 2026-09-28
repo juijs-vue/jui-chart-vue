@@ -47,17 +47,38 @@ import { NodeManager, treemapMultidimensional, type TreemapNode } from './treema
 
 const TEXT_MARGIN_LEFT = 3
 
+/** `chart.brush.treemap`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface TreemapBrushOptions {
+  /** Vertical position of a leaf node's own text within its rectangle. */
+  textOrient?: 'top' | 'center' | 'bottom'
+  /** Horizontal alignment of a leaf node's own text within its rectangle. */
+  textAlign?: 'start' | 'middle' | 'end'
+  /** Draws each leaf node's own text (its `titleDepth`-depth group title, if any, is controlled
+   * separately and always shown). */
+  showText?: boolean
+  /** Tree depth (root's children are depth 1) whose nodes get a group title label instead of - or
+   * in addition to, per node - a leaf's own text. */
+  titleDepth?: number
+  /** Per-node fill color override; return value is passed straight through to `chart.color()`
+   * (index, color string, or array - see this class's own `draw()` for the exact pass-through). */
+  nodeColor?: ((this: unknown, node: TreemapNode) => unknown) | null
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `treemap.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** Formats a node's displayed text (both its own leaf text and any `titleDepth` group title);
+   * the node's raw `text` field is used verbatim when omitted. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.treemap.setup()` fields - see legacy `treemap.js`. */
-export const TREEMAP_BRUSH_OWN_DEFAULTS = {
-  /** @cfg {"top"/"center"/"bottom"} [textOrient="top"] */
+export const TREEMAP_BRUSH_OWN_DEFAULTS: TreemapBrushOptions = {
   textOrient: 'top',
-  /** @cfg {"start"/"middle"/"end"} [textAlign="middle"] */
   textAlign: 'middle',
   showText: true,
   titleDepth: 1,
-  nodeColor: null as ((this: unknown, node: TreemapNode) => unknown) | null,
+  nodeColor: null,
   clip: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 /** **PRESERVED QUIRK, literal port of `getMinimumXY()`** - see this file's own header comment: the
@@ -259,7 +280,7 @@ export class TreemapBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return TREEMAP_BRUSH_OWN_DEFAULTS
+    return TREEMAP_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

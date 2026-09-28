@@ -16,17 +16,40 @@ interface PieCacheEntry {
   outerRadius: number
 }
 
+/** `chart.brush.pie`'s own config fields. `clip` defaults to `false` here (unlike
+ * `CoreBrush`'s own `clip: true` default) - `jui-graph-ts`'s `defineOptions()` merges leaf-first
+ * (`PieBrush.setup()` before `CoreBrush.setup()`), so this leaf-level `clip: false` correctly
+ * wins over `CoreBrush`'s own default without any extra work here. */
+export interface PieBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `pie.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** Shows each slice's value/label text either inside the slice or just outside its edge;
+   * `null` shows no text. */
+  showText?: 'inside' | 'outside' | null
+  /** Formats the value shown in a slice's text/tooltip; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** Renders a pseudo-3D (extruded/beveled) slice style instead of a flat 2D one. */
+  '3d'?: boolean
+  /** Which slice(s) render at full opacity/expanded by default - a target key, an array of keys,
+   * or `null` for none highlighted initially. */
+  active?: string | string[] | null
+  /** DOM event name (e.g. `'click'`) that toggles a slice's active/highlighted state when it
+   * fires on that slice; `null` disables this per-slice toggle interaction. */
+  activeEvent?: string | null
+}
+
 /** Own `chart.brush.pie.setup()` fields - see legacy `pie.js`. Note `clip` defaults to `false`
  * here (unlike `CoreBrush`'s own `clip: true` default) - `jui-graph-ts`'s `defineOptions()` merges
  * leaf-first (`PieBrush.setup()` before `CoreBrush.setup()`), so this leaf-level `clip: false`
  * correctly wins over `CoreBrush`'s own default without any extra work here. */
-export const PIE_BRUSH_OWN_DEFAULTS = {
+export const PIE_BRUSH_OWN_DEFAULTS: PieBrushOptions = {
   clip: false,
-  showText: null as 'inside' | 'outside' | null,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  showText: null,
+  format: null,
   '3d': false,
-  active: null as string | string[] | null,
-  activeEvent: null as string | null,
+  active: null,
+  activeEvent: null,
 }
 
 export class PieBrush extends CoreBrush {
@@ -400,7 +423,7 @@ export class PieBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return PIE_BRUSH_OWN_DEFAULTS
+    return PIE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -7,9 +7,17 @@ import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
 type ScatterSymbol = 'circle' | 'rect' | 'rectangle' | 'triangle' | 'cross' | ((this: unknown, target: string, value: unknown) => string)
 
+/** `chart.brush.canvas.scatter`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface CanvasScatterBrushOptions {
+  /** Marker shape for every point, or a callback resolving it per `(target, value)` cell. */
+  symbol?: ScatterSymbol
+  /** Marker width/height in px. */
+  size?: number
+}
+
 /** Own `chart.brush.canvas.scatter.setup()` fields - see legacy `canvas/scatter.js`. */
-export const CANVAS_SCATTER_BRUSH_OWN_DEFAULTS = {
-  symbol: 'circle' as ScatterSymbol,
+export const CANVAS_SCATTER_BRUSH_OWN_DEFAULTS: CanvasScatterBrushOptions = {
+  symbol: 'circle',
   size: 7,
 }
 
@@ -69,7 +77,7 @@ export class CanvasScatterBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_SCATTER_BRUSH_OWN_DEFAULTS
+    return CANVAS_SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

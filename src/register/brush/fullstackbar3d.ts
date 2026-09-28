@@ -12,8 +12,16 @@ type CScale = { radian: number; degree: unknown }
 type RateScale = (v: unknown) => number
 type RateScaleFull = RateScale & { rate(value: number, max: number): number; max(): number }
 
+/** `chart.brush.fullstackbar3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface FullStackBar3DBrushOptions {
+  /** Padding reserved at the top/bottom of each row's 100%-stacked box lane. */
+  outerPadding?: number
+  /** Shows each segment's percentage-of-row label centered on that segment. */
+  showText?: boolean
+}
+
 /** Own `chart.brush.fullstackbar3d.setup()` fields - see legacy `fullstackbar3d.js`. */
-export const FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS = {
+export const FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS: FullStackBar3DBrushOptions = {
   outerPadding: 10,
   showText: false,
 }
@@ -101,7 +109,7 @@ export class FullStackBar3DBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS
+    return FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

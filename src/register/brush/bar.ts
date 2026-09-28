@@ -35,16 +35,42 @@ interface BarListItem {
   minmax?: BrushTooltip
 }
 
+/** `chart.brush.bar`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions` -
+ * `target`/`colors`/`axis`/`index`/`clip`/`useEvent`/`type`). */
+export interface BarBrushOptions {
+  /** Fixed bar thickness in px. `0` auto-computes thickness from the available row height split
+   * across `target.length` bars (see `outerPadding`/`innerPadding`). */
+  size?: number
+  /** Minimum rendered bar length in px, even for a value at (or near) zero - keeps very small/zero
+   * values visibly clickable instead of collapsing to a sliver. */
+  minSize?: number
+  /** Padding reserved at the top/bottom of each row's bar group when auto-sizing (`size: 0`). */
+  outerPadding?: number
+  /** Gap in px between adjacent bars within the same row (also used as the vertical step between
+   * multiple targets' bars). */
+  innerPadding?: number
+  /** Index of the bar to show a permanent (always-visible) value tooltip for, on mount. */
+  active?: number | null
+  /** DOM event name (e.g. `'click'`) that toggles a bar's value tooltip on/off when it fires on
+   * that bar; `null` disables this per-bar toggle interaction entirely. */
+  activeEvent?: string | null
+  /** Which bars get a permanent min/max value tooltip: `'max'`/`'min'` shows it only on that row's
+   * highest/lowest bar, `'all'` shows it on every bar, `null` shows none by default. */
+  display?: 'max' | 'min' | 'all' | null
+  /** Formats the value shown in a bar's tooltip; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.bar.setup()` fields - see legacy `bar.js`. */
-export const BAR_BRUSH_OWN_DEFAULTS = {
+export const BAR_BRUSH_OWN_DEFAULTS: BarBrushOptions = {
   size: 0,
   minSize: 0,
   outerPadding: 2,
   innerPadding: 1,
-  active: null as number | null,
-  activeEvent: null as string | null,
-  display: null as 'max' | 'min' | 'all' | null,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  active: null,
+  activeEvent: null,
+  display: null,
+  format: null,
 }
 
 export class BarBrush extends CoreBrush {
@@ -276,7 +302,7 @@ export class BarBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return BAR_BRUSH_OWN_DEFAULTS
+    return BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

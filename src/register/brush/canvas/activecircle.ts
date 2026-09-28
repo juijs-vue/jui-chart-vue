@@ -26,8 +26,15 @@ interface ChartWithCache {
  * `.max()` real scale objects expose (confirmed via legacy `checkWallCollision`'s own usage). */
 type ScaleWithMinMax = ((value: unknown) => number) & { min(): unknown; max(): unknown }
 
+/** `chart.brush.canvas.activecircle`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface CanvasActiveCircleBrushOptions {
+  /** Fallback radius in px used when a row doesn't supply its own `radius` field. */
+  radius?: number
+}
+
 /** Own `chart.brush.canvas.activecircle.setup()` fields - see legacy `activecircle.js`. */
-export const CANVAS_ACTIVECIRCLE_BRUSH_OWN_DEFAULTS = {
+export const CANVAS_ACTIVECIRCLE_BRUSH_OWN_DEFAULTS: CanvasActiveCircleBrushOptions = {
   radius: 20,
 }
 
@@ -174,7 +181,7 @@ export class CanvasActiveCircleBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_ACTIVECIRCLE_BRUSH_OWN_DEFAULTS
+    return CANVAS_ACTIVECIRCLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -6,6 +6,12 @@
 // cylinders visually butt up against each other without a projection-induced gap/overlap.
 import { registerBrush } from 'jui-graph-ts'
 import { StackColumn3DBrush } from './stackcolumn3d'
+import type { StackColumn3DBrushOptions } from './stackcolumn3d'
+
+/** `chart.brush.stackcylinder3d` has no `setup()` of its own - it inherits
+ * `StackColumn3DBrush`'s options verbatim. Re-exported under this name purely so a generated doc
+ * page for `"stackcylinder3d"` has something to point at. */
+export type StackCylinder3DBrushOptions = StackColumn3DBrushOptions
 
 export class StackCylinder3DBrush extends StackColumn3DBrush {
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {

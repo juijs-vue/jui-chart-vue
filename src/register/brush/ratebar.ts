@@ -27,13 +27,34 @@ interface RateBarStyle {
   disableBackgroundOpacity: unknown
 }
 
+/** `chart.brush.ratebar`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface RateBarBrushOptions {
+  /** Index of the row whose bar shows a permanent active/highlighted state on mount. */
+  activeIndex?: number | null
+  /** Target key within the active row's bar to highlight; `null` highlights the whole bar. */
+  activeTarget?: string | null
+  /** DOM event name (e.g. `'click'`) that toggles a segment's active/highlighted state; `null`
+   * disables this per-segment toggle interaction. */
+  activeEvent?: string | null
+  /** Formats the label text shown on each segment; segment labels are only rendered when this is
+   * a function. */
+  showText?: ((...args: unknown[]) => unknown) | null
+  /** Formats the tooltip text shown for each segment; the tooltip is only rendered when this is
+   * a function. */
+  showTooltip?: ((...args: unknown[]) => unknown) | null
+  /** Font size in px for the tooltip text. */
+  tooltipSize?: number
+  /** Gap in px between adjacent segments within a row's bar. */
+  padding?: number
+}
+
 /** Own `chart.brush.ratebar.setup()` fields - see legacy `ratebar.js`. */
-export const RATE_BAR_BRUSH_OWN_DEFAULTS = {
-  activeIndex: null as number | null,
-  activeTarget: null as string | null,
-  activeEvent: null as string | null,
-  showText: null as ((...args: unknown[]) => unknown) | null,
-  showTooltip: null as ((...args: unknown[]) => unknown) | null,
+export const RATE_BAR_BRUSH_OWN_DEFAULTS: RateBarBrushOptions = {
+  activeIndex: null,
+  activeTarget: null,
+  activeEvent: null,
+  showText: null,
+  showTooltip: null,
   tooltipSize: 14,
   padding: 0,
 }
@@ -231,7 +252,7 @@ export class RateBarBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return RATE_BAR_BRUSH_OWN_DEFAULTS
+    return RATE_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

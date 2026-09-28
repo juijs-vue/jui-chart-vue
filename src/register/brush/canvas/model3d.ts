@@ -47,9 +47,16 @@ export function getPolygonModel(name: string): (new () => PolygonModel) | undefi
 
 registerPolygonModel('f16', F16Model as unknown as new () => PolygonModel)
 
+/** `chart.brush.canvas.model3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface CanvasModel3DBrushOptions {
+  /** Name of a model registered via `registerPolygonModel()` (e.g. `'f16'`); nothing is drawn
+   * when the name isn't registered or is `null`. */
+  model?: string | null
+}
+
 /** Own `chart.brush.canvas.model3d.setup()` fields - see legacy `canvas/model3d.js`. */
-export const CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS = {
-  model: null as string | null,
+export const CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS: CanvasModel3DBrushOptions = {
+  model: null,
 }
 
 export class CanvasModel3DBrush extends CanvasCoreBrush {
@@ -122,7 +129,7 @@ export class CanvasModel3DBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS
+    return CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -9,8 +9,17 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.rangecolumn`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions` -
+ * each `target` field here holds a `[min, max]` 2-element array per row, not a plain number). */
+export interface RangeColumnBrushOptions {
+  /** Padding reserved at the left/right of each row's range-column group. */
+  outerPadding?: number
+  /** Gap in px between adjacent range-columns within the same row. */
+  innerPadding?: number
+}
+
 /** Own `chart.brush.rangecolumn.setup()` fields - see legacy `rangecolumn.js`. */
-export const RANGE_COLUMN_BRUSH_OWN_DEFAULTS = {
+export const RANGE_COLUMN_BRUSH_OWN_DEFAULTS: RangeColumnBrushOptions = {
   outerPadding: 2,
   innerPadding: 1,
 }
@@ -72,7 +81,7 @@ export class RangeColumnBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return RANGE_COLUMN_BRUSH_OWN_DEFAULTS
+    return RANGE_COLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

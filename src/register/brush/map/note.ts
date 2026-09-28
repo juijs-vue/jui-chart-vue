@@ -10,11 +10,22 @@ const PADDING = 7
 const ANCHOR = 7
 const TEXT_Y = 14
 
+/** `chart.brush.map.note`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface MapNoteBrushOptions {
+  /** Row `id`s whose note balloon starts visible; every other row's balloon starts hidden. */
+  active?: unknown[]
+  /** DOM event name that, when it fires on a row, shows that row's balloon and hides every other
+   * one. No such toggling wired up when omitted. */
+  activeEvent?: string | null
+  /** Formats a row's balloon text; defaults to `"<id>: <value>"` when omitted. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.map.note.setup()` fields - see legacy `map/note.js`. */
-export const MAP_NOTE_BRUSH_OWN_DEFAULTS = {
-  active: [] as unknown[],
-  activeEvent: null as string | null,
-  format: null as ((...args: unknown[]) => unknown) | null,
+export const MAP_NOTE_BRUSH_OWN_DEFAULTS: MapNoteBrushOptions = {
+  active: [],
+  activeEvent: null,
+  format: null,
 }
 
 export class MapNoteBrush extends MapCoreBrush {
@@ -105,7 +116,7 @@ export class MapNoteBrush extends MapCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_NOTE_BRUSH_OWN_DEFAULTS
+    return MAP_NOTE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

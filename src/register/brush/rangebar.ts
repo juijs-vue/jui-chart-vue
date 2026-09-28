@@ -6,8 +6,17 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.rangebar`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions` - each
+ * `target` field here holds a `[min, max]` 2-element array per row, not a plain number). */
+export interface RangeBarBrushOptions {
+  /** Padding reserved at the top/bottom of each row's range-bar group. */
+  outerPadding?: number
+  /** Gap in px between adjacent range-bars within the same row. */
+  innerPadding?: number
+}
+
 /** Own `chart.brush.rangebar.setup()` fields - see legacy `rangebar.js`. */
-export const RANGE_BAR_BRUSH_OWN_DEFAULTS = {
+export const RANGE_BAR_BRUSH_OWN_DEFAULTS: RangeBarBrushOptions = {
   outerPadding: 2,
   innerPadding: 1,
 }
@@ -71,7 +80,7 @@ export class RangeBarBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return RANGE_BAR_BRUSH_OWN_DEFAULTS
+    return RANGE_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -38,16 +38,42 @@ import { NodeManager, type TreemapNode } from './treemap-shared'
 
 const TEXT_MARGIN = 3
 
+/** `chart.brush.flame`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface FlameBrushOptions {
+  /** Maximum tree depth to render (rows deeper than this are clipped from the layout); `null`
+   * renders every depth the data actually has. */
+  maxDepth?: number | null
+  /** Whether depth level 0 (the root frame) sits at the bottom of the plot area (growing upward)
+   * or the top (growing downward). */
+  nodeOrient?: 'bottom' | 'top'
+  /** Whether each node's children are laid out left-to-right (`'start'`) or right-to-left
+   * (`'end'`) within the parent's width. */
+  nodeAlign?: 'start' | 'end'
+  /** Text alignment of each node's label within its box. */
+  textAlign?: 'start' | 'end' | 'center'
+  /** Overrides a node's fill color as a function of the node itself; the theme palette is used
+   * when `null`. */
+  nodeColor?: ((this: unknown, node: TreemapNode) => unknown) | null
+  /** Dot-separated tree path of the node currently drilled into (re-roots the visible tree at
+   * that node); `null` shows the whole tree from the real root. */
+  activeIndex?: string | null
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `flame.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** Formats the value shown in each node's label/tooltip; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.flame.setup()` fields - see legacy `flame.js`. */
-export const FLAME_BRUSH_OWN_DEFAULTS = {
-  maxDepth: null as number | null,
+export const FLAME_BRUSH_OWN_DEFAULTS: FlameBrushOptions = {
+  maxDepth: null,
   nodeOrient: 'bottom',
   nodeAlign: 'end',
   textAlign: 'start',
-  nodeColor: null as ((this: unknown, node: TreemapNode) => unknown) | null,
-  activeIndex: null as string | null,
+  nodeColor: null,
+  activeIndex: null,
   clip: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 /** Literal port of legacy `flame.js`'s own module-scope `QuickSort` helper (an in-place,
@@ -415,7 +441,7 @@ export class FlameBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FLAME_BRUSH_OWN_DEFAULTS
+    return FLAME_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -12,15 +12,45 @@ interface ScatterSymbol {
   uri: unknown
 }
 
+/** `chart.brush.scatter`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions` -
+ * `clip` is redeclared here with a different default (`false`) than `BrushOptions`'s own
+ * `true`). */
+export interface ScatterBrushOptions {
+  /** Marker shape: `'circle'`/`'rectangle'`/`'rect'`/`'triangle'`/`'cross'` (cross gets no
+   * fill/stroke/hover styling), or a function of `(target, value)` returning one of those names
+   * or an arbitrary image URL (rendered as an `<image>`). */
+  symbol?: string | ((...args: unknown[]) => unknown)
+  /** Marker width/height in px. */
+  size?: number
+  /** Renders every marker at `opacity: 0` (still present/interactive, just invisible) - useful
+   * for a hover/click-only overlay. */
+  hide?: boolean
+  /** Skips drawing a marker entirely for any point whose value is exactly `0`. */
+  hideZero?: boolean
+  /** On hover, restyles every marker in the same row (not just the hovered one) together. */
+  hoverSync?: boolean
+  /** DOM event name (e.g. `'click'`) that highlights a marker and shows its value in a floating
+   * tooltip when it fires; `null` disables this per-marker toggle interaction. */
+  activeEvent?: string | null
+  /** Which points get a permanent min/max/every-point value tooltip; `null` shows none by
+   * default. */
+  display?: 'max' | 'min' | 'all' | null
+  /** Marker fill/background opacity. */
+  opacity?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `scatter.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.scatter.setup()` fields - see legacy `scatter.js`. */
-export const SCATTER_BRUSH_OWN_DEFAULTS = {
-  symbol: 'circle' as string | ((...args: unknown[]) => unknown),
+export const SCATTER_BRUSH_OWN_DEFAULTS: ScatterBrushOptions = {
+  symbol: 'circle',
   size: 7,
   hide: false,
   hideZero: false,
   hoverSync: false,
-  activeEvent: null as string | null,
-  display: null as 'max' | 'min' | 'all' | null,
+  activeEvent: null,
+  display: null,
   opacity: 1,
   clip: false,
 }
@@ -302,7 +332,7 @@ export class ScatterBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return SCATTER_BRUSH_OWN_DEFAULTS
+    return SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

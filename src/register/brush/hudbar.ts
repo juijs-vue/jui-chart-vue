@@ -5,12 +5,25 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.hudbar`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface HUDBarBrushOptions {
+  /** Padding reserved at the top/bottom of each row's HUD bar group. */
+  outerPadding?: number
+  /** Gap in px between adjacent bars within the same row. */
+  innerPadding?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `hudbar.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** Formats the value shown in the HUD's domain labels; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.hudbar.setup()` fields - see legacy `hudbar.js`. */
-export const HUDBAR_BRUSH_OWN_DEFAULTS = {
+export const HUDBAR_BRUSH_OWN_DEFAULTS: HUDBarBrushOptions = {
   outerPadding: 7,
   innerPadding: 7,
   clip: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class HUDBarBrush extends CoreBrush {
@@ -158,7 +171,7 @@ export class HUDBarBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return HUDBAR_BRUSH_OWN_DEFAULTS
+    return HUDBAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

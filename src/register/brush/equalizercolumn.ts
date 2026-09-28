@@ -5,9 +5,18 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { StackColumnBrush } from './stackcolumn'
+import type { StackColumnBrushOptions } from './stackcolumn'
+
+/** `chart.brush.equalizercolumn`'s own config fields (on top of the inherited
+ * `StackColumnBrushOptions`) - same "block-train" `unit` divisor as `EqualizerBarBrush`,
+ * transposed to the y-axis. */
+export interface EqualizerColumnBrushOptions extends StackColumnBrushOptions {
+  /** Divisor controlling how many small blocks each row's "train" is split into. */
+  unit?: number
+}
 
 /** Own `chart.brush.equalizercolumn.setup()` fields - see legacy `equalizercolumn.js`. */
-export const EQUALIZER_COLUMN_BRUSH_OWN_DEFAULTS = {
+export const EQUALIZER_COLUMN_BRUSH_OWN_DEFAULTS: EqualizerColumnBrushOptions = {
   unit: 1,
 }
 
@@ -74,7 +83,7 @@ export class EqualizerColumnBrush extends StackColumnBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return EQUALIZER_COLUMN_BRUSH_OWN_DEFAULTS
+    return EQUALIZER_COLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

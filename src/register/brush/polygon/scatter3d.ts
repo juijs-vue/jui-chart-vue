@@ -23,8 +23,18 @@
 import { registerBrush, PolygonCoreBrush, PointPolygon, colorUtil, mathUtil } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.polygon.scatter3d`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface PolygonScatter3DBrushOptions {
+  /** Marker diameter in px before perspective scaling. */
+  size?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `scatter3d.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.polygon.scatter3d.setup()` fields - see legacy `polygon/scatter3d.js`. */
-export const POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS = {
+export const POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS: PolygonScatter3DBrushOptions = {
   size: 7,
   clip: false,
 }
@@ -79,7 +89,7 @@ export class PolygonScatter3DBrush extends PolygonCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS
+    return POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

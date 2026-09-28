@@ -5,11 +5,21 @@
 // instead of a `rect3d(...)` box.
 import { registerBrush } from 'jui-graph-ts'
 import { Column3DBrush } from './column3d'
+import type { Column3DBrushOptions } from './column3d'
+
+/** `chart.brush.cylinder3d`'s own config fields - `topRate` is NEW over the inherited
+ * `Column3DBrush`'s `outerPadding`/`innerPadding` (still inherited unchanged, per the real
+ * `extend` chain). */
+export interface Cylinder3DBrushOptions extends Column3DBrushOptions {
+  /** Ratio of the cylinder's top ellipse radius to its base radius (`1` = a true cylinder;
+   * `< 1` tapers toward the top like a frustum, `0` comes to a point). */
+  topRate?: number
+}
 
 /** Own `chart.brush.cylinder3d.setup()` fields - see legacy `cylinder3d.js`. `topRate` is NEW
  * over the inherited `Column3DBrush.setup()`'s own `outerPadding`/`innerPadding` (still inherited
  * unchanged, per the real `extend` chain). */
-export const CYLINDER3D_BRUSH_OWN_DEFAULTS = {
+export const CYLINDER3D_BRUSH_OWN_DEFAULTS: Cylinder3DBrushOptions = {
   topRate: 1,
   outerPadding: 10,
   innerPadding: 5,
@@ -21,7 +31,7 @@ export class Cylinder3DBrush extends Column3DBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CYLINDER3D_BRUSH_OWN_DEFAULTS
+    return CYLINDER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

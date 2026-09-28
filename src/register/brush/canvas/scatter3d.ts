@@ -7,8 +7,15 @@
 import { registerBrush, CanvasCoreBrush, PointPolygon, colorUtil, mathUtil } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.canvas.scatter3d`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface CanvasScatter3DBrushOptions {
+  /** Marker diameter in px before perspective scaling. */
+  size?: number
+}
+
 /** Own `chart.brush.canvas.scatter3d.setup()` fields - see legacy `canvas/scatter3d.js`. */
-export const CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS = {
+export const CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS: CanvasScatter3DBrushOptions = {
   size: 7,
 }
 
@@ -50,7 +57,7 @@ export class CanvasScatter3DBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS
+    return CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

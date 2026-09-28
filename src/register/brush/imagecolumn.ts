@@ -5,6 +5,12 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 import { ImageBarBrush } from './imagebar'
+import type { ImageBarBrushOptions } from './imagebar'
+
+/** `chart.brush.imagecolumn` has no `setup()` of its own - it inherits `ImageBarBrush`'s options
+ * verbatim. Re-exported under this name purely so a generated doc page for `"imagecolumn"` has
+ * something to point at. */
+export type ImageColumnBrushOptions = ImageBarBrushOptions
 
 export class ImageColumnBrush extends ImageBarBrush {
   private zeroY = 0

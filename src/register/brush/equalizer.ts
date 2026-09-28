@@ -21,8 +21,22 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.equalizer`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface EqualizerBrushOptions {
+  /** Gap in px between adjacent grouped targets' block-stacks within the same row. */
+  innerPadding?: number
+  /** Padding reserved at the left/right of each row's block-stack group. */
+  outerPadding?: number
+  /** Fixed pixel height of each small block in a stack (blocks grow from zero toward the value,
+   * separated by a constant 1.5px gap - see this file's header comment). */
+  unit?: number
+  /** Number of consecutive blocks (counted from zero) that share one theme color before cycling
+   * to the next, for the color-banded VU-meter look. */
+  gap?: number
+}
+
 /** Own `chart.brush.equalizer.setup()` fields - see legacy `equalizer.js`. */
-export const EQUALIZER_BRUSH_OWN_DEFAULTS = {
+export const EQUALIZER_BRUSH_OWN_DEFAULTS: EqualizerBrushOptions = {
   innerPadding: 10,
   outerPadding: 15,
   unit: 5,
@@ -111,7 +125,7 @@ export class EqualizerBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return EQUALIZER_BRUSH_OWN_DEFAULTS
+    return EQUALIZER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -6,8 +6,20 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.waterfall`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface WaterfallBrushOptions {
+  /** Draws a dashed guide line connecting each floating segment's top edge to the next column. */
+  line?: boolean
+  /** Renders the LAST column as a full edge-colored bar from zero too (like the first column),
+   * instead of a floating segment. */
+  end?: boolean
+  /** Horizontal gap in px reserved on each side of every column's band, before the column itself
+   * is drawn within the remaining width. */
+  outerPadding?: number
+}
+
 /** Own `chart.brush.waterfall.setup()` fields - see legacy `waterfall.js`. */
-export const WATERFALL_BRUSH_OWN_DEFAULTS = {
+export const WATERFALL_BRUSH_OWN_DEFAULTS: WaterfallBrushOptions = {
   line: true,
   end: false,
   outerPadding: 5,
@@ -95,7 +107,7 @@ export class WaterfallBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return WATERFALL_BRUSH_OWN_DEFAULTS
+    return WATERFALL_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

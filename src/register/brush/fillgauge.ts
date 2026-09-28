@@ -43,22 +43,33 @@ function createId(key?: string): string {
   return [key || 'id', +new Date(), Math.round(Math.random() * 100) % 100].join('-')
 }
 
+/** `chart.brush.fillgauge`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface FillGaugeBrushOptions {
+  /** Determines the minimum value of a fill gauge. */
+  min?: number
+  /** Determines the maximum value of a fill gauge. */
+  max?: number
+  /** Determines the current value of a fill gauge. */
+  value?: number
+  /** Determines the shape of a fill gauge (`'circle'`, `'rectangle'`). */
+  shape?: 'circle' | 'rectangle'
+  /** Determines the direction in which a fill gauge is to be filled (`'vertical'`,
+   * `'horizontal'`). */
+  direction?: 'vertical' | 'horizontal'
+  /** Sets the shape of a fill gauge with a specified URL to an external SVG. */
+  svg?: string
+  /** Sets the shape of a fill gauge with a specified `<path>` `d` attribute string. */
+  path?: string
+}
+
 /** Own `chart.brush.fillgauge.setup()` fields - see legacy `fillgauge.js`. */
-export const FILLGAUGE_BRUSH_OWN_DEFAULTS = {
-  /** @cfg {Number} [min=0] Determines the minimum size of a fill gauge. */
+export const FILLGAUGE_BRUSH_OWN_DEFAULTS: FillGaugeBrushOptions = {
   min: 0,
-  /** @cfg {Number} [max=100] Determines the maximum size of a fill gauge. */
   max: 100,
-  /** @cfg {Number} [value=0] Determines the value of a fill gauge. */
   value: 0,
-  /** @cfg {String} [shape="circle"] Determines the shape of a fill gauge (circle, rectangle). */
   shape: 'circle',
-  /** @cfg {String} [direction="vertical"] Determines the direction in which a fill gauge is to be
-   * filled (vertical, horizontal). */
   direction: 'vertical',
-  /** @cfg {String} [svg=""] Sets the shape of a fill gauge with a specified URL as an SVG tag. */
   svg: '',
-  /** @cfg {String} [path=""] Sets the shape of a fill gauge with a specified path tag. */
   path: '',
 }
 
@@ -230,7 +241,7 @@ export class FillGaugeBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FILLGAUGE_BRUSH_OWN_DEFAULTS
+    return FILLGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

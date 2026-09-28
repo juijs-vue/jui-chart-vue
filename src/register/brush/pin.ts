@@ -8,11 +8,26 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.pin`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). Unlike
+ * most brushes, this renders exactly one marker (not once per data row) - `split` picks WHERE. */
+export interface PinBrushOptions {
+  /** Flag/triangle marker size in px. */
+  size?: number
+  /** X-axis value the single pin marker is positioned at (`axis.x(split)`). */
+  split?: number
+  /** Formats the label text shown on the pin; the label is only shown when this is a function
+   * (a `null` format renders no text at all, not the raw value). */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `pin.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.pin.setup()` fields - see legacy `pin.js`. */
-export const PIN_BRUSH_OWN_DEFAULTS = {
+export const PIN_BRUSH_OWN_DEFAULTS: PinBrushOptions = {
   size: 6,
   split: 0,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
   clip: false,
 }
 
@@ -69,7 +84,7 @@ export class PinBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return PIN_BRUSH_OWN_DEFAULTS
+    return PIN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

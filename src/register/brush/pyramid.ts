@@ -13,11 +13,26 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.pyramid`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). Only
+ * ever reads the FIRST data row (`axis.data[0]`) - a second row is silently ignored. */
+export interface PyramidBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `pyramid.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** Shows each segment's value/label text on its trapezoid slice. */
+  showText?: boolean
+  /** Formats the value shown in each segment's text; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** Draws an inverted funnel (apex at the bottom) instead of the default upright triangle (apex
+   * at the top). */
+  reverse?: boolean
+}
+
 /** Own `chart.brush.pyramid.setup()` fields - see legacy `pyramid.js`. */
-export const PYRAMID_BRUSH_OWN_DEFAULTS = {
+export const PYRAMID_BRUSH_OWN_DEFAULTS: PyramidBrushOptions = {
   clip: false,
   showText: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
   reverse: false,
 }
 
@@ -162,7 +177,7 @@ export class PyramidBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return PYRAMID_BRUSH_OWN_DEFAULTS
+    return PYRAMID_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

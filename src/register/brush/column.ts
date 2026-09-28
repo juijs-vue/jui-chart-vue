@@ -6,6 +6,13 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushSeriesXY } from 'jui-graph-ts'
 import { BarBrush } from './bar'
+import type { BarBrushOptions } from './bar'
+
+/** `chart.brush.column` has no `setup()` of its own - it inherits `BarBrush`'s
+ * `BAR_BRUSH_OWN_DEFAULTS`/`BarBrushOptions` verbatim (only the orientation-specific
+ * `drawBefore`/`draw`/`drawAnimate` are overridden). Re-exported under this name purely so a
+ * generated doc page for `"column"` has something to point at. */
+export type ColumnBrushOptions = BarBrushOptions
 
 export class ColumnBrush extends BarBrush {
   private zeroY = 0

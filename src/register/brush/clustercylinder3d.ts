@@ -6,9 +6,17 @@
 // of `column3d.ts`.
 import { registerBrush } from 'jui-graph-ts'
 import { ClusterColumn3DBrush } from './clustercolumn3d'
+import type { ClusterColumn3DBrushOptions } from './clustercolumn3d'
+
+/** `chart.brush.clustercylinder3d`'s own config fields - `topRate` is NEW over the inherited
+ * `ClusterColumn3DBrush`'s `outerPadding`/`innerPadding`. */
+export interface ClusterCylinder3DBrushOptions extends ClusterColumn3DBrushOptions {
+  /** Ratio of the cylinder's top ellipse radius to its base radius (`1` = a true cylinder). */
+  topRate?: number
+}
 
 /** Own `chart.brush.clustercylinder3d.setup()` fields - see legacy `clustercylinder3d.js`. */
-export const CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS = {
+export const CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS: ClusterCylinder3DBrushOptions = {
   topRate: 1,
   outerPadding: 5,
   innerPadding: 5,
@@ -20,7 +28,7 @@ export class ClusterCylinder3DBrush extends ClusterColumn3DBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS
+    return CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

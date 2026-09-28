@@ -7,8 +7,24 @@
 import { registerBrush, PolygonCoreBrush, CubePolygon, colorUtil } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.polygon.column3d`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface PolygonColumn3DBrushOptions {
+  /** Cube width (x-axis extent) in px; `0` auto-derives it from the x-band width minus
+   * `padding` on each side. */
+  width?: number
+  /** Cube depth (z-axis extent) in px; `0` auto-derives it from the z-band width minus
+   * `padding` on each side. */
+  height?: number
+  /** Gap in px reserved on each side of a cube's x/z band before auto-deriving `width`/`height`. */
+  padding?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `column3d.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.polygon.column3d.setup()` fields - see legacy `polygon/column3d.js`. */
-export const POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS = {
+export const POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS: PolygonColumn3DBrushOptions = {
   width: 0,
   height: 0,
   padding: 20,
@@ -87,7 +103,7 @@ export class PolygonColumn3DBrush extends PolygonCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS
+    return POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -22,6 +22,17 @@ const IMAGES: Record<string, string> = {
   snow: 'data:image/gif;base64,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',
 }
 
+/** `chart.brush.map.weather`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface MapWeatherBrushOptions {
+  /** Formats a row's card title text; the raw row `id` is used when omitted/returns falsy. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
+/** Own `chart.brush.map.weather.setup()` fields - see legacy `map/weather.js`. */
+export const MAP_WEATHER_BRUSH_OWN_DEFAULTS: MapWeatherBrushOptions = {
+  format: null,
+}
+
 function getFormat(brush: Record<string, unknown>, self: MapWeatherBrush, id: string): unknown {
   let name: unknown = null
 
@@ -101,7 +112,7 @@ export class MapWeatherBrush extends MapCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return { format: null as ((...args: unknown[]) => unknown) | null }
+    return MAP_WEATHER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

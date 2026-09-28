@@ -11,10 +11,22 @@ const MIN_OPACITY = 0.6
 const LINE_ANGLE = 315
 const TITLE_RATE = 0.6
 
+/** `chart.brush.map.comparebubble`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface MapCompareBubbleBrushOptions {
+  /** Radius in px of the larger ("max") circle; the smaller ("min") circle's radius is derived
+   * proportionally from it (`size * (minValue / maxValue)`). Requires exactly 2 data rows - see
+   * this file's own header comment. */
+  size?: number
+  /** Formats the value text shown in each circle's own label; the raw `value` is used verbatim
+   * when omitted. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.map.comparebubble.setup()` fields - see legacy `map/comparebubble.js`. */
-export const MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS = {
+export const MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS: MapCompareBubbleBrushOptions = {
   size: 100,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class MapCompareBubbleBrush extends MapCoreBrush {
@@ -154,7 +166,7 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS
+    return MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

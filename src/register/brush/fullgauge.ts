@@ -11,17 +11,41 @@ import { registerBrush } from 'jui-graph-ts'
 import { mathUtil } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 import { DonutBrush } from './donut'
+import type { DonutBrushOptions } from './donut'
+
+/** `chart.brush.fullgauge`'s own config fields (on top of the inherited `DonutBrushOptions` -
+ * `size` is redeclared here as each ring-gauge's stroke width, and `showText` here is a plain
+ * boolean rather than `PieBrushOptions`'s `'inside' | 'outside' | null`). */
+export interface FullGaugeBrushOptions extends Omit<DonutBrushOptions, 'size' | 'showText'> {
+  /** Arc line-cap style: flat (`'butt'`) or rounded (`'round'`) ends. */
+  symbol?: 'butt' | 'round'
+  /** Stroke width of each ring-gauge's track/value arc in px. */
+  size?: number
+  /** Start angle in degrees of each ring's arc. */
+  startAngle?: number
+  /** End angle in degrees of each ring's arc (an angular span from `startAngle`, not an absolute
+   * end - `360` draws a full circle). */
+  endAngle?: number
+  /** Shows the value/title text labels inside each ring. */
+  showText?: boolean
+  /** X offset in px for the title label, relative to its default centered position. */
+  titleX?: number
+  /** Y offset in px for the title label, relative to its default centered position. */
+  titleY?: number
+  /** Formats the value shown in each ring's center label; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
 
 /** Own `chart.brush.fullgauge.setup()` fields - see legacy `fullgauge.js`. */
-export const FULL_GAUGE_BRUSH_OWN_DEFAULTS = {
-  symbol: 'butt' as 'butt' | 'round',
+export const FULL_GAUGE_BRUSH_OWN_DEFAULTS: FullGaugeBrushOptions = {
+  symbol: 'butt',
   size: 60,
   startAngle: 0,
   endAngle: 360,
   showText: true,
   titleX: 0,
   titleY: 0,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class FullGaugeBrush extends DonutBrush {
@@ -147,7 +171,7 @@ export class FullGaugeBrush extends DonutBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FULL_GAUGE_BRUSH_OWN_DEFAULTS
+    return FULL_GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

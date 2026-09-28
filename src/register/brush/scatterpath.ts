@@ -7,9 +7,21 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushSeriesXY } from 'jui-graph-ts'
 
+/** `chart.brush.scatterpath`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`) - a
+ * high-performance `scatter`-like brush batched into 5 `<path>` elements instead of one node per
+ * point (see this file's header comment). */
+export interface ScatterPathBrushOptions {
+  /** Marker shape for every point (unlike `scatter.ts`, this can't vary per point/callback). */
+  symbol?: 'circle' | 'triangle' | 'rectangle' | 'cross'
+  /** Marker width/height in px. */
+  size?: number
+  /** Marker stroke width in px. */
+  strokeWidth?: number
+}
+
 /** Own `chart.brush.scatterpath.setup()` fields - see legacy `scatterpath.js`. */
-export const SCATTERPATH_BRUSH_OWN_DEFAULTS = {
-  symbol: 'circle' as 'circle' | 'triangle' | 'rectangle' | 'cross',
+export const SCATTERPATH_BRUSH_OWN_DEFAULTS: ScatterPathBrushOptions = {
+  symbol: 'circle',
   size: 7,
   strokeWidth: 1,
 }
@@ -111,7 +123,7 @@ export class ScatterPathBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return SCATTERPATH_BRUSH_OWN_DEFAULTS
+    return SCATTERPATH_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

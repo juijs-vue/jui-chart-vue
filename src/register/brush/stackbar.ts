@@ -19,9 +19,22 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { BarBrush } from './bar'
+import type { BarBrushOptions } from './bar'
+
+/** `chart.brush.stackbar`'s own config fields. Despite completely overriding `BarBrush`'s
+ * drawing methods (see this file's header comment), the engine's `static setup()` chain-merge
+ * still layers `BarBrush`'s `size`/`minSize`/`innerPadding`/`active`/`activeEvent`/`display`/
+ * `format` defaults underneath these, so they remain valid config keys here too. */
+export interface StackBarBrushOptions extends BarBrushOptions {
+  /** Padding reserved at the top/bottom of each row's stacked-segment group. */
+  outerPadding?: number
+  /** Draws a connecting line across each stacked bar's segment boundaries (visually links same
+   * segment index across rows, like a mini stacked-area overlay on top of the bars). */
+  edge?: boolean
+}
 
 /** Own `chart.brush.stackbar.setup()` fields - see legacy `stackbar.js`. */
-export const STACK_BAR_BRUSH_OWN_DEFAULTS = {
+export const STACK_BAR_BRUSH_OWN_DEFAULTS: StackBarBrushOptions = {
   outerPadding: 15,
   edge: false,
 }
@@ -281,7 +294,7 @@ export class StackBarBrush extends BarBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return STACK_BAR_BRUSH_OWN_DEFAULTS
+    return STACK_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

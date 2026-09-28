@@ -20,9 +20,20 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { StackBarBrush } from './stackbar'
+import type { StackBarBrushOptions } from './stackbar'
+
+/** `chart.brush.equalizerbar`'s own config fields (on top of the inherited
+ * `StackBarBrushOptions`). Note `unit` here is a divisor controlling block count/spacing
+ * (`band / (unit * padding)`) - semantically different from `equalizer.ts`'s same-named `unit`,
+ * which is a literal pixel block height there. */
+export interface EqualizerBarBrushOptions extends StackBarBrushOptions {
+  /** Divisor controlling how many small blocks each row's "train" is split into (larger = fewer,
+   * bigger blocks). */
+  unit?: number
+}
 
 /** Own `chart.brush.equalizerbar.setup()` fields - see legacy `equalizerbar.js`. */
-export const EQUALIZER_BAR_BRUSH_OWN_DEFAULTS = {
+export const EQUALIZER_BAR_BRUSH_OWN_DEFAULTS: EqualizerBarBrushOptions = {
   unit: 1,
 }
 
@@ -91,7 +102,7 @@ export class EqualizerBarBrush extends StackBarBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return EQUALIZER_BAR_BRUSH_OWN_DEFAULTS
+    return EQUALIZER_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

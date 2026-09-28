@@ -143,20 +143,61 @@ function inArray<T>(target: T, list: T[]): number {
   return -1
 }
 
+/** `chart.brush.topologynode`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface TopologyNodeBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `topologynode.js` defaults this to `true`, same as `BrushOptions`'s own default (kept
+   * explicit for parity with the legacy source rather than omitted as redundant). */
+  clip?: boolean
+  /** Per-node title text, shown below the node (bold). No title when omitted/returns falsy. */
+  nodeTitle?: ((this: unknown, data: BrushData) => unknown) | null
+  /** Per-node body text, shown centered inside the node. No text when omitted/returns falsy. */
+  nodeText?: ((this: unknown, data: BrushData) => unknown) | null
+  /** Per-node image URL; when it returns a value, the node renders as an `<image>` instead of a
+   * plain circle. */
+  nodeImage?: ((this: unknown, data: BrushData) => unknown) | null
+  /** Per-node radius multiplier applied on top of the theme's `topologyNodeRadius`. */
+  nodeScale?: ((this: unknown, data: BrushData) => number) | null
+  /** Extra per-edge records (keyed by `"<fromKey>:<toKey>"`) consulted for edge label text and
+   * tooltip content - the row data itself only carries each node's own `outgoing` key list. */
+  edgeData?: unknown[]
+  /** Formats the label drawn along an edge; no label when omitted/returns nullish. Receives the
+   * matching `edgeData` record and which end (`'start'`/`'end'`) the edge points toward. */
+  edgeText?: ((this: unknown, data: unknown, align: string) => unknown) | null
+  /** Per-edge opacity override on top of the theme's `topologyEdgeOpacity`. Receives the matching
+   * `edgeData` record (or `null` when none exists for that edge). */
+  edgeOpacity?: ((this: unknown, data: unknown) => number) | null
+  /** Formats the bold title line of an edge's click tooltip. Required (together with
+   * `tooltipText`) for the tooltip to render at all. */
+  tooltipTitle?: ((this: unknown, data: unknown, align: string) => unknown) | null
+  /** Formats the body line of an edge's click tooltip. Required (together with `tooltipTitle`)
+   * for the tooltip to render at all. */
+  tooltipText?: ((this: unknown, data: unknown, align: string) => unknown) | null
+  /** Node `key` to highlight as active on initial render (re-render only, not the first mount -
+   * see this brush's own `draw()`). */
+  activeNode?: string | null
+  /** Edge key (`"<fromKey>:<toKey>"`) to highlight as active, and its tooltip shown, on initial
+   * render (re-render only, same caveat as `activeNode`). */
+  activeEdge?: string | null
+  /** DOM event name that activates a node/edge (highlight + `topology.nodeclick`/
+   * `topology.edgeclick` emit) when it fires on that element. */
+  activeEvent?: string
+}
+
 /** Own `chart.brush.topologynode.setup()` fields - see legacy `topologynode.js`. */
-export const TOPOLOGYNODE_BRUSH_OWN_DEFAULTS = {
+export const TOPOLOGYNODE_BRUSH_OWN_DEFAULTS: TopologyNodeBrushOptions = {
   clip: true,
-  nodeTitle: null as ((this: unknown, data: BrushData) => unknown) | null,
-  nodeText: null as ((this: unknown, data: BrushData) => unknown) | null,
-  nodeImage: null as ((this: unknown, data: BrushData) => unknown) | null,
-  nodeScale: null as ((this: unknown, data: BrushData) => number) | null,
-  edgeData: [] as unknown[],
-  edgeText: null as ((this: unknown, data: unknown, align: string) => unknown) | null,
-  edgeOpacity: null as ((this: unknown, data: unknown) => number) | null,
-  tooltipTitle: null as ((this: unknown, data: unknown, align: string) => unknown) | null,
-  tooltipText: null as ((this: unknown, data: unknown, align: string) => unknown) | null,
-  activeNode: null as string | null,
-  activeEdge: null as string | null,
+  nodeTitle: null,
+  nodeText: null,
+  nodeImage: null,
+  nodeScale: null,
+  edgeData: [],
+  edgeText: null,
+  edgeOpacity: null,
+  tooltipTitle: null,
+  tooltipText: null,
+  activeNode: null,
+  activeEdge: null,
   activeEvent: 'click',
 }
 
@@ -724,7 +765,7 @@ export class TopologyNode extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return TOPOLOGYNODE_BRUSH_OWN_DEFAULTS
+    return TOPOLOGYNODE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

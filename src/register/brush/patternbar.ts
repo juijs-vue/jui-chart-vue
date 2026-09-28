@@ -7,13 +7,27 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 import { ImageBarBrush } from './imagebar'
+import type { ImageBarBrushOptions } from './imagebar'
+
+/** `chart.brush.patternbar`'s own config fields (on top of the inherited `ImageBarBrushOptions` -
+ * `fixed` doesn't apply here, since pattern tiling has no "stretch vs. fixed-size" distinction). */
+export interface PatternBarBrushOptions extends Omit<ImageBarBrushOptions, 'fixed'> {
+  /** Gap in px between adjacent bars within the same row. */
+  innerPadding?: number
+  /** Pattern tile width in px. */
+  width?: number
+  /** Pattern tile height in px. */
+  height?: number
+  /** Pattern tile image URL: a fixed string, or a function of `(key, value)` returning one. */
+  uri?: string | ((this: unknown, key: string, value: unknown) => string) | null
+}
 
 /** Own `chart.brush.patternbar.setup()` fields - see legacy `patternbar.js`. */
-export const PATTERNBAR_BRUSH_OWN_DEFAULTS = {
+export const PATTERNBAR_BRUSH_OWN_DEFAULTS: PatternBarBrushOptions = {
   innerPadding: 2,
   width: 0,
   height: 0,
-  uri: null as string | ((this: unknown, key: string, value: unknown) => string) | null,
+  uri: null,
 }
 
 function createId(key?: string): string {
@@ -95,7 +109,7 @@ export class PatternBarBrush extends ImageBarBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return PATTERNBAR_BRUSH_OWN_DEFAULTS
+    return PATTERNBAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

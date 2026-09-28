@@ -19,14 +19,37 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.timeline`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface TimelineBrushOptions {
+  /** Height in px of each row's timeline bar. */
+  barSize?: number
+  /** Stroke width in px of the connecting line drawn to a contiguous next row. */
+  lineWidth?: number
+  /** Index of the row to show a permanent active/highlighted state for, on mount. */
+  active?: number | null
+  /** DOM event name that toggles a row's active/highlighted state when it fires on that row. */
+  activeEvent?: string
+  /** Which element the active/hover highlight targets: the invisible full-row overlay (`'rect'`,
+   * the default) or the visible bar itself (any other value) - two independent interaction models,
+   * not a shared abstraction (see this file's header comment). */
+  activeType?: string
+  /** Formats the tooltip content shown for the active row; no tooltip is shown when `null`. */
+  activeTooltip?: ((...args: unknown[]) => unknown) | null
+  /** Hides each row's title/label text, showing only the bars. */
+  hideTitle?: boolean
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `timeline.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.timeline.setup()` fields - see legacy `timeline.js`. */
-export const TIMELINE_BRUSH_OWN_DEFAULTS = {
+export const TIMELINE_BRUSH_OWN_DEFAULTS: TimelineBrushOptions = {
   barSize: 7,
   lineWidth: 1,
-  active: null as number | null,
+  active: null,
   activeEvent: 'click',
   activeType: 'rect',
-  activeTooltip: null as ((...args: unknown[]) => unknown) | null,
+  activeTooltip: null,
   hideTitle: false,
   clip: false,
 }
@@ -418,7 +441,7 @@ export class TimelineBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return TIMELINE_BRUSH_OWN_DEFAULTS
+    return TIMELINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

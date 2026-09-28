@@ -7,6 +7,13 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { FullStackBarBrush } from './fullstackbar'
+import type { FullStackBarBrushOptions } from './fullstackbar'
+
+/** `chart.brush.fullstackcolumn` has no `setup()` of its own - it inherits `FullStackBarBrush`'s
+ * options verbatim (only `getTargetSize`/`drawBefore`/`draw` are overridden for the vertical
+ * orientation). Re-exported under this name purely so a generated doc page for
+ * `"fullstackcolumn"` has something to point at. */
+export type FullStackColumnBrushOptions = FullStackBarBrushOptions
 
 export class FullStackColumnBrush extends FullStackBarBrush {
   private fscWidth = 0

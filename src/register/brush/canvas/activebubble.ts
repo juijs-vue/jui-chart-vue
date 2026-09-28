@@ -25,8 +25,21 @@ interface ChartWithCache {
   setCache(key: string, value: unknown): void
 }
 
+/** `chart.brush.canvas.activebubble`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface CanvasActiveBubbleBrushOptions {
+  /** Downward acceleration applied to every bubble each frame, in the collision simulation's own
+   * (unitless, canvas-pixel-scaled) force units. */
+  gravity?: number
+  /** Radius in px of every spawned bubble (all bubbles share one size). */
+  radius?: number
+  /** Fill opacity of the bubble's solid core (its softer outer ring is always drawn at a fixed
+   * lower opacity - see `MortalBubble`). */
+  opacity?: number
+}
+
 /** Own `chart.brush.canvas.activebubble.setup()` fields - see legacy `activebubble.js`. */
-export const CANVAS_ACTIVEBUBBLE_BRUSH_OWN_DEFAULTS = {
+export const CANVAS_ACTIVEBUBBLE_BRUSH_OWN_DEFAULTS: CanvasActiveBubbleBrushOptions = {
   gravity: 0.2,
   radius: 20,
   opacity: 1,
@@ -201,7 +214,7 @@ export class CanvasActiveBubbleBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_ACTIVEBUBBLE_BRUSH_OWN_DEFAULTS
+    return CANVAS_ACTIVEBUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

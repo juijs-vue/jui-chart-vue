@@ -6,6 +6,12 @@
 // the label to the cylinder's own visual center, factoring in the projected depth offset).
 import { registerBrush } from 'jui-graph-ts'
 import { FullStackColumn3DBrush } from './fullstackcolumn3d'
+import type { FullStackColumn3DBrushOptions } from './fullstackcolumn3d'
+
+/** `chart.brush.fullstackcylinder3d` has no `setup()` of its own - it inherits
+ * `FullStackColumn3DBrush`'s options verbatim. Re-exported under this name purely so a generated
+ * doc page for `"fullstackcylinder3d"` has something to point at. */
+export type FullStackCylinder3DBrushOptions = FullStackColumn3DBrushOptions
 
 export class FullStackCylinder3DBrush extends FullStackColumn3DBrush {
   drawMain(index: number, width: number, height: number, degree: unknown, depth: number): any {

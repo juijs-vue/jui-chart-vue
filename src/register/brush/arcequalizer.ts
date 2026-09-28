@@ -16,13 +16,30 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.arcequalizer`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface ArcEqualizerBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `arcequalizer.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+  /** The value a row's wedge is considered "full" at (its block count reaches `stackCount`): a
+   * fixed number, or a function returning one. */
+  maxValue?: number | ((...args: unknown[]) => number)
+  /** Number of annular-sector "blocks" a fully-lit wedge (value === `maxValue`) is divided into
+   * radially. */
+  stackCount?: number
+  /** Radius in px of the empty center hole each wedge's blocks stack outward from. */
+  textRadius?: number
+  /** Formats the value shown in each wedge's center label; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.arcequalizer.setup()` fields - see legacy `arcequalizer.js`. */
-export const ARC_EQUALIZER_BRUSH_OWN_DEFAULTS = {
+export const ARC_EQUALIZER_BRUSH_OWN_DEFAULTS: ArcEqualizerBrushOptions = {
   clip: false,
-  maxValue: 100 as number | ((...args: unknown[]) => number),
+  maxValue: 100,
   stackCount: 25,
   textRadius: 50,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number): { x: number; y: number } {
@@ -177,7 +194,7 @@ export class ArcEqualizerBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return ARC_EQUALIZER_BRUSH_OWN_DEFAULTS
+    return ARC_EQUALIZER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

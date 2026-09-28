@@ -5,6 +5,12 @@
 // effects, `static setup()`) is reused unchanged from `LineBrush`.
 import { registerBrush } from 'jui-graph-ts'
 import { LineBrush } from './line'
+import type { LineBrushOptions } from './line'
+
+/** `chart.brush.stackline` has no `setup()` of its own - it inherits `LineBrush`'s options
+ * verbatim (only `draw()` is overridden, to stack values via `getStackXY()`). Re-exported under
+ * this name purely so a generated doc page for `"stackline"` has something to point at. */
+export type StackLineBrushOptions = LineBrushOptions
 
 export class StackLineBrush extends LineBrush {
   draw = (): any => {

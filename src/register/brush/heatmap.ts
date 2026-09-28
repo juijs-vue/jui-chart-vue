@@ -23,9 +23,17 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.heatmap`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions` - see
+ * this file's header comment for a real, easy-to-miss gotcha in how inherited `colors` interacts
+ * with per-cell coloring here). */
+export interface HeatmapBrushOptions {
+  /** Formats the value shown in each cell's label; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.heatmap.setup()` fields - see legacy `heatmap.js`. */
-export const HEATMAP_BRUSH_OWN_DEFAULTS = {
-  format: null as ((...args: unknown[]) => unknown) | null,
+export const HEATMAP_BRUSH_OWN_DEFAULTS: HeatmapBrushOptions = {
+  format: null,
 }
 
 export class HeatmapBrush extends CoreBrush {
@@ -92,7 +100,7 @@ export class HeatmapBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return HEATMAP_BRUSH_OWN_DEFAULTS
+    return HEATMAP_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

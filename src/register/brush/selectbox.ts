@@ -10,8 +10,15 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.selectbox`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface SelectBoxBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `selectbox.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.selectbox.setup()` fields - see legacy `selectbox.js`. */
-export const SELECT_BOX_BRUSH_OWN_DEFAULTS = {
+export const SELECT_BOX_BRUSH_OWN_DEFAULTS: SelectBoxBrushOptions = {
   clip: false,
 }
 
@@ -83,7 +90,7 @@ export class SelectBoxBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return SELECT_BOX_BRUSH_OWN_DEFAULTS
+    return SELECT_BOX_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

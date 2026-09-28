@@ -8,8 +8,16 @@ import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
 type CAxis = (i: unknown, v: unknown) => { x: number; y: number; depth: number }
 
+/** `chart.brush.column3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface Column3DBrushOptions {
+  /** Padding reserved at the left/right of each row's extruded-box group. */
+  outerPadding?: number
+  /** Gap in px between adjacent boxes within the same row (for multiple `target` keys). */
+  innerPadding?: number
+}
+
 /** Own `chart.brush.column3d.setup()` fields - see legacy `column3d.js`. */
-export const COLUMN3D_BRUSH_OWN_DEFAULTS = {
+export const COLUMN3D_BRUSH_OWN_DEFAULTS: Column3DBrushOptions = {
   outerPadding: 10,
   innerPadding: 5,
 }
@@ -69,7 +77,7 @@ export class Column3DBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return COLUMN3D_BRUSH_OWN_DEFAULTS
+    return COLUMN3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

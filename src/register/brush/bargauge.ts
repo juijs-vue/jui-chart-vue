@@ -13,11 +13,24 @@
 // cell's own right edge by `cut` px whenever the cell's own `x`/width make that visible.
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 
+/** `chart.brush.bargauge`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`).
+ * `min`/`max` per bar come from each DATA row instead (`getValue(row, 'min'|'max', ...)`), not
+ * from this brush config. */
+export interface BarGaugeBrushOptions {
+  /** Gap in px between the track/fill bars' offset and between stacked rows (see this file's
+   * header comment for the exact, slightly-quirky left-edge/width math). */
+  cut?: number
+  /** Bar height in px, and the vertical step between stacked rows. */
+  size?: number
+  /** Formats the value shown per bar; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.bargauge.setup()` fields - see legacy `bargauge.js`. */
-export const BAR_GAUGE_BRUSH_OWN_DEFAULTS = {
+export const BAR_GAUGE_BRUSH_OWN_DEFAULTS: BarGaugeBrushOptions = {
   cut: 5,
   size: 20,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class BarGaugeBrush extends CoreBrush {
@@ -98,7 +111,7 @@ export class BarGaugeBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return BAR_GAUGE_BRUSH_OWN_DEFAULTS
+    return BAR_GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

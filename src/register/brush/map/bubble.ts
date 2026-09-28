@@ -7,12 +7,26 @@ import type { BrushData } from 'jui-graph-ts'
 
 type MapScaleFn = (id: string) => { x: number; y: number } | undefined
 
+/** `chart.brush.map.bubble`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface MapBubbleBrushOptions {
+  /** Radius in px for the row with the smallest `value` (rows are scaled linearly between `min`
+   * and `max` over the data's own min/max `value`). */
+  min?: number
+  /** Radius in px for the row with the largest `value`. */
+  max?: number
+  /** Draws each bubble's own `value` (or `format`'s result) centered inside it. */
+  showText?: boolean
+  /** Formats the text drawn when `showText` is on; the raw `value` is used verbatim when
+   * omitted. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.map.bubble.setup()` fields - see legacy `map/bubble.js`. */
-export const MAP_BUBBLE_BRUSH_OWN_DEFAULTS = {
+export const MAP_BUBBLE_BRUSH_OWN_DEFAULTS: MapBubbleBrushOptions = {
   min: 10,
   max: 30,
   showText: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class MapBubbleBrush extends MapCoreBrush {
@@ -86,7 +100,7 @@ export class MapBubbleBrush extends MapCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_BUBBLE_BRUSH_OWN_DEFAULTS
+    return MAP_BUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

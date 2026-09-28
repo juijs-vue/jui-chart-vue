@@ -22,24 +22,40 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 import { DonutBrush } from './donut'
+import type { DonutBrushOptions } from './donut'
 
 type CAxis = () => { width: number; height: number; x: number; y: number }
 
+/** `chart.brush.stackgauge`'s own config fields (on top of the inherited `DonutBrushOptions` -
+ * `size` is redeclared here since it means "each concentric ring's bar thickness" rather than
+ * `DonutBrush`'s single-ring thickness, though the same underlying concept). */
+export interface StackGaugeBrushOptions extends Omit<DonutBrushOptions, 'size'> {
+  /** Minimum value of the gauge's scale. */
+  min?: number
+  /** Maximum value of the gauge's scale. */
+  max?: number
+  /** Spacing in px between adjacent concentric rings. */
+  cut?: number
+  /** Each concentric ring's bar thickness in px (also the amount the next ring's radius shrinks
+   * by). */
+  size?: number
+  /** Start angle in degrees of each ring's arc. */
+  startAngle?: number
+  /** End angle in degrees of each ring's arc (an angular span, not an absolute end - `360` draws
+   * a full circle from `startAngle`). */
+  endAngle?: number
+  /** Data key whose value is shown as each ring's title/label. */
+  title?: string
+}
+
 /** Own `chart.brush.stackgauge.setup()` fields - see legacy `stackgauge.js`. */
-export const STACKGAUGE_BRUSH_OWN_DEFAULTS = {
-  /** @cfg {Number} [min=0] Determines the minimum value of a stack gauge. */
+export const STACKGAUGE_BRUSH_OWN_DEFAULTS: StackGaugeBrushOptions = {
   min: 0,
-  /** @cfg {Number} [max=100] Determines the maximum value of a stack gauge. */
   max: 100,
-  /** @cfg {Number} [cut=5] Determines the bar spacing of a stack gauge. */
   cut: 5,
-  /** @cfg {Number} [size=24] Determines the bar size of a stack gauge. */
   size: 24,
-  /** @cfg {Number} [startAngle=-180] Determines the start angle of a stack gauge. */
   startAngle: -180,
-  /** @cfg {Number} [endAngle=360] Determines the end angle of a stack gauge. */
   endAngle: 360,
-  /** @cfg {String} [title="title"] Sets a data key to be configured as the title of a stack gauge. */
   title: 'title',
 }
 
@@ -134,7 +150,7 @@ export class StackGaugeBrush extends DonutBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return STACKGAUGE_BRUSH_OWN_DEFAULTS
+    return STACKGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

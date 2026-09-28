@@ -9,8 +9,18 @@
 import { registerBrush, PolygonCoreBrush, PointPolygon, colorUtil } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.polygon.line3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface PolygonLine3DBrushOptions {
+  /** Gap in px reserved on each side of a ribbon segment's z-band, shrinking the ribbon's own
+   * z-axis thickness. */
+  padding?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `line3d.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.polygon.line3d.setup()` fields - see legacy `polygon/line3d.js`. */
-export const POLYGON_LINE3D_BRUSH_OWN_DEFAULTS = {
+export const POLYGON_LINE3D_BRUSH_OWN_DEFAULTS: PolygonLine3DBrushOptions = {
   padding: 10,
   clip: false,
 }
@@ -81,7 +91,7 @@ export class PolygonLine3DBrush extends PolygonCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return POLYGON_LINE3D_BRUSH_OWN_DEFAULTS
+    return POLYGON_LINE3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

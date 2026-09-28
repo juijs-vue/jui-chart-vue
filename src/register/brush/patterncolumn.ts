@@ -5,6 +5,12 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 import { PatternBarBrush } from './patternbar'
+import type { PatternBarBrushOptions } from './patternbar'
+
+/** `chart.brush.patterncolumn` has no `setup()` of its own - it inherits `PatternBarBrush`'s
+ * options verbatim. Re-exported under this name purely so a generated doc page for
+ * `"patterncolumn"` has something to point at. */
+export type PatternColumnBrushOptions = PatternBarBrushOptions
 
 export class PatternColumnBrush extends PatternBarBrush {
   private zeroY = 0

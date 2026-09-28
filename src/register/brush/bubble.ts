@@ -10,15 +10,35 @@ import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import { mathUtil } from 'jui-graph-ts'
 import type { BrushData, BrushSeriesXY } from 'jui-graph-ts'
 
+/** `chart.brush.bubble`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface BubbleBrushOptions {
+  /** Minimum rendered bubble radius in px, mapped to the data's smallest scale value. */
+  min?: number
+  /** Maximum rendered bubble radius in px, mapped to the data's largest scale value. */
+  max?: number
+  /** Data key whose value drives each bubble's radius (via `mathUtil.scaleValue()` between
+   * `min`/`max`); `null` uses the same value driving the bubble's y-position instead. */
+  scaleKey?: string | null
+  /** Shows each bubble's value as text centered on it. */
+  showText?: boolean
+  /** Formats the value shown in text/tooltips; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+  /** Index of the bubble to show a permanent (always-visible) value tooltip for, on mount. */
+  active?: number | null
+  /** DOM event name (e.g. `'click'`) that toggles a bubble's value tooltip on/off; `null`
+   * disables this per-bubble toggle interaction. */
+  activeEvent?: string | null
+}
+
 /** Own `chart.brush.bubble.setup()` fields - see legacy `bubble.js`. */
-export const BUBBLE_BRUSH_OWN_DEFAULTS = {
+export const BUBBLE_BRUSH_OWN_DEFAULTS: BubbleBrushOptions = {
   min: 5,
   max: 30,
-  scaleKey: null as string | null,
+  scaleKey: null,
   showText: false,
-  format: null as ((...args: unknown[]) => unknown) | null,
-  active: null as number | null,
-  activeEvent: null as string | null,
+  format: null,
+  active: null,
+  activeEvent: null,
 }
 
 export class BubbleBrush extends CoreBrush {
@@ -187,7 +207,7 @@ export class BubbleBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return BUBBLE_BRUSH_OWN_DEFAULTS
+    return BUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

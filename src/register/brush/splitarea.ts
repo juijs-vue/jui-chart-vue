@@ -18,14 +18,24 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushSeriesXY } from 'jui-graph-ts'
 import { SplitLineBrush } from './splitline'
+import type { SplitLineBrushOptions } from './splitline'
+
+/** `chart.brush.splitarea`'s own config fields. Note `line` is a NEW key over
+ * `SplitLineBrush.setup()`'s own `symbol`/`split` (which this class still inherits unchanged, per
+ * the real `extend` chain - `jui-graph-ts`'s `defineOptions()` walks the full chain itself, same
+ * as every other multi-level brush this project has ported). */
+export interface SplitAreaBrushOptions extends SplitLineBrushOptions {
+  /** Draws the split line's own stroke on top of the filled area; `false` renders the fill only. */
+  line?: boolean
+}
 
 /** Own `chart.brush.splitarea.setup()` fields - see legacy `splitarea.js`. Note `line` is a NEW
  * key over `SplitLineBrush.setup()`'s own `symbol`/`split` (which this class still inherits
  * unchanged, per the real `extend` chain - `jui-graph-ts`'s `defineOptions()` walks the full
  * chain itself, same as every other multi-level brush this project has ported). */
-export const SPLITAREA_BRUSH_OWN_DEFAULTS = {
-  symbol: 'normal' as 'normal' | 'curve' | 'step',
-  split: null as number | Date | null,
+export const SPLITAREA_BRUSH_OWN_DEFAULTS: SplitAreaBrushOptions = {
+  symbol: 'normal',
+  split: null,
   line: true,
 }
 
@@ -93,7 +103,7 @@ export class SplitAreaBrush extends SplitLineBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return SPLITAREA_BRUSH_OWN_DEFAULTS
+    return SPLITAREA_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

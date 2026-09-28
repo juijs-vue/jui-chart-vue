@@ -15,9 +15,19 @@
 import { registerBrush } from 'jui-graph-ts'
 import { mathUtil, colorUtil } from 'jui-graph-ts'
 import { PieBrush } from './pie'
+import type { PieBrushOptions } from './pie'
+
+/** `chart.brush.donut`'s own config fields (on top of the inherited `PieBrushOptions`). */
+export interface DonutBrushOptions extends PieBrushOptions {
+  /** Ring thickness in px (`outerRadius - innerRadius`) - also auto-shrunk by `getProperty()` if
+   * it would exceed half the available plot area. */
+  size?: number
+  /** Shows the sum of all slice values as text in the donut's center hole. */
+  showValue?: boolean
+}
 
 /** Own `chart.brush.donut.setup()` fields - see legacy `donut.js`. */
-export const DONUT_BRUSH_OWN_DEFAULTS = {
+export const DONUT_BRUSH_OWN_DEFAULTS: DonutBrushOptions = {
   size: 50,
   showValue: false,
 }
@@ -324,7 +334,7 @@ export class DonutBrush extends PieBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return DONUT_BRUSH_OWN_DEFAULTS
+    return DONUT_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

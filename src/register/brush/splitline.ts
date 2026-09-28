@@ -17,10 +17,20 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushSeriesXY } from 'jui-graph-ts'
 
+/** `chart.brush.splitline`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface SplitLineBrushOptions {
+  /** Line-drawing style, same as `LineBrush`'s own `symbol`. */
+  symbol?: 'normal' | 'curve' | 'step'
+  /** Index (or date, for a date axis) the line's style switches at - everything before uses the
+   * normal per-target color, everything from here on uses the theme's split color; `null` draws
+   * no split (single uniform style). */
+  split?: number | Date | null
+}
+
 /** Own `chart.brush.splitline.setup()` fields - see legacy `splitline.js`. */
-export const SPLITLINE_BRUSH_OWN_DEFAULTS = {
-  symbol: 'normal' as 'normal' | 'curve' | 'step',
-  split: null as number | Date | null,
+export const SPLITLINE_BRUSH_OWN_DEFAULTS: SplitLineBrushOptions = {
+  symbol: 'normal',
+  split: null,
 }
 
 export class SplitLineBrush extends CoreBrush {
@@ -112,7 +122,7 @@ export class SplitLineBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return SPLITLINE_BRUSH_OWN_DEFAULTS
+    return SPLITLINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

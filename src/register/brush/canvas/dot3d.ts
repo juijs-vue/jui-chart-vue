@@ -34,11 +34,25 @@ class FacePolygon extends PolygonCore {
   }
 }
 
+/** `chart.brush.canvas.dot3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface CanvasDot3DBrushOptions {
+  /** Dot diameter in px (`'dot'`), or stroke width in px (`'line'`/`'poly'`); unused for
+   * `'area'` (see `createArea()`'s own always-dead `r` parameter). */
+  size?: number
+  /** Color index (passed to `CoreBrush.color()`) shared by every point/segment/face this brush
+   * draws - NOT a per-row/per-series index like most 2D brushes' own `index`. */
+  color?: number
+  /** Rendering mode: `'dot'` draws one point per row; `'line'` connects consecutive rows;
+   * `'poly'` is `'line'` plus closing and filling the traced outline; `'area'` fills a quad face
+   * from each row down to the y=0 plane. */
+  symbol?: 'dot' | 'line' | 'area' | 'poly'
+}
+
 /** Own `chart.brush.canvas.dot3d.setup()` fields - see legacy `dot3d.js`. */
-export const CANVAS_DOT3D_BRUSH_OWN_DEFAULTS = {
+export const CANVAS_DOT3D_BRUSH_OWN_DEFAULTS: CanvasDot3DBrushOptions = {
   size: 4,
   color: 0,
-  symbol: 'dot' as 'dot' | 'line' | 'area' | 'poly',
+  symbol: 'dot',
 }
 
 type Scale3 = (value: unknown) => number
@@ -186,7 +200,7 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_DOT3D_BRUSH_OWN_DEFAULTS
+    return CANVAS_DOT3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

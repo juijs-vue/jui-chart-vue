@@ -9,8 +9,16 @@ import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 type CAxis = (i: unknown, v: unknown, j: unknown, count: unknown) => { x: number; y: number; depth: number }
 type CScale = { radian: number; degree: unknown }
 
+/** `chart.brush.clustercolumn3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface ClusterColumn3DBrushOptions {
+  /** Padding reserved at the left/right of each row's clustered-lane group. */
+  outerPadding?: number
+  /** Gap in px between adjacent target lanes within the same row. */
+  innerPadding?: number
+}
+
 /** Own `chart.brush.clustercolumn3d.setup()` fields - see legacy `clustercolumn3d.js`. */
-export const CLUSTERCOLUMN3D_BRUSH_OWN_DEFAULTS = {
+export const CLUSTERCOLUMN3D_BRUSH_OWN_DEFAULTS: ClusterColumn3DBrushOptions = {
   outerPadding: 5,
   innerPadding: 5,
 }
@@ -70,7 +78,7 @@ export class ClusterColumn3DBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CLUSTERCOLUMN3D_BRUSH_OWN_DEFAULTS
+    return CLUSTERCOLUMN3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

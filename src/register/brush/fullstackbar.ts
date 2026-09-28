@@ -8,9 +8,21 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 import { StackBarBrush } from './stackbar'
+import type { StackBarBrushOptions } from './stackbar'
+
+/** `chart.brush.fullstackbar`'s own config fields (`edge` is inherited from `StackBarBrush`
+ * unchanged; `outerPadding` is redeclared with a different default here). "Full stack" = each
+ * row's bar always fills the whole axis width, with segment widths as each target's share of
+ * that row's own sum (not raw values) - see this file's header comment. */
+export interface FullStackBarBrushOptions extends StackBarBrushOptions {
+  /** Padding reserved at the top/bottom of each row's 100%-stacked bar. */
+  outerPadding?: number
+  /** Shows each segment's percentage-of-row label centered on that segment. */
+  showText?: boolean
+}
 
 /** Own `chart.brush.fullstackbar.setup()` fields - see legacy `fullstackbar.js`. */
-export const FULL_STACK_BAR_BRUSH_OWN_DEFAULTS = {
+export const FULL_STACK_BAR_BRUSH_OWN_DEFAULTS: FullStackBarBrushOptions = {
   outerPadding: 15,
   showText: false,
 }
@@ -101,7 +113,7 @@ export class FullStackBarBrush extends StackBarBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FULL_STACK_BAR_BRUSH_OWN_DEFAULTS
+    return FULL_STACK_BAR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

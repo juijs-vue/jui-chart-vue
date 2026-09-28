@@ -6,13 +6,33 @@ interface LineListItem {
   tooltip: BrushTooltip | null
 }
 
+/** `chart.brush.line`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface LineBrushOptions {
+  /** Line-drawing style: straight segments, a smoothed curve through each point, or a stepped
+   * (right-angle) path. */
+  symbol?: 'normal' | 'curve' | 'step'
+  /** Which target(s) render at full opacity by default while the rest are dimmed
+   * (`lineDisableBorderOpacity`) - a target key, an array of keys, or `null` for "all at full
+   * opacity" (no dimming). */
+  active?: number | string | string[] | null
+  /** DOM event name (e.g. `'click'`) that switches which line is `active` when it fires on a
+   * line; `null` disables this per-line toggle interaction. */
+  activeEvent?: string | null
+  /** Which points get a permanent min/max/every-point value tooltip; `null` shows none by
+   * default. */
+  display?: 'max' | 'min' | 'all' | null
+  /** Line stroke opacity override: a fixed number, or a function of `(data, rowIndex)` returning
+   * one; the theme's `lineBorderOpacity` is used when `null`. */
+  opacity?: number | ((...args: unknown[]) => number) | null
+}
+
 /** Own `chart.brush.line.setup()` fields - see legacy `line.js`. */
-export const LINE_BRUSH_OWN_DEFAULTS = {
-  symbol: 'normal' as 'normal' | 'curve' | 'step',
-  active: null as number | string | string[] | null,
-  activeEvent: null as string | null,
-  display: null as 'max' | 'min' | 'all' | null,
-  opacity: null as number | ((...args: unknown[]) => number) | null,
+export const LINE_BRUSH_OWN_DEFAULTS: LineBrushOptions = {
+  symbol: 'normal',
+  active: null,
+  activeEvent: null,
+  display: null,
+  opacity: null,
 }
 
 export class LineBrush extends CoreBrush {
@@ -250,7 +270,7 @@ export class LineBrush extends CoreBrush {
   // `jui-graph-ts`'s `defineOptions()` now walks the full `LineBrush -> CoreBrush -> Draw` chain
   // itself, so this only needs to return `LineBrush`'s own legacy defaults (1:1 with `line.js`).
   static setup(): Record<string, unknown> {
-    return LINE_BRUSH_OWN_DEFAULTS
+    return LINE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -27,16 +27,41 @@ interface BarRect {
   height: number
 }
 
+/** `chart.brush.canvas.equalizercolumn`'s own config fields (on top of `jui-graph-ts`'s
+ * `BrushOptions`). */
+export interface CanvasEqualizerColumnBrushOptions {
+  /** Fixed column width in px; `0` auto-derives it from the row band width minus
+   * `outerPadding` (falling back to `minSize` if that would be smaller). */
+  size?: number
+  /** Floor for the auto-derived column width when `size` is `0`. */
+  minSize?: number
+  /** Horizontal gap in px reserved on each side of a column's band before auto-deriving `size`. */
+  outerPadding?: number
+  /** Gap in px between each discrete stacked "cell" within a column. */
+  innerPadding?: number
+  /** Value each discrete stacked cell represents, combined with `innerPadding` to derive one
+   * cell's pixel height. */
+  unit?: number
+  /** Column index (or indices) to draw at full opacity; every other column is dimmed to the
+   * theme's `barDisableBackgroundOpacity`. `null` draws every column at full opacity. */
+  active?: number | number[] | null
+  /** Column index (or indices) to render as an error placeholder (`errorText` label, no bars)
+   * instead of its normal stacked cells. `null` draws no error columns. */
+  error?: number | number[] | null
+  /** Label text shown on a column flagged by `error`. */
+  errorText?: string
+}
+
 /** Own `chart.brush.canvas.equalizercolumn.setup()` fields - see legacy
  * `canvas/equalizercolumn.js`. */
-export const CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS = {
+export const CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS: CanvasEqualizerColumnBrushOptions = {
   size: 0,
   minSize: 0,
   outerPadding: 15,
   innerPadding: 1,
   unit: 1,
-  active: null as number | number[] | null,
-  error: null as number | number[] | null,
+  active: null,
+  error: null,
   errorText: 'Stopped',
 }
 
@@ -273,7 +298,7 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS
+    return CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -7,8 +7,17 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale } from 'jui-graph-ts'
 
+/** `chart.brush.focus`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface FocusBrushOptions {
+  /** Start of the highlighted range, in the range-typed axis's own value units. `-1` (with `end`
+   * also `-1`) means "no focus configured" - nothing is drawn. */
+  start?: number
+  /** End of the highlighted range, in the range-typed axis's own value units. */
+  end?: number
+}
+
 /** Own `chart.brush.focus.setup()` fields - see legacy `focus.js`. */
-export const FOCUS_BRUSH_OWN_DEFAULTS = {
+export const FOCUS_BRUSH_OWN_DEFAULTS: FocusBrushOptions = {
   start: -1,
   end: -1,
 }
@@ -101,7 +110,7 @@ export class FocusBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return FOCUS_BRUSH_OWN_DEFAULTS
+    return FOCUS_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

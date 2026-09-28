@@ -4,6 +4,12 @@
 // `this.drawArea(this.getXY())` - everything else reused unchanged from `AreaBrush`.
 import { registerBrush } from 'jui-graph-ts'
 import { AreaBrush } from './area'
+import type { AreaBrushOptions } from './area'
+
+/** `chart.brush.stackarea` has no `setup()` of its own - it inherits `AreaBrush`'s options
+ * verbatim (only `draw()` is overridden, to stack values via `getStackXY()`). Re-exported under
+ * this name purely so a generated doc page for `"stackarea"` has something to point at. */
+export type StackAreaBrushOptions = AreaBrushOptions
 
 export class StackAreaBrush extends AreaBrush {
   draw = (): any => {

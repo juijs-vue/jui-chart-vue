@@ -5,17 +5,38 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushSeriesXY } from 'jui-graph-ts'
 import { LineBrush } from './line'
+import type { LineBrushOptions } from './line'
+
+/** `chart.brush.area`'s own config fields. Note this legacy file's own `setup()` does NOT
+ * include `opacity` (unlike `LineBrush.setup()`) - `jui-graph-ts`'s `defineOptions()` now walks
+ * the full `AreaBrush -> LineBrush -> CoreBrush -> Draw` static `setup()` chain itself, so
+ * `opacity` (from `LineBrush.setup()`) and `CoreBrush`/`Draw`'s own defaults all merge in
+ * automatically - `opacity` (inherited) still controls the area FILL's opacity here (read via
+ * `getOpacity()`/`drawArea()`'s own `opacityOpt` handling), not just a line's stroke. */
+export interface AreaBrushOptions extends Omit<LineBrushOptions, 'display'> {
+  symbol?: 'normal' | 'curve' | 'step'
+  active?: number | string | string[] | null
+  activeEvent?: string | null
+  /** Which points get a permanent min/max value tooltip on the area's own boundary line; `null`
+   * shows none by default (`AreaBrush` never supports `'all'`, unlike `LineBrush`). */
+  display?: 'max' | 'min' | null
+  /** Fills from the axis's zero line (`true`) or from its minimum value (`false`) - only matters
+   * when the domain doesn't include zero. */
+  startZero?: boolean
+  /** Draws a visible boundary line on top of the filled area; `false` renders the fill only. */
+  line?: boolean
+}
 
 /** Own `chart.brush.area.setup()` fields - see legacy `area.js`. Note this legacy file's own
  * `setup()` does NOT include `opacity` (unlike `LineBrush.setup()`) - `jui-graph-ts`'s
  * `defineOptions()` now walks the full `AreaBrush -> LineBrush -> CoreBrush -> Draw` static
  * `setup()` chain itself, so `opacity` (from `LineBrush.setup()`) and `CoreBrush`/`Draw`'s own
  * defaults all merge in automatically - this only needs `AreaBrush`'s own leaf-level fields. */
-export const AREA_BRUSH_OWN_DEFAULTS = {
-  symbol: 'normal' as 'normal' | 'curve' | 'step',
-  active: null as number | string | string[] | null,
-  activeEvent: null as string | null,
-  display: null as 'max' | 'min' | null,
+export const AREA_BRUSH_OWN_DEFAULTS: AreaBrushOptions = {
+  symbol: 'normal',
+  active: null,
+  activeEvent: null,
+  display: null,
   startZero: true,
   line: true,
 }
@@ -89,7 +110,7 @@ export class AreaBrush extends LineBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return AREA_BRUSH_OWN_DEFAULTS
+    return AREA_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

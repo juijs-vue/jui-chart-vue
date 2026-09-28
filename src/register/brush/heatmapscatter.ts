@@ -21,8 +21,19 @@
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 
+/** `chart.brush.heatmapscatter`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface HeatmapScatterBrushOptions {
+  /** Width in px of each density-grid bucket cell along the x-axis. */
+  xInterval?: number
+  /** Height in px of each density-grid bucket cell along the y-axis. */
+  yInterval?: number
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `heatmapscatter.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
 /** Own `chart.brush.heatmapscatter.setup()` fields - see legacy `heatmapscatter.js`. */
-export const HEATMAP_SCATTER_BRUSH_OWN_DEFAULTS = {
+export const HEATMAP_SCATTER_BRUSH_OWN_DEFAULTS: HeatmapScatterBrushOptions = {
   xInterval: 0,
   yInterval: 0,
   clip: false,
@@ -179,7 +190,7 @@ export class HeatmapScatterBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return HEATMAP_SCATTER_BRUSH_OWN_DEFAULTS
+    return HEATMAP_SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -6,10 +6,20 @@
 import { registerBrush, MapCoreBrush } from 'jui-graph-ts'
 import type { MapScale } from 'jui-graph-ts'
 
+/** `chart.brush.map.selector`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface MapSelectorBrushOptions {
+  /** Row `id`s whose map path starts highlighted as "active" (immune to hover revert). */
+  active?: unknown[]
+  /** DOM event name that, when it fires on a map path, marks that path as the new "active" one
+   * (reverting the previous active path's fill first). No click-to-select wired up when
+   * omitted - only hover highlighting still applies. */
+  activeEvent?: string | null
+}
+
 /** Own `chart.brush.map.selector.setup()` fields - see legacy `map/selector.js`. */
-export const MAP_SELECTOR_BRUSH_OWN_DEFAULTS = {
-  active: [] as unknown[],
-  activeEvent: null as string | null,
+export const MAP_SELECTOR_BRUSH_OWN_DEFAULTS: MapSelectorBrushOptions = {
+  active: [],
+  activeEvent: null,
 }
 
 export class MapSelectorBrush extends MapCoreBrush {
@@ -68,7 +78,7 @@ export class MapSelectorBrush extends MapCoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return MAP_SELECTOR_BRUSH_OWN_DEFAULTS
+    return MAP_SELECTOR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

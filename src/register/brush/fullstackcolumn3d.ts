@@ -6,6 +6,12 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 import { FullStackBar3DBrush } from './fullstackbar3d'
+import type { FullStackBar3DBrushOptions } from './fullstackbar3d'
+
+/** `chart.brush.fullstackcolumn3d` has no `setup()` of its own - it inherits
+ * `FullStackBar3DBrush`'s options verbatim. Re-exported under this name purely so a generated
+ * doc page for `"fullstackcolumn3d"` has something to point at. */
+export type FullStackColumn3DBrushOptions = FullStackBar3DBrushOptions
 
 type CAxis = (i: unknown, v: unknown) => { x: number; y: number; depth: number }
 type CScale = { radian: number; degree: unknown }

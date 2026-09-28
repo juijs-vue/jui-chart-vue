@@ -15,8 +15,14 @@ import type { BrushData } from 'jui-graph-ts'
 type CAxis = (v: unknown, i: unknown) => { x: number; y: number; depth: number }
 type CScale = { radian: number; degree: unknown }
 
+/** `chart.brush.stackbar3d`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface StackBar3DBrushOptions {
+  /** Padding reserved at the top/bottom of each row's stacked-box lane. */
+  outerPadding?: number
+}
+
 /** Own `chart.brush.stackbar3d.setup()` fields - see legacy `stackbar3d.js`. */
-export const STACKBAR3D_BRUSH_OWN_DEFAULTS = {
+export const STACKBAR3D_BRUSH_OWN_DEFAULTS: StackBar3DBrushOptions = {
   outerPadding: 10,
 }
 
@@ -78,7 +84,7 @@ export class StackBar3DBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return STACKBAR3D_BRUSH_OWN_DEFAULTS
+    return STACKBAR3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

@@ -9,6 +9,7 @@
 import { registerBrush, mathUtil } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 import { FullGaugeBrush } from './fullgauge'
+import type { FullGaugeBrushOptions } from './fullgauge'
 
 type CAxis = (i: number) => { width: number; height: number }
 
@@ -19,15 +20,33 @@ interface ArcArea {
   centerY: number
 }
 
+/** `chart.brush.arcgauge`'s own config fields (on top of the inherited `FullGaugeBrushOptions` -
+ * `startAngle`/`endAngle`/`size` are redeclared here with different defaults/meaning: a tick-marked
+ * radial arc rather than a full ring). */
+export interface ArcGaugeBrushOptions extends Omit<FullGaugeBrushOptions, 'startAngle' | 'endAngle' | 'size'> {
+  /** Stroke width of the filled value arc in px. */
+  size?: number
+  /** Start angle in degrees of the tick-marked arc. */
+  startAngle?: number
+  /** End angle in degrees of the tick-marked arc (an angular span from `startAngle`). */
+  endAngle?: number
+  /** X offset in px for the title label. */
+  titleX?: number
+  /** Y offset in px for the title label. */
+  titleY?: number
+  /** Formats the value shown in the center label; the raw value is used when `null`. */
+  format?: ((...args: unknown[]) => unknown) | null
+}
+
 /** Own `chart.brush.arcgauge.setup()` fields - see legacy `arcgauge.js`. */
-export const ARCGAUGE_BRUSH_OWN_DEFAULTS = {
+export const ARCGAUGE_BRUSH_OWN_DEFAULTS: ArcGaugeBrushOptions = {
   size: 5,
   startAngle: 245,
   endAngle: 475,
   showText: true,
   titleX: 0,
   titleY: 0,
-  format: null as ((...args: unknown[]) => unknown) | null,
+  format: null,
 }
 
 export class ArcGaugeBrush extends FullGaugeBrush {
@@ -146,7 +165,7 @@ export class ArcGaugeBrush extends FullGaugeBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return ARCGAUGE_BRUSH_OWN_DEFAULTS
+    return ARCGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 

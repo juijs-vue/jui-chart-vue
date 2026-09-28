@@ -22,16 +22,27 @@
 import { registerBrush, mathUtil } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 import { DonutBrush } from './donut'
+import type { DonutBrushOptions } from './donut'
 
 type CAxis = (i: number) => { width: number; height: number; x: number; y: number }
 
+/** `chart.brush.gauge`'s own config fields (on top of the inherited `DonutBrushOptions` -
+ * `size` is redeclared here as the gauge arc's stroke width, same concept as `DonutBrush`'s ring
+ * thickness). */
+export interface GaugeBrushOptions extends Omit<DonutBrushOptions, 'size'> {
+  /** Stroke width of the gauge arc in px. */
+  size?: number
+  /** Start angle in degrees of the gauge arc. */
+  startAngle?: number
+  /** End angle in degrees of the gauge arc (an angular span from `startAngle`, not an absolute
+   * end - `360` draws a full circle). */
+  endAngle?: number
+}
+
 /** Own `chart.brush.gauge.setup()` fields - see legacy `gauge.js`. */
-export const GAUGE_BRUSH_OWN_DEFAULTS = {
-  /** @cfg {Number} [size=30] Determines the stroke width of a gauge. */
+export const GAUGE_BRUSH_OWN_DEFAULTS: GaugeBrushOptions = {
   size: 30,
-  /** @cfg {Number} [startAngle=0] Determines the start angle(as start point) of a gauge. */
   startAngle: 0,
-  /** @cfg {Number} [endAngle=360] Determines the end angle(as draw point) of a gauge. */
   endAngle: 360,
 }
 
@@ -186,7 +197,7 @@ export class GaugeBrush extends DonutBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return GAUGE_BRUSH_OWN_DEFAULTS
+    return GAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 
