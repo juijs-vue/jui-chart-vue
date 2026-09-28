@@ -160,6 +160,10 @@ interface TopologyTableScaleResult {
   scale?: number
 }
 
+/** `chart.grid.topologytable` - a `jui-chart`-own grid extension (not part of `jui-graph-ts`
+ * itself, see this file's own header comment) providing the pre-scattered `{x, y}` node-position
+ * table plus pan/zoom mutator closures (`setX`/`setY`/`setScale`/`setView`/`moveLast`) that
+ * `topologynode.ts`'s brush and the `topologyctrl` widget both read/write via `axis.c(index)`. */
 export class TopologyTableGrid extends CoreGrid {
   private getDataIndex(key: unknown): number | null {
     const data = this.axis.data as BrushData[]

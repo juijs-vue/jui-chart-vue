@@ -61,6 +61,7 @@ export interface GuidelineWidgetOptions {
   stackPoint?: boolean
 }
 
+/** Own `chart.widget.guideline.setup()` fields - see legacy `guideline.js`. */
 export const GUIDELINE_WIDGET_OWN_DEFAULTS: GuidelineWidgetOptions = {
   brush: 0,
   xFormat: null,

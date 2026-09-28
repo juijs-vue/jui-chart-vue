@@ -34,6 +34,9 @@
 // something to keep silently re-attempting fixes for.
 import { registerIcon } from 'jui-graph-ts'
 
+/** `chart.icon.classic` - the default icon set's `{iconName: codepoint}` map, registered as
+ * `"classic"` via `registerIcon()`. See this file's own header comment for provenance and a known,
+ * open glyph-rendering issue (not fixed). */
 export const classicIcons = {
   "chevron-left": "\ue90e",
   "iframe": "\ue9be",

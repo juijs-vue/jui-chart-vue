@@ -19,6 +19,10 @@
 // breaks). `HidpiUtil.apply()` (`base/builder.ts`'s own post-`getContext()` call) is a documented
 // no-op whenever `window.devicePixelRatio` is `1` (jsdom's own default) - true here, so this stub
 // never needs to survive prototype-level DPR patching.
+/** Test-only helper shape (used by `canvas/*.spec.ts` files, not part of the public library
+ * surface): a recording stand-in for `CanvasRenderingContext2D`, since jsdom has no real 2D canvas
+ * implementation - `calls` accumulates each invoked method's name so a test can assert e.g.
+ * `stub.calls.includes('beginPath')`. See this file's own header comment. */
 export interface StubCanvasContext {
   calls: string[]
   [key: string]: unknown

@@ -103,6 +103,14 @@ export function preprocessMapAxis<T extends { axis?: unknown }>(options: T): T {
   }
 }
 
+/** Wraps a raw `axis[].map` user config into a plain object that already carries its own working
+ * `render`/`draw`/`drawAfter` methods, so `Axis.reload()`'s own broken lazy-construction path (see
+ * this file's own header comment) never needs to run - `drawMapType()`'s duck-typed
+ * `this.map.render()` call just works. Internally builds a real `jui-graph-ts` `Map` instance once
+ * (memoized in a closure) and delegates to its `draw()`/`drawAfter()`, with `chart`/`axis`/`svg`
+ * copied on at call time and the inner instance's own `.map` field pointed back at this same outer
+ * object (self-referential, matching the engine's own broken-path assignment shape) so the real
+ * `Map` internals find the user's `path`/`width`/`height`/`scale` values directly on it. */
 export function createMapConfig(userConfig: Record<string, unknown>): Record<string, unknown> {
   let inner: EngineMap | null = null
 

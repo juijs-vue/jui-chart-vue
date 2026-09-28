@@ -34,6 +34,11 @@ import {
 // `src/register/grid/`, not imported from `jui-graph-ts` like every grid above.
 import { TopologyTableGrid } from './grid/topologytable'
 
+/** Every grid type this project registers, keyed by the same `axis.x.type`/`.y.type`/`.z.type`/
+ * `.c.type` config strings the legacy engine used - stamped onto each `Builder` instance
+ * (`chart.gridTypes = GRID_TYPES`) by `Chart.vue` before mounting, since `Builder` itself never
+ * populates that field on its own (see this file's own header comment for the full "who's
+ * responsible for wiring this" investigation). */
 export const GRID_TYPES: Record<string, GridConstructor> = {
   block: BlockGrid as unknown as GridConstructor,
   range: RangeGrid as unknown as GridConstructor,

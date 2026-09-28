@@ -17,6 +17,9 @@
 // would. No fake geo data is invented - these specs only assert "mounts without throwing"/`setup()`
 // defaults, real per-path/per-bubble rendering against real geo SVGs is Playwright-verified against
 // the live site instead (see each spec file's own test name for that division of responsibility).
+/** Test-only helper (used by `map/*.spec.ts` files, not part of the public library surface):
+ * monkey-patches the global `XMLHttpRequest` with a stub that serves a canned response for map-data
+ * requests, returning a `restore()` callback. See this file's own header comment. */
 export function installStubMapXhr(): () => void {
   const g = globalThis as unknown as { XMLHttpRequest: unknown }
   const original = g.XMLHttpRequest

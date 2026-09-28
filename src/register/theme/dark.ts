@@ -36,6 +36,9 @@ const themeColors = [
     '#f21d4f'
 ];
 
+/** `chart.theme.dark` - a dark-background theme, registered as `"dark"` via `registerTheme()`.
+ * See this file's own header comment for provenance, including the `map*` keys' own
+ * previously-dead-comment fix. */
 export const darkTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#222222',

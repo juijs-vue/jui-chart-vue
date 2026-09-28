@@ -5,6 +5,8 @@
 import { registerTheme } from 'jui-graph-ts'
 import type { ChartThemeOptions } from './types'
 
+/** `chart.theme.classic` - the default theme (light, colorful palette), registered as `"classic"`
+ * via `registerTheme()`. See this file's own header comment for provenance. */
 export const classicTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#fff',

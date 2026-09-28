@@ -38,6 +38,10 @@ const themeColors = [
     'linear(top) #b76fef,0.9 #9228e4'
 ];
 
+/** `chart.theme.gradient` - the same palette as `classicTheme` but with each solid color replaced
+ * by a top-to-bottom linear gradient variant, registered as `"gradient"` via `registerTheme()`.
+ * See this file's own header comment for provenance, including the `map*` keys' own
+ * previously-dead-comment fix. */
 export const gradientTheme: ChartThemeOptions = {
   backgroundColor: '#fff',
   fontFamily: 'arial,Tahoma,verdana',

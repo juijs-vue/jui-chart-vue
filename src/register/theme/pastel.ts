@@ -23,6 +23,10 @@
 import { registerTheme } from 'jui-graph-ts'
 import type { ChartThemeOptions } from './types'
 
+/** `chart.theme.pastel` - a site-only 5th theme (no legacy `jui-chart` source counterpart),
+ * registered as `"pastel"` via `registerTheme()`. See this file's own header comment for
+ * provenance (extracted from the real live site's own bundle) and the cross-theme key-gap
+ * investigation/restoration. */
 export const pastelTheme: ChartThemeOptions = {
   fontFamily: "Caslon540BT-Regular,Times,New Roman,serif",
   backgroundColor: "#fff",

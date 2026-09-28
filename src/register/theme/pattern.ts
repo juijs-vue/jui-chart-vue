@@ -33,6 +33,10 @@ const themeColors = [
     'pattern-jennifer-12'
 ];
 
+/** `chart.theme.pattern` - the same layout as `classicTheme` but with each series color replaced
+ * by a `'pattern-jennifer-NN'` fill-pattern reference (see `register/pattern/classic.ts`'s own
+ * `patternJenniferMap`), registered as `"pattern"` via `registerTheme()`. See this file's own
+ * header comment for provenance, including the `map*` keys' own previously-dead-comment fix. */
 export const patternTheme: ChartThemeOptions = {
   fontFamily: 'arial,Tahoma,verdana',
   backgroundColor: '#fff',

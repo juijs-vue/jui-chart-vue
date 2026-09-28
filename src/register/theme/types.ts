@@ -45,6 +45,10 @@
 // Every value's type was derived from actually reading all 5 theme files' own literal values
 // (not guessed from the key name) - confirmed there is exactly one consistent type per key across
 // every file that sets it (no key is e.g. a string in one theme and a number in another).
+/** The full style-key shape every `chart.theme.*` registration (`classic`/`dark`/`gradient`/
+ * `pastel`/`pattern`) is built from - see this file's own header comment for why every field is
+ * optional (a real, investigated cross-theme inconsistency, not a hedge) and the full methodology
+ * behind each field's type. */
 export interface ChartThemeOptions {
 
   fontFamily?: string
