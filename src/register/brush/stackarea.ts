@@ -11,6 +11,11 @@ import type { AreaBrushOptions } from './area'
  * this name purely so a generated doc page for `"stackarea"` has something to point at. */
 export type StackAreaBrushOptions = AreaBrushOptions
 
+/**
+ * `chart.brush.stackarea`: extends `AreaBrush` with exactly one override - `draw()` stacks values
+ * via the inherited `getStackXY()` instead of `getXY()` before handing off to `drawArea()`, which
+ * is otherwise reused unchanged.
+ */
 export class StackAreaBrush extends AreaBrush {
   /** Arrow-function class field overriding `AreaBrush.draw` - the only override this class makes
    * (see header comment): draws stacked series via the inherited `CoreBrush.getStackXY()` instead

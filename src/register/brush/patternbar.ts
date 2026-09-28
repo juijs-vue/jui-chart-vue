@@ -37,6 +37,13 @@ function createId(key?: string): string {
   return [key || 'id', +new Date(), Math.round(Math.random() * 100) % 100].join('-')
 }
 
+/**
+ * `chart.brush.patternbar`: like `ImageBarBrush`, but instead of an `<image>` plus optional
+ * backing rect per cell, fills a single rect per cell with a freshly-registered SVG `<pattern>`
+ * (one new `<defs>` pattern per cell, no reuse/dedup across cells) that tiles `brush.uri`'s image.
+ * Reuses `ImageBarBrush.getImageURI()`; `drawBefore()`/`draw()` are fully overridden. Base class
+ * for `PatternColumnBrush`.
+ */
 export class PatternBarBrush extends ImageBarBrush {
   /** Registers a new SVG `<pattern>` (a freshly-generated, effectively-unique id from `createId`)
    * tiling an `<image>` (resolved via the inherited `getImageURI(key, value)`) at the given

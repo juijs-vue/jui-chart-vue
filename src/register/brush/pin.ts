@@ -31,6 +31,12 @@ export const PIN_BRUSH_OWN_DEFAULTS: PinBrushOptions = {
   clip: false,
 }
 
+/**
+ * `chart.brush.pin`: unlike every other brush, renders exactly ONE marker - not once per data row -
+ * at a single x position (`axis.x(brush.split)`): an optional formatted text label, a
+ * downward-pointing triangle "flag", and a vertical line spanning the plot area (see this file's
+ * own header comment).
+ */
 export class PinBrush extends CoreBrush {
   /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Renders the
    * brush's single marker at `axis.x(brush.split)` (see this file's header comment - unlike every

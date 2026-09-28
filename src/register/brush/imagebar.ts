@@ -32,6 +32,14 @@ export const IMAGEBAR_BRUSH_OWN_DEFAULTS: ImageBarBrushOptions = {
   uri: null,
 }
 
+/**
+ * `chart.brush.imagebar`: a horizontal bar brush whose "bar" is an `<image>` (resolved via
+ * `brush.uri`, a string or a `(key, value) => string` callback) instead of a plain colored rect.
+ * When `fixed: true` (the default) the image is drawn at its configured `width`/`height` with the
+ * remaining bar length filled by a plain colored rect behind it; otherwise the image is stretched
+ * to the bar's full length. Base class for `PatternBarBrush`/`ImageColumnBrush`, which reuse its
+ * `getBarStyle()`/`getImageURI()` unchanged.
+ */
 export class ImageBarBrush extends CoreBrush {
   protected g: any
   protected targets: string[] = []

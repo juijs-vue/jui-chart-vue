@@ -12,6 +12,12 @@ import type { ImageBarBrushOptions } from './imagebar'
  * something to point at. */
 export type ImageColumnBrushOptions = ImageBarBrushOptions
 
+/**
+ * `chart.brush.imagecolumn`: the vertical-column counterpart to `ImageBarBrush` - same
+ * image-or-fallback-rect bar rendering (see `ImageBarBrush`'s own class doc/header comment), just
+ * with x/y swapped so bars grow upward from the column axis's zero line instead of horizontally.
+ * Reuses `getImageURI()`/`getBarStyle()` unchanged; only `drawBefore()`/`draw()` are overridden.
+ */
 export class ImageColumnBrush extends ImageBarBrush {
   private zeroY = 0
   private halfWidth = 0

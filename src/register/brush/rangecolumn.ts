@@ -24,6 +24,13 @@ export const RANGE_COLUMN_BRUSH_OWN_DEFAULTS: RangeColumnBrushOptions = {
   innerPadding: 1,
 }
 
+/**
+ * `chart.brush.rangecolumn`: the vertical counterpart to `RangeBarBrush` - draws one vertical
+ * range-span rect per target per row from each row's `[min, max]` tuple. A fully independent
+ * sibling, not a subclass of `RangeBarBrush`/`ColumnBrush`. Its border-style theme lookups
+ * reference keys that don't exist in the classic theme, a genuine preserved legacy quirk (not
+ * fixed here) - see this file's own header comment.
+ */
 export class RangeColumnBrush extends CoreBrush {
   private g: any
   private half_width = 0

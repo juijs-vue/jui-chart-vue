@@ -13,6 +13,12 @@ export type PathBrushOptions = BrushOptions
 
 type CAxis = (i: number, value: unknown) => { x: number; y: number }
 
+/**
+ * `chart.brush.path`: a general-purpose closed-path brush that draws one `<path>` per target,
+ * moved through every data row's `axis.c(index, value)` panel-grid position (the same projection
+ * gauge brushes use for `axis.c(i)`, here called with a value argument too). Used directly by the
+ * real site's radar/circle-radar demos via a `radar`-type `c` grid. No per-point event wiring.
+ */
 export class PathBrush extends CoreBrush {
   /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Draws one
    * closed `<path>` per `target` field, moving through every data row's `axis.c(index, value)`

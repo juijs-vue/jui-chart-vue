@@ -70,6 +70,12 @@ function loop(total: number): (callback: (index: number, group: number) => void)
   }
 }
 
+/**
+ * `chart.brush.scatterpath`: a high-performance scatter variant that batches every target's points
+ * into exactly 5 `PathSymbolElement`s via a round-robin loop, instead of one SVG element per point
+ * like `ScatterBrush` - trading per-point styling/flexibility for far fewer DOM nodes on large
+ * datasets. Marker shape/size/stroke-width apply uniformly to all points.
+ */
 export class ScatterPathBrush extends CoreBrush {
   /** Draws every target's points batched into exactly 5 `PathSymbolElement`s instead of one node
    * per point (see this file's header comment): builds a template of the configured `symbol`

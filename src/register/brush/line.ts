@@ -35,6 +35,12 @@ export const LINE_BRUSH_OWN_DEFAULTS: LineBrushOptions = {
   opacity: null,
 }
 
+/**
+ * `chart.brush.line`: draws one line per target across all data rows, as straight segments, a
+ * smoothed curve, or a stepped path (`symbol`). Supports dimming inactive lines and toggling which
+ * one is `active` via a configurable DOM event, permanent min/max/all-point value tooltips
+ * (`display`), and a custom per-point stroke-opacity override.
+ */
 export class LineBrush extends CoreBrush {
   protected lineList: LineListItem[] = []
 

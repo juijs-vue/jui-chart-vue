@@ -12,6 +12,11 @@ import type { LineBrushOptions } from './line'
  * this name purely so a generated doc page for `"stackline"` has something to point at. */
 export type StackLineBrushOptions = LineBrushOptions
 
+/**
+ * `chart.brush.stackline`: extends `LineBrush` with exactly one override - `draw()` stacks values
+ * via the inherited `getStackXY()` instead of `getXY()` before handing off to `drawLine()`, which
+ * is otherwise reused unchanged along with `drawBefore`/tooltips/active effects.
+ */
 export class StackLineBrush extends LineBrush {
   /** Arrow-function class field overriding `LineBrush.draw` - the only override this class makes
    * (see header comment): draws stacked series via the inherited `CoreBrush.getStackXY()` instead

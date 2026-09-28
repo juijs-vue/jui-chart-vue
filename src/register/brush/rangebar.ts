@@ -21,6 +21,11 @@ export const RANGE_BAR_BRUSH_OWN_DEFAULTS: RangeBarBrushOptions = {
   innerPadding: 1,
 }
 
+/**
+ * `chart.brush.rangebar`: draws one horizontal range-span rect per target per row, where each
+ * row's target field is a `[min, max]` 2-element array rather than a single number. Extends
+ * `CoreBrush` directly and shares no code with `BarBrush`.
+ */
 export class RangeBarBrush extends CoreBrush {
   private g: any
   private half_height = 0

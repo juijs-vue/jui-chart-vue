@@ -25,6 +25,13 @@ export const WATERFALL_BRUSH_OWN_DEFAULTS: WaterfallBrushOptions = {
   outerPadding: 5,
 }
 
+/**
+ * `chart.brush.waterfall`: a classic waterfall bridge chart - the first (and, if `end: true`,
+ * last) column is a full edge-colored bar from the axis's zero line, while every column in between
+ * is a floating segment between the previous row's value and this row's value, colored
+ * differently for rising vs. falling, optionally connected to the next segment by a dashed guide
+ * line.
+ */
 export class WaterfallBrush extends CoreBrush {
   private g: any
   private count = 0

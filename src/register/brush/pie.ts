@@ -52,6 +52,13 @@ export const PIE_BRUSH_OWN_DEFAULTS: PieBrushOptions = {
   activeEvent: null,
 }
 
+/**
+ * `chart.brush.pie`: draws a pie chart, one slice per target, positioned within the axis's
+ * auto-registered "c" (panel) grid slot - no extra axis config is required beyond `axis: [{ data }]`
+ * (see this file's own header comment). Supports inside/outside value labels (`showText`), a
+ * pseudo-3D beveled slice style (`'3d'`), and toggling a slice's active/expanded state via a
+ * configurable DOM event.
+ */
 export class PieBrush extends CoreBrush {
   private textY = 3
   private preAngle = 0

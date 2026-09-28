@@ -70,6 +70,14 @@ function getCalculatedData(obj: BrushData, targets: string[]): PyramidSegment[] 
   return list
 }
 
+/**
+ * `chart.brush.pyramid`: draws a single solid triangle (apex at top by default, or an inverted
+ * funnel when `reverse: true`) inscribed in the plot area, with each target's value rendered as a
+ * trapezoid slice sized by its share of the total and sorted by value descending so the largest
+ * segment forms the base. Only ever reads `axis.data[0]` and is not axis-scale-based - see this
+ * file's own header comment for a preserved `total === 0` divide-by-zero quirk, kept faithful to
+ * the legacy source rather than fixed.
+ */
 export class PyramidBrush extends CoreBrush {
   /** Draws one segment's label as a leader line from `(cx, cy)` out to `(cx + pyramidTextLineSize,
    * y)` plus the text itself just past its end. `dist` is the vertical distance to the PREVIOUS

@@ -16,6 +16,12 @@ import type { StackBarBrushOptions } from './stackbar'
  * something to point at. */
 export type StackColumnBrushOptions = StackBarBrushOptions
 
+/**
+ * `chart.brush.stackcolumn`: the vertical-column counterpart to `StackBarBrush` - extends it
+ * directly (not `ColumnBrush`), reusing `getBarElement`/`setActiveEffect`/`drawStackTooltip`/
+ * `drawStackEdge`/`static setup()` unchanged, and overriding only `getTargetSize`/`drawBefore`/
+ * `draw` to lay segments out vertically instead of horizontally.
+ */
 export class StackColumnBrush extends StackBarBrush {
   private stackColWidth = 0
 

@@ -39,6 +39,12 @@ export const SPLITAREA_BRUSH_OWN_DEFAULTS: SplitAreaBrushOptions = {
   line: true,
 }
 
+/**
+ * `chart.brush.splitarea`: extends `SplitLineBrush`, reusing its `createLine()`/`getXY()`
+ * wholesale and adding its own `drawArea()`/`draw()` to fill the area under each split line -
+ * itself split into two differently-colored regions at the same `split` boundary the inherited
+ * line stroke already uses. Used directly by the real site's "Today's TPS" realtime demo.
+ */
 export class SplitAreaBrush extends SplitLineBrush {
   /** For each target, builds the inherited `createLine()` path(s) and extends each one into a
    * closed fill shape by dropping straight down to `maxY` (the plot area's bottom) and back:

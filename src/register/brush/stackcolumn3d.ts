@@ -20,6 +20,12 @@ export const STACKCOLUMN3D_BRUSH_OWN_DEFAULTS: StackColumn3DBrushOptions = {
   outerPadding: 10,
 }
 
+/**
+ * `chart.brush.stackcolumn3d`: the vertical counterpart to `StackBar3DBrush`, stacking every
+ * target's extruded 3D box end-to-end along y within one column-width "lane". Exposes its own
+ * `drawMain()` seam for `StackCylinder3DBrush` to override; unlike `StackBar3DBrush`, has no
+ * unused-`group` bug (see this file's own header comment).
+ */
 export class StackColumn3DBrush extends CoreBrush {
   protected g: any
   private barWidth = 0

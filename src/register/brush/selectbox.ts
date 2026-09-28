@@ -26,6 +26,12 @@ type DateAxisScale = BrushAxisScale & {
   ticks(type: 'milliseconds', interval: number): Date[]
 }
 
+/**
+ * `chart.brush.selectbox`: draws one invisible (opacity 0, hover-revealed) clickable overlay cell
+ * per tick interval on a date x-axis, using the axis's real date/time scale's own `.ticks(...)`
+ * call - see this file's own header comment for how this differs from other ports of this brush
+ * that had to approximate date-axis ticking by hand.
+ */
 export class SelectBoxBrush extends CoreBrush {
   private g: any
   private zeroY = 0

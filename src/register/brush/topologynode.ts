@@ -205,6 +205,14 @@ export const TOPOLOGYNODE_BRUSH_OWN_DEFAULTS: TopologyNodeBrushOptions = {
  * the real required grid (`chart.grid.topologytable`) isn't ported yet. */
 type TopologyScale = (index: number | string) => { x: number; y: number; scale: number }
 
+/**
+ * `chart.brush.topologynode`: a force-directed-style node/edge network diagram - nodes are
+ * positioned via `axis.c(index)` and edges connect node pairs listed in each row's own `outgoing`
+ * array. Ported in full for brush registration, but its real demo depends on a
+ * `chart.grid.topologytable` grid that has not been ported to `jui-graph-ts` - see this file's own
+ * header comment for the full gap analysis (no working demo exists yet; the "panel" grid stand-in
+ * would render visibly broken output).
+ */
 export class TopologyNode extends CoreBrush {
   private edges = new TopologyEdgeManager()
   private g: any = null

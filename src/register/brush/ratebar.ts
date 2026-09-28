@@ -59,6 +59,13 @@ export const RATE_BAR_BRUSH_OWN_DEFAULTS: RateBarBrushOptions = {
   padding: 0,
 }
 
+/**
+ * `chart.brush.ratebar`: renders each data row as one horizontal pill-shaped bar split into
+ * contiguous colored segments, one per target whose value is greater than 0 (a zero/negative value
+ * is skipped entirely, not drawn as a zero-width placeholder). Each segment's width is that
+ * target's share of the row's own total, so a row's bar always fills the full plot width
+ * regardless of its raw total. Only one orientation exists - x is always the range/value axis.
+ */
 export class RateBarBrush extends CoreBrush {
   protected barList: any[] = []
 

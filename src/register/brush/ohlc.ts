@@ -15,6 +15,13 @@ import type { CandleStickBrushOptions } from './candlestick'
  * this name purely so a future `jui-api-doc` page for `"ohlc"` has something to point at. */
 export type OHLCBrushOptions = CandleStickBrushOptions
 
+/**
+ * `chart.brush.ohlc`: renders classic OHLC ("open-high-low-close") tick marks - a vertical
+ * high-low line plus a short left "open" tick and right "close" tick - per data row. Extends
+ * `CandleStickBrush` in name only: it completely replaces `drawBefore()`/`draw()` with its own tick
+ * rendering and reuses none of the inherited candlestick-body drawing logic (see this file's own
+ * header comment).
+ */
 export class OHLCBrush extends CandleStickBrush {
   private ohlcG: any
 

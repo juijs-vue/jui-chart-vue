@@ -59,6 +59,13 @@ export const STACKGAUGE_BRUSH_OWN_DEFAULTS: StackGaugeBrushOptions = {
   title: 'title',
 }
 
+/**
+ * `chart.brush.stackgauge`: draws concentric partial-ring "stacked" gauges, one per data row,
+ * each ring's radius shrinking inward by `size` from the previous ring. Extends `DonutBrush`,
+ * reusing only `drawDonut()` unmodified - `draw()`/`drawBefore()` are both completely overridden,
+ * including a ported fallback that synthesizes a full-chart-area panel when no `c`-type axis panel
+ * is configured (see this file's own header comment for its authenticity/provenance).
+ */
 export class StackGaugeBrush extends DonutBrush {
   private sgW = 0
   private sgCenterX = 0

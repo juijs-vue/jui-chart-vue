@@ -55,6 +55,14 @@ export const SCATTER_BRUSH_OWN_DEFAULTS: ScatterBrushOptions = {
   clip: false,
 }
 
+/**
+ * `chart.brush.scatter`: renders one marker per (row, target) point, shaped by `symbol`
+ * ('circle'/'rectangle'/'triangle'/'cross', or a callback returning one of those or an arbitrary
+ * image URL rendered as an `<image>`). Supports hiding markers entirely or just visually
+ * (`hide`/`hideZero`), syncing hover styling across a whole row (`hoverSync`), toggling an
+ * active/highlighted marker with tooltip via a configurable DOM event, and permanent min/max/all
+ * value tooltips (`display`).
+ */
 export class ScatterBrush extends CoreBrush {
   protected cachedSymbol: Record<number, any[]> = {}
   protected activeScatter: any = null

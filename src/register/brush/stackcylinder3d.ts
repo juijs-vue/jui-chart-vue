@@ -13,6 +13,12 @@ import type { StackColumn3DBrushOptions } from './stackcolumn3d'
  * page for `"stackcylinder3d"` has something to point at. */
 export type StackCylinder3DBrushOptions = StackColumn3DBrushOptions
 
+/**
+ * `chart.brush.stackcylinder3d`: extends `StackColumn3DBrush`, reusing its `drawBefore()`/
+ * `draw()` wholesale and overriding only `drawMain()` to draw a cylinder instead of a box - every
+ * segment except the first has its height shortened by its own projected "top" sliver first, so
+ * consecutive cylinders visually butt up against each other without a projection gap/overlap.
+ */
 export class StackCylinder3DBrush extends StackColumn3DBrush {
   /** Overrides `StackColumn3DBrush.drawMain` to draw a cylinder instead of a box, shortening every
    * segment's height EXCEPT the first (`index > 0`) by its own projected "top" sliver

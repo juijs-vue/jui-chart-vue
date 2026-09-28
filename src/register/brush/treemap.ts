@@ -152,6 +152,15 @@ function getRootNodeSeq(node: TreemapNode): number {
   return node.nodenum as number
 }
 
+/**
+ * `chart.brush.treemap`: renders a squarified treemap, where each row's `index` field is a
+ * dot-separated tree path fed into a shared `NodeManager`. Only leaf nodes are ever drawn as
+ * rectangles; non-leaf nodes are invisible grouping containers (optionally shown as a group title
+ * label via `titleDepth`). See this file's own header comment for a preserved layout quirk
+ * (siblings three or more levels apart losing their intermediate grouping boundary) and a
+ * `getMinimumXY()` bug that isn't a true bounding-box minimum, both kept faithful to the legacy
+ * source.
+ */
 export class TreemapBrush extends CoreBrush {
   private nodes = new NodeManager()
   private titleKeys: Record<string, boolean> = {}

@@ -33,6 +33,12 @@ export const SPLITLINE_BRUSH_OWN_DEFAULTS: SplitLineBrushOptions = {
   split: null,
 }
 
+/**
+ * `chart.brush.splitline`: a line brush that draws two visually distinct segments split at a given
+ * `split` index/date - the portion before `split` in the normal per-target color, the portion from
+ * `split` onward re-styled with the theme's split color (falling back to the normal color when
+ * that theme key is unset). Base class `SplitAreaBrush` extends for its own filled-area variant.
+ */
 export class SplitLineBrush extends CoreBrush {
   /**
    * @method createLine

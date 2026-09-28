@@ -26,6 +26,13 @@ export const STACKBAR3D_BRUSH_OWN_DEFAULTS: StackBar3DBrushOptions = {
   outerPadding: 10,
 }
 
+/**
+ * `chart.brush.stackbar3d`: stacks every target's extruded 3D box end-to-end along x, all sharing
+ * one row-height "lane". Contains a preserved, genuine legacy bug in its trailing `addEvent` call
+ * (fires a second time on an unused variable using the final target's stale loop values) - see
+ * this file's own header comment for the full trace; kept faithful to the original rather than
+ * fixed.
+ */
 export class StackBar3DBrush extends CoreBrush {
   private g: any
   private barHeight = 0

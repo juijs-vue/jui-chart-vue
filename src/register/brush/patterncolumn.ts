@@ -12,6 +12,12 @@ import type { PatternBarBrushOptions } from './patternbar'
  * `"patterncolumn"` has something to point at. */
 export type PatternColumnBrushOptions = PatternBarBrushOptions
 
+/**
+ * `chart.brush.patterncolumn`: the vertical-column counterpart to `PatternBarBrush` - same
+ * SVG-pattern-tiled bar rendering (see `PatternBarBrush`'s own class doc/header comment), with x/y
+ * swapped so bars grow upward from the column axis's zero line. Reuses `createPattern()`/
+ * `getImageURI()` unchanged; only `drawBefore()`/`draw()` are overridden.
+ */
 export class PatternColumnBrush extends PatternBarBrush {
   private zeroY = 0
   private halfWidth = 0

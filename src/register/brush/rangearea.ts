@@ -19,6 +19,13 @@ import type { BrushAxisScale, BrushData, BrushOptions } from 'jui-graph-ts'
  * a `[low, high]` 2-element tuple. */
 export type RangeAreaBrushOptions = BrushOptions
 
+/**
+ * `chart.brush.rangearea`: draws one closed band polygon per target, where each row's value is a
+ * `[low, high]` tuple - traces the low bound forward across every row then the high bound
+ * backward, with straight point-to-point edges (no curve/step interpolation). Declares no config
+ * options and wires no per-element events at all, both genuine gaps in the legacy source, not
+ * oversights of this port (see this file's own header comment).
+ */
 export class RangeAreaBrush extends CoreBrush {
   /** Arrow-function class field satisfying `Draw.render()`'s required `draw` hook. Builds one
    * closed polygon per target field: traces `value[0]` (the low bound) forward across every row,

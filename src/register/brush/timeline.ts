@@ -63,6 +63,14 @@ interface TimelineCacheRow {
   height: number
 }
 
+/**
+ * `chart.brush.timeline`: a Gantt-style timeline chart - a `range`-typed x-axis (start/end
+ * timestamps) crossed with a `block`-typed y-axis (one row per unique key), drawing one horizontal
+ * bar per data row plus a connecting line to the next row's start when contiguous, and a
+ * background hover/active highlight layer per row. Supports two independent active/hover
+ * interaction models selected by `activeType` (an invisible full-row overlay by default, or the
+ * visible bar itself), each with its own state - see this file's own header comment.
+ */
 export class TimelineBrush extends CoreBrush {
   private g: any = null
   private padding: { left: number; top: number; right: number; bottom: number } | null = null

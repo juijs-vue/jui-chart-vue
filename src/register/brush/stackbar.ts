@@ -39,6 +39,13 @@ export const STACK_BAR_BRUSH_OWN_DEFAULTS: StackBarBrushOptions = {
   edge: false,
 }
 
+/**
+ * `chart.brush.stackbar`: draws stacked horizontal bar segments, one per target, within each
+ * row's shared bar lane. Extends `BarBrush` in name only - `getBarElement`/`setActiveEffect`/
+ * `drawBefore`/`draw` are all completely overridden with independent state (`stackGroupList`,
+ * etc.) rather than reusing the parent's; only `getBarStyle()` and the `static setup()`
+ * default-merge chain are genuinely shared (see this file's own header comment).
+ */
 export class StackBarBrush extends BarBrush {
   protected stackGroupList: any[] = []
   protected stackTooltips: any[] = []
