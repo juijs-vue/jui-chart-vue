@@ -1,8 +1,9 @@
 // Smoke test (task step 4's own explicit ask): confirms `Builder` genuinely produces real SVG DOM
 // under jsdom, mounted through `<Chart>`, the same way it would in a browser - and that unmounting
 // tears the SVG back out again.
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { Builder } from 'jui-graph-ts'
 import Chart from './Chart.vue'
 
 describe('Chart.vue', () => {
@@ -160,5 +161,67 @@ describe('Chart.vue', () => {
     await flushPromises()
 
     expect(wrapper.element.querySelectorAll('circle').length).toBeGreaterThan(0)
+  })
+
+  // Regression test for a reported bug (`play/chart/json/update_axis_grid.js`'s own pattern):
+  // "mounted once with `render: false` triggers `Builder.render()` FIVE times, producing transient
+  // `<ellipse cx="null">` SVG errors" (expected: exactly 2 - the one mandatory call
+  // `Builder.init()` always makes at mount regardless of `render`, plus the one explicit trailing
+  // `builder.render()` below; `Axis.set()`/`updateGrid()`'s own `if (this.chart.isRender())
+  // this.chart.render()` guard should suppress both `updateGrid()` calls in between, since
+  // `isRender()` consults `_options.render` - `false` here - once `_initialize` is `true`).
+  // NOT REPRODUCIBLE against this project's current code (see `UpdateAxisGridSample.vue`'s own
+  // header comment for the full investigation, including real-browser/Playwright confirmation -
+  // jsdom can't validate SVG attributes the way a real renderer does, so it wouldn't reproduce the
+  // reported `<ellipse>` warnings even if the call-count bug were still present here) - this test
+  // exists as a permanent guard against the count regressing back to something other than 2,
+  // whatever the eventual root cause of the originally-reported discrepancy turns out to be.
+  it('calls Builder.render() exactly twice for a render:false mount + two axis(0).updateGrid() calls + one explicit render()', async () => {
+    const renderSpy = vi.spyOn(Builder.prototype, 'render')
+    renderSpy.mockClear()
+
+    const wrapper = mount(Chart, {
+      props: {
+        width: 600,
+        height: 400,
+        axis: [
+          {
+            x: { type: 'block', domain: ['1Q', '2Q', '3Q', '4Q'], line: true },
+            y: { type: 'range', domain: [0, 10000], step: 4 },
+            data: [
+              { sales: 2100, profit: 1800 },
+              { sales: 6000, profit: 4400 },
+              { sales: 8300, profit: 6700 },
+              { sales: 5200, profit: 4800 },
+            ],
+          },
+        ],
+        brush: [{ type: 'scatter', target: ['sales', 'profit'] }],
+        render: false,
+      },
+    })
+
+    expect(renderSpy).toHaveBeenCalledTimes(1)
+
+    const builder: any = (wrapper.vm as any).getBuilder()
+    const axis0 = builder.axis(0)
+
+    axis0.updateGrid('y', { type: 'block', domain: ['1Q', '2Q', '3Q', '4Q'], line: true }, true)
+    axis0.updateGrid('x', { type: 'range', domain: [0, 10000], step: 4 }, true)
+    await flushPromises()
+
+    // The two updateGrid() calls above must NOT have triggered a render (render:false, and no
+    // reactive prop change occurred - a spurious remount would also show up here as extra calls).
+    expect(renderSpy).toHaveBeenCalledTimes(1)
+
+    builder.render()
+
+    expect(renderSpy).toHaveBeenCalledTimes(2)
+
+    // Same final-state check as the legacy demo's own visual intent: a real, non-empty scatter
+    // brush, not a crashed/empty one.
+    expect(wrapper.element.querySelectorAll('g.brush-scatter ellipse').length).toBeGreaterThan(0)
+
+    renderSpy.mockRestore()
   })
 })

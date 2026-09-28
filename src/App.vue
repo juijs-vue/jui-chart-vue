@@ -39,6 +39,7 @@ import DarkThemeSample from './demos/DarkThemeSample.vue'
 import GradientThemeSample from './demos/GradientThemeSample.vue'
 import PatternThemeSample from './demos/PatternThemeSample.vue'
 import IconSample from './demos/IconSample.vue'
+import UpdateAxisGridSample from './demos/UpdateAxisGridSample.vue'
 </script>
 
 <template>
@@ -95,6 +96,8 @@ import IconSample from './demos/IconSample.vue'
     <PatternThemeSample />
     <h2 class="phase-heading">Icon font subsystem</h2>
     <IconSample />
+    <h2 class="phase-heading">Bug fix verification: update_axis_grid</h2>
+    <UpdateAxisGridSample />
   </main>
 </template>
 
