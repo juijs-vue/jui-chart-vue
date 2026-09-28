@@ -12,6 +12,11 @@
 import { canvasBaseUtil } from 'jui-graph-ts'
 import { KineticObject } from './kinetic'
 
+/** A single labeled, physics-driven circle used by `canvas.bubblecloud`'s `BubbleCloud` helper.
+ * Extends `KineticObject`, reusing its `pos`/`force`/`update`/`distance`/`distancePos` wholesale;
+ * adds only `draw()` (a drop-shadowed filled circle with centered `text`, dimmable via `dim`) plus
+ * the display fields (`mark`/`dim`/`radius`/`text`/`color`/`shadowColor`/`textColor`) the owning
+ * `BubbleCloud` mutates directly after construction. */
 export class Bubble extends KineticObject {
   mark = false
   dim = false

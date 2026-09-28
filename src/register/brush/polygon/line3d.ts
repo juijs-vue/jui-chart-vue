@@ -25,6 +25,12 @@ export const POLYGON_LINE3D_BRUSH_OWN_DEFAULTS: PolygonLine3DBrushOptions = {
   clip: false,
 }
 
+/** Draws each `(dataIndex -> dataIndex+1, targetIndex)` ribbon segment as a single 4-point
+ * `<polygon>` face, built from four separate single-vertex `PointPolygon`s rather than a
+ * `LinePolygon` (despite this brush's name - a real quirk of the legacy source, documented in this
+ * file's header comment), each rotated individually so the four corners of one ribbon quad can end
+ * up with slightly different projected perspective before being assembled by hand into one
+ * `<polygon>` element with a manually computed z-sort `.order`. */
 export class PolygonLine3DBrush extends PolygonCoreBrush {
   /** Builds one ribbon-segment `<polygon>` connecting row `dataIndex` to row `dataIndex + 1` for
    * `target`, at `targetIndex`'s z-band (thickness `d = axis.z.rangeBand() - padding * 2`,

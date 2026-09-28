@@ -39,6 +39,12 @@ export const POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS: PolygonScatter3DBrushOptions 
   clip: false,
 }
 
+/** Draws each `(dataIndex, targetIndex)` cell as a single 3D `<circle>` (radial-gradient filled,
+ * perspective-scaled by depth), positioned via a single-vertex `PointPolygon` and the inherited
+ * `createPolygon()` (`PolygonCoreBrush` - rotates/z-sorts/stamps `.order` for `appendAll()`). Per
+ * this file's header comment, this class has no counterpart in this repo's copied legacy source tree
+ * despite being real, live code in the actual bundled site engine - ported from an external mirror
+ * of the original `polygon/scatter3d.js`. */
 export class PolygonScatter3DBrush extends PolygonCoreBrush {
   /** Builds one 3D marker `<circle>` for row `dataIndex`'s `target` field, at `(axis.x(dataIndex),
    * axis.y(data[target]), axis.z(dataIndex))` - both `x` and `z` keyed by the row index itself, not

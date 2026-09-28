@@ -57,6 +57,13 @@ export const CANVAS_DOT3D_BRUSH_OWN_DEFAULTS: CanvasDot3DBrushOptions = {
 
 type Scale3 = (value: unknown) => number
 
+/** Draws 3D dot/line/poly/area series directly onto the canvas 2D context (`symbol`: `'dot'`,
+ * `'line'`, `'poly'`, or `'area'`), each shape queued via `addPolygon()`/`drawAfter()` for deferred,
+ * z-sorted drawing. Reads `listData()` rows as plain `[x, y, (z)]` arrays rather than the usual
+ * object-shaped rows (z-padded with a trailing `0` when a row only has 2 elements). For
+ * `'line'`/`'poly'`, `draw()` preserves a legacy transcription bug where the "is this the last row"
+ * check reads the current row's own (always-3) length instead of the dataset's actual last index -
+ * see `draw()`'s own doc for the full quirk. */
 export class CanvasDot3DBrush extends CanvasCoreBrush {
   private firstCacheData: [string, number, number, number, number, number, boolean] | null = null
 

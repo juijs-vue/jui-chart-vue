@@ -176,6 +176,13 @@ class Circle {
   }
 }
 
+/** Draws one simple kinematic `Circle` per data row, seeded from each row's `x`/`y`/`radius`/`vx`/
+ * `vy`/`ax`/`ay` fields and cached on the chart so the same instances persist across redraws. Each
+ * frame calls every circle's `move()`/`draw()`; per this file's header comment, `Circle` only
+ * performs constant-velocity motion (`move()` bails out whenever `tpf == 1`, which is its cached
+ * default, so circles never actually move unless something else populates that cache) - the
+ * inclined-plane friction/acceleration helpers and wall-collision detection it also carries are dead
+ * code, never invoked. */
 export class CanvasActiveCircleBrush extends CanvasCoreBrush {
   /** Reports whether `circle` has crossed any of the four axis-range boundaries (its edge, `pos ±
    * radius`, past the mapped pixel position of `axis.x`/`axis.y`'s own `min()`/`max()`). Note the

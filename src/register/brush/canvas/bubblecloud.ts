@@ -200,6 +200,12 @@ class BubbleCloud {
   }
 }
 
+/** A "force-directed labeled bubble cloud" canvas brush: builds a `BubbleCloud` (this file's local
+ * helper, built on `Bubble` from `base/bubble.ts`) where each bubble is sized by a row's `capacity`
+ * field, gravitates toward the canvas center, and collides/separates from its neighbors. Reuses and
+ * re-animates the cached cloud across redraws when the underlying data reference hasn't changed, and
+ * registers a `'picker'` chart-cache hook so `canvas.picker` can route pointer hover events into the
+ * cloud's own hit-testing. */
 export class CanvasBubbleCloudBrush extends CanvasCoreBrush {
   /** Reuses the cached `BubbleCloud` (just re-running its physics/render step) when one already
    * exists and the chart's `axis.data` reference hasn't changed since it was built; otherwise

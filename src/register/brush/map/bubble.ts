@@ -29,6 +29,10 @@ export const MAP_BUBBLE_BRUSH_OWN_DEFAULTS: MapBubbleBrushOptions = {
   format: null,
 }
 
+/** Draws one value-scaled circle per data row at its `axis.map(id)` projected `{x,y}` position
+ * (`jui-graph-ts`'s already-ported `base/map.ts` `Map` engine's `MapScale`), skipping any row whose
+ * `id` doesn't resolve. Each bubble's radius is linearly rescaled from the dataset's own `[min, max]`
+ * value range onto `[brush.min, brush.max]`, optionally with a centered value label. */
 export class MapBubbleBrush extends MapCoreBrush {
   /** Scans every row's `value` field (via `axis.getValue(row, 'value', 0)`) and returns the
    * dataset's own `{ min, max }`, seeded from the first row so a single-row (or all-equal-value)

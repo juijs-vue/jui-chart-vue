@@ -196,6 +196,12 @@ class ActiveBubble {
   }
 }
 
+/** A physics-collision "swarm of self-expiring bubbles" canvas brush: drains queued data rows into
+ * new `MortalBubble`s (`base/mortalbubble.ts`) added to a cached `ActiveBubble` simulation instance,
+ * then runs one collision/gravity step and renders the whole swarm every frame. Per this file's
+ * header comment, `ActiveBubble`'s "gravity" force actually points along +x, not +y, and its
+ * collision resolution is an asymmetric, non-physically-rigorous velocity/force response rather than
+ * a rigid-body solve. */
 export class CanvasActiveBubbleBrush extends CanvasCoreBrush {
   /** Lazily creates the single `ActiveBubble` simulation instance for this brush and caches it on
    * the chart (`getCache`/`setCache('active_bubble', ...)`) so it survives across redraws instead

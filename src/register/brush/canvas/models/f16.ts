@@ -20,6 +20,10 @@
 // "construct empty, fill from axis scales before first render" shape.
 import { PolygonCore } from 'jui-graph-ts'
 
+/** Static 3D wireframe model data (2537 source vertices + 4949 triangular faces) for
+ * `canvas.model3d`'s `model: "f16"` config, registered via `registerPolygonModel()`. Pure
+ * vertex/face data with no real logic - `vertices` starts empty and is populated later by
+ * `CanvasModel3DBrush.drawBefore()` from this class's own `sources`. */
 export class F16Model extends PolygonCore {
   sources: Float32Array[]
   faces: Float32Array[]

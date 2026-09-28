@@ -22,6 +22,12 @@ export const MAP_SELECTOR_BRUSH_OWN_DEFAULTS: MapSelectorBrushOptions = {
   activeEvent: null,
 }
 
+/** A pure event-wiring brush (renders only an empty `<g>`): highlights the hovered map path on
+ * `map.mouseover`/reverts it on `map.mouseout` (unless it's the currently "active" path), and, when
+ * `brush.activeEvent` is configured, marks whichever path that event fires on as the new "active"
+ * one. Per this file's header comment, several legacy bugs are preserved around `activePath`
+ * comparisons and origin-fill tracking, so hover-revert immunity and fill restoration don't always
+ * behave as their names suggest - see `draw()`'s own doc for the specifics. */
 export class MapSelectorBrush extends MapCoreBrush {
   private g: any
   private activePath: any = null

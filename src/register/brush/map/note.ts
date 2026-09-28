@@ -28,6 +28,11 @@ export const MAP_NOTE_BRUSH_OWN_DEFAULTS: MapNoteBrushOptions = {
   format: null,
 }
 
+/** A persistent (non-hover) tooltip-style "note" balloon per data row, shown/hidden by id via
+ * `brush.active`/`brush.activeEvent`. Each balloon is sized to fit its text and anchored above the
+ * row's map position; per this file's header comment, the `activeEvent`-driven "show" path sets an
+ * invalid CSS `visibility: 'visibility'` value (a preserved bug from the legacy source), so only a
+ * balloon whose `id` was in the initial `active` list ever actually starts visible. */
 export class MapNoteBrush extends MapCoreBrush {
   private g: any
   private tooltips: Record<string, any> = {}

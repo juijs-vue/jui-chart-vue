@@ -19,6 +19,12 @@ const PADDING = 7
 const ANCHOR = 7
 const TEXT_Y = 14
 
+/** Draws "airport" markers (small/large concentric circles, per row's `airport` field) plus straight
+ * connector lines to each of that row's own `routes` (other row ids), with a shared hover balloon
+ * tooltip showing the row's `title`. Per this file's own doc on `setOverEffect()`, the hover-in
+ * highlight color is the opposite of the marker's own resting color (large markers highlight with
+ * the small-airport color and vice versa), matching the legacy source's quirk. Rows missing either
+ * `airport` or a resolvable map position are skipped entirely. */
 export class MapFlightRouteBrush extends MapCoreBrush {
   private g: any
   private tooltip: any

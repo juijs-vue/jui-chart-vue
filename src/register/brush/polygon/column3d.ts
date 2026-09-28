@@ -31,6 +31,10 @@ export const POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS: PolygonColumn3DBrushOptions = 
   clip: false,
 }
 
+/** Draws each `(dataIndex, targetIndex)` cell as a real 3D `<polygon>` cube (`CubePolygon`), one
+ * `<polygon>` SVG face element per visible cube face, growing up or down from the zero baseline
+ * depending on the value's sign, all queued through the inherited `createPolygon()`
+ * (`PolygonCoreBrush` - z-sorts/rotates/stamps `.order` for `appendAll()`). */
 export class PolygonColumn3DBrush extends PolygonCoreBrush {
   private colWidth = 0
   private colHeight = 0

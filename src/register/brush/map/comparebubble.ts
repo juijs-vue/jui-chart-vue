@@ -29,6 +29,11 @@ export const MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS: MapCompareBubbleBrushOptions 
   format: null,
 }
 
+/** Draws exactly 2 overlapping value-scaled circles centered in the map area, with a connector-line
+ * callout label for the larger ("max") value and a centered label for the smaller ("min") one - a
+ * fixed 2-row comparison visualization, not per-row like the other map brushes. Renders nothing
+ * beyond an empty group unless `listData()` returns exactly 2 rows (per `drawBefore()`'s own
+ * resolution of which row is "min" vs "max"). */
 export class MapCompareBubbleBrush extends MapCoreBrush {
   private g: any
   private min: BrushData | null = null

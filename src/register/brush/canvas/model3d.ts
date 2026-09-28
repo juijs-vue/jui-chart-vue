@@ -59,6 +59,12 @@ export const CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS: CanvasModel3DBrushOptions = {
   model: null,
 }
 
+/** Draws a static 3D wireframe model (looked up by name via `brush.model`) by projecting its
+ * local-space `sources` through the axis's `x`/`y`/`z` scales into `vertices` (`drawBefore()`), then
+ * stroking each of its `faces` as a closed path once per frame. Models are resolved through this
+ * file's own local `registerPolygonModel()`/`getPolygonModel()` registry (a project-local stand-in
+ * for the legacy engine's global `jui.include()` lookup - see this file's header comment); nothing
+ * is drawn when `brush.model` names an unregistered model. */
 export class CanvasModel3DBrush extends CanvasCoreBrush {
   private model: PolygonModel | null = null
 

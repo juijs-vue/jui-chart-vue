@@ -21,6 +21,10 @@ export const CANVAS_SCATTER_BRUSH_OWN_DEFAULTS: CanvasScatterBrushOptions = {
   size: 7,
 }
 
+/** Canvas-rendered scatter brush drawing one of 4 symbols (circle/rect/triangle/cross) per
+ * `(dataIndex, targetIndex)` cell directly with raw `CanvasRenderingContext2D` calls, positioning
+ * each marker by the row's own index along x rather than any x data field - no SVG element per
+ * point, unlike the SVG `scatter` brush. */
 export class CanvasScatterBrush extends CanvasCoreBrush {
   /** Draws one marker for row `dataIndex`'s `target` field, at `x = axis.x(dataIndex)` (the row's
    * own index, not any data field - this brush plots by category position, not an x-value column)

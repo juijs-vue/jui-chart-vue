@@ -7,6 +7,12 @@
 // real ES class per this project's own established convention (Phase 0 rule 2 in `jui-graph-ts`,
 // followed throughout this project's `register/` tree), imported directly by `base/bubble.ts`/
 // `base/mortalbubble.ts` rather than looked up through any registry.
+/** A plain physics-vector helper class (mass/friction/position/velocity/acceleration) shared by
+ * `base/bubble.ts`'s `Bubble` and `base/mortalbubble.ts`'s `MortalBubble`, both of which extend it.
+ * Provides force accumulation (`force()`), Euclidean distance/direction helpers, and a simple
+ * velocity/position integrator (`update()`) with a preserved quirk: `pos` only advances on an axis
+ * once `|veloc|` exceeds `2`, so slow motion can "snap" forward rather than easing in smoothly. Not
+ * part of any `jui-graph-ts` `chart.*` class chain - a `jui-chart`-own canvas-brush helper. */
 export class KineticObject {
   mass = 10
   friction = 0.1

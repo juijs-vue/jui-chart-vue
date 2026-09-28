@@ -29,6 +29,10 @@ export const MAP_MARKER_BRUSH_OWN_DEFAULTS: MapMarkerBrushOptions = {
   svg: null,
 }
 
+/** Drops an arbitrary HTML (`<foreignObject>`) and/or raw SVG marker at each data row's
+ * `axis.map(id)` position, skipping rows whose `id` doesn't resolve. `html`/`svg` are each resolved
+ * per row (as a static string or a per-row callback) and rendered independently - a row can have
+ * both, either, or neither marker. */
 export class MapMarkerBrush extends MapCoreBrush {
   /** Draws every row's marker(s), skipping rows whose `id` doesn't resolve to a map position.
    * `html`/`svg` are each resolved per row (calling them with the row as the argument, `this` bound

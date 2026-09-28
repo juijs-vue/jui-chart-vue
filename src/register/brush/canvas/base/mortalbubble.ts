@@ -8,6 +8,11 @@
 import { canvasBaseUtil } from 'jui-graph-ts'
 import { KineticObject } from './kinetic'
 
+/** A self-expiring, "pulse then fade" circle used by `canvas.activebubble`'s `ActiveBubble`
+ * collision system. Extends `KineticObject`, reusing its `pos`/`force`/`update`/`distance`
+ * wholesale; adds `draw()`, which renders the bubble's remaining lifetime as a plain circle, then a
+ * pulsing enlarged circle, then a bursting 4-armed cross that collapses inward, before flipping
+ * `active` to `false` once expired (the flag the owning `ActiveBubble` uses to cull it). */
 export class MortalBubble extends KineticObject {
   active = true
   birthtime: number

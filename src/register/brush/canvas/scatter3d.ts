@@ -19,6 +19,11 @@ export const CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS: CanvasScatter3DBrushOptions = 
   size: 7,
 }
 
+/** A 3D canvas scatter brush: each `(dataIndex, targetIndex)` cell is a single perspective-scaled,
+ * radial-gradient-filled circle, positioned via a single-vertex `PointPolygon` (`x`/`z` keyed by the
+ * row index itself, `y` from the data value) and the inherited `addPolygon()`
+ * (`CanvasCoreBrush` - rotates/z-sorts/drains via `drawAfter()`), giving each dot a soft 3D-sphere
+ * look. */
 export class CanvasScatter3DBrush extends CanvasCoreBrush {
   /** Draws one 3D marker for row `dataIndex`'s `target` field. Both `x` and `z` are derived from
    * `dataIndex` itself (`axis.x(dataIndex)`/`axis.z(dataIndex)`, not any data field - every point

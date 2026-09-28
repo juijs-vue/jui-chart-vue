@@ -43,6 +43,11 @@ function getFormat(brush: Record<string, unknown>, self: MapWeatherBrush, id: st
   return name && name != '' ? name : id
 }
 
+/** Draws a small "weather card" (rounded background + icon + title + info text) at each data row's
+ * `axis.map(id)` position, one row skipped (renders nothing) when its `id` doesn't resolve. The icon
+ * is looked up from the row's `weather` field against this file's own byte-for-byte-copied
+ * `IMAGES` base64 GIF set; a `weather` value outside those 5 keys resolves to a broken/empty icon
+ * rather than an error. */
 export class MapWeatherBrush extends MapCoreBrush {
   /** Builds one weather card group at `id`'s map position (returning `undefined`, drawing
    * nothing, when `id` doesn't resolve - `draw()` appends whatever this returns without checking

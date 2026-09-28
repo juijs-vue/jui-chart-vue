@@ -65,6 +65,13 @@ export const CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS: CanvasEqualizerColumnBru
   errorText: 'Stopped',
 }
 
+/** A canvas-rendered "audio equalizer" stacked-block column brush: draws discrete horizontal-bar
+ * cells up each column (sliced from each target's cumulative value into fixed-size cells, dropping
+ * any leftover shorter than one full cell) plus a small pulsing animated overlay bar and running
+ * total label. Columns flagged via `error` render a rounded placeholder marker with an `errorText`
+ * label instead. Drawn with raw `CanvasRenderingContext2D` calls - a completely different class from
+ * the similarly-named SVG `chart.brush.equalizercolumn` (`register/brush/equalizercolumn.ts`),
+ * disambiguated by the `"canvas.equalizercolumn"` registration type. */
 export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
   private ecZeroY = 0
   private ecBarWidth = 0
