@@ -26,10 +26,29 @@ export class MapSelectorBrush extends MapCoreBrush {
   private g: any
   private activePath: any = null
 
+  /** Creates the (always-empty) render group - this brush's whole effect is event wiring done in
+   * `draw()`, per this file's own header comment. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
   }
 
+  /** Wires the map's hover/click-to-select behavior; renders no visible shapes of its own (returns
+   * the empty group from `drawBefore()`). `map.mouseover` records the hovered path's current fill
+   * into the closure-local `originFill` and recolors it to `mapSelectorHoverColor`; `map.mouseout`
+   * restores that same `originFill`. Both skip a path that's currently `this.activePath` - but see
+   * the PRESERVED BUG below, this only actually protects a path selected via `activeEvent`, not one
+   * from the initial `active` list. When `brush.activeEvent` is configured, that event marks its
+   * path as the new `activePath`, colors every OTHER map path (via `axis.map.each()`) back to
+   * `originFill`, and colors the newly active path `mapSelectorActiveColor`. PRESERVED BUG (also
+   * present in the legacy source): that revert uses the single most-recent `originFill` value from
+   * whichever path was last hovered, not each path's own individual original fill - so if paths
+   * have different original colors, activating a new selection can leave other paths repainted with
+   * the wrong color. Finally, when `brush.active` lists any ids, every matching map path is colored
+   * `mapSelectorActiveColor` up front and `this.activePath` is set to the ARRAY of those paths -
+   * ANOTHER PRESERVED BUG: the hover handlers' `this.activePath == obj.path` check compares a single
+   * path object against that array, which is never `==` true, so hover-revert immunity never
+   * actually applies to any path from this initial `active` list (only to a path chosen afterward
+   * via `activeEvent`, which overwrites `activePath` with a single path object). */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
     let originFill: unknown = null
@@ -77,6 +96,8 @@ export class MapSelectorBrush extends MapCoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`active`/`activeEvent`), merged by
+   * `defineOptions()` on top of `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_SELECTOR_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -26,6 +26,17 @@ export class MortalBubble extends KineticObject {
     this.force([30, 0])
   }
 
+  /** Renders this bubble's current life-stage, driven by `d` - the remaining lifetime
+   * (`age - (now - birthtime)`). Once `d <= 0` the bubble has expired: `active` is flipped to
+   * `false` (the owning `ActiveBubble` collision system uses this flag to cull it) and nothing is
+   * drawn. While `d` is within the last `300` time units (`100 * animSpeed`) the drawn `radius` is
+   * scaled up toward `2x` as `d` approaches `0`, producing a pulse just before death. Within the
+   * last `240` units (`80 * animSpeed`) the shape switches from a plain filled circle
+   * (`drawCircle`) to a 4-armed rounded-cap cross (`drawLine` up/down/left/right from `pos`, with
+   * per-arm start/end offsets `sd`/`ed` that shrink toward `2` as `d -> 0`, `sd` shrinking linearly
+   * and `ed` shrinking along a sine ease) - i.e. the bubble visually "bursts open" into a cross
+   * shape that collapses inward as it dies. Outside that last-240 window it's drawn as a plain
+   * circle at `radius`. */
   draw(context: CanvasRenderingContext2D, now: number): void {
     context.shadowColor = this.shadowColor
     context.shadowBlur = 10

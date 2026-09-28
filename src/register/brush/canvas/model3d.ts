@@ -62,6 +62,12 @@ export const CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS: CanvasModel3DBrushOptions = {
 export class CanvasModel3DBrush extends CanvasCoreBrush {
   private model: PolygonModel | null = null
 
+  /** Resolves `brush.model` through `getPolygonModel()`; when it names a registered model,
+   * instantiates it and projects every one of its local-space `sources` through the 3D axis scales
+   * into pixel-space `vertices` (stored back onto the model instance itself, `faces` untouched
+   * since they're plain vertex-index lists), caching the fully-projected model on `this.model` for
+   * `draw()`. When the name is unregistered (or `null`), `this.model` is left as whatever it was
+   * before (`null` on a fresh brush), so `draw()` skips rendering entirely. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const Model3D = getPolygonModel(brush.model as string)
@@ -81,6 +87,16 @@ export class CanvasModel3DBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Strokes the wireframe of the model resolved by `drawBefore()` (no-op when none was resolved).
+   * Queues the whole model as a single `addPolygon()` entry so the engine's own z-sort/perspective
+   * pass runs on it; the callback flattens every projected vertex down to its 2D `(x, y)` (dropping
+   * `z`/`w`) into `cache`, then walks each face's vertex-index list building one closed subpath per
+   * face - `moveTo` the first vertex, `lineTo` each middle vertex, and on the last vertex `lineTo`
+   * back to the face's own first vertex (explicitly closing the loop, rather than relying on
+   * `closePath()` to do it) - silently skipping any index that has no corresponding cached vertex.
+   * All faces accumulate into one shared path (`beginPath()` runs once before `addPolygon()`, and
+   * `stroke()`/`closePath()` once inside the callback after every face is added), stroked in a
+   * single `color(0)` at a fixed `0.5`px line width. */
   draw = (): void => {
     if (this.model == null) return
 
@@ -128,6 +144,8 @@ export class CanvasModel3DBrush extends CanvasCoreBrush {
     })
   }
 
+  /** Returns this brush's own default options (`model`), merged by `defineOptions()` on top of
+   * `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_MODEL3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

@@ -26,6 +26,20 @@ export const POLYGON_LINE3D_BRUSH_OWN_DEFAULTS: PolygonLine3DBrushOptions = {
 }
 
 export class PolygonLine3DBrush extends PolygonCoreBrush {
+  /** Builds one ribbon-segment `<polygon>` connecting row `dataIndex` to row `dataIndex + 1` for
+   * `target`, at `targetIndex`'s z-band (thickness `d = axis.z.rangeBand() - padding * 2`,
+   * centered on that band). Computes the 4 quad corners - near/far-z at the start point, far/near-z
+   * at the end point (so the two z-sides connect straight across rather than crossing) - and runs
+   * EACH corner through its own `createPolygon(PointPolygon, ...)` call (per this file's own header
+   * comment: real per-vertex rotation, not a single shared transform), manually appending each
+   * projected `(x, y)` onto the pre-built `elem` polygon via `.point()` since these per-vertex
+   * callbacks return `undefined` rather than an element (so `createPolygon()`'s own automatic
+   * `.order` stamping never runs for them). Tracks whichever corner has the largest projected `z`
+   * (`maxPoint`) and, after all 4 are added, manually stamps `elem.order = axis.depth -
+   * maxPoint.max().z` - a hand-rolled z-sort value based on that farthest corner, done here because
+   * the automatic stamping path was bypassed. Filled in the series `color`, stroked with a darkened
+   * variant reusing `polygonLineBorderOpacity` as the darken rate (matching the legacy source, same
+   * as `column3d.ts`'s identical pattern). */
   private createLine(datas: BrushData[], target: string, dataIndex: number, targetIndex: number) {
     const brush = this.brush as Record<string, unknown>
     const color = this.color(dataIndex, targetIndex)
@@ -76,6 +90,9 @@ export class PolygonLine3DBrush extends PolygonCoreBrush {
     return elem
   }
 
+  /** Draws every consecutive-row ribbon segment (`i` to `i + 1`, hence looping only to
+   * `datas.length - 1`) for every configured `target`, via `createLine()`, appending each into one
+   * shared group. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const datas = this.listData() as BrushData[]
@@ -90,6 +107,8 @@ export class PolygonLine3DBrush extends PolygonCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`padding`/`clip`), merged by `defineOptions()` on
+   * top of `PolygonCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return POLYGON_LINE3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

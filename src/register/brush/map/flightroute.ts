@@ -29,6 +29,9 @@ export class MapFlightRouteBrush extends MapCoreBrush {
   private lineWidth: unknown
   private outerSize = 0
 
+  /** Sets the shared tooltip's text/anchor to `obj.data.title` when it's a non-empty string, and
+   * returns that title (falsy for a missing/empty title) - `setOverEffect()`'s hover-in handler
+   * uses the return value to decide whether to show the tooltip at all. */
   private printTooltip(obj: { data: BrushData }): unknown {
     const msg = obj.data.title
 
@@ -40,6 +43,15 @@ export class MapFlightRouteBrush extends MapCoreBrush {
     return msg
   }
 
+  /** Wires hover handlers onto an airport's `outer`/`inner` circles. On hover-in, bails out via
+   * `printTooltip()` when the row has no title; otherwise sizes/positions the balloon tooltip above
+   * the marker (`balloonPoints('top', w, h, ANCHOR)`, inherited from `MapCoreBrush`) and recolors
+   * both circles and the tooltip border. PRESERVED QUIRK: the hover-in highlight color is the
+   * OPPOSITE of `type`'s own resting color (`type == 'large' ? smallColor : largeColor`, versus
+   * `drawAirport()`/hover-out's `type == 'large' ? largeColor : smallColor`) - hovering a large
+   * airport marker recolors it with the small-airport color and vice versa, exactly matching the
+   * legacy source. On hover-out, the marker is restored to its normal `type`-matched color and the
+   * tooltip is hidden. */
   private setOverEffect(type: string, xy: { x: number; y: number; data: BrushData }, outer: any, inner: any): void {
     const over = (): void => {
       if (!this.printTooltip(xy as unknown as { data: BrushData })) return
@@ -74,6 +86,11 @@ export class MapFlightRouteBrush extends MapCoreBrush {
     inner.hover(over, out)
   }
 
+  /** Draws one airport marker at `xy` as two concentric circles - a stroked, transparent-fill
+   * `outer` ring and a solid-fill `inner` dot - both colored by `type`'s own color
+   * (`largeColor`/`smallColor`) and sized off `outerSize`, with `'large'` markers additionally
+   * scaled up by `LARGE_RATE` (radius and border width alike). Wires hover behavior via
+   * `setOverEffect()`. */
   drawAirport(type: string, xy: { x: number; y: number }): void {
     const color = type == 'large' ? this.largeColor : this.smallColor
     const innerSize = this.outerSize * SMALL_RATE
@@ -102,6 +119,8 @@ export class MapFlightRouteBrush extends MapCoreBrush {
     this.setOverEffect(type, xy as unknown as { x: number; y: number; data: BrushData }, outer, inner)
   }
 
+  /** Draws one straight connector line between two already-projected map points, styled with the
+   * theme's `mapFlightRouteLineColor`/`mapFlightRouteLineWidth`. */
   drawRoutes(target: { x: number; y: number }, xy: { x: number; y: number }): void {
     const line = this.chart.svg.line({
       x1: xy.x,
@@ -115,6 +134,10 @@ export class MapFlightRouteBrush extends MapCoreBrush {
     this.g.append(line)
   }
 
+  /** Creates the render group and a hidden shared tooltip group (a balloon `polygon` plus a
+   * centered `text` element, reused/repositioned by `setOverEffect()` for every marker's hover
+   * rather than built per-marker), and caches every `mapFlightRoute*` theme value this brush
+   * reads. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
     this.tooltip = this.chart.svg.group({ visibility: 'hidden' }, () => {
@@ -140,6 +163,11 @@ export class MapFlightRouteBrush extends MapCoreBrush {
     this.lineWidth = this.chart.theme('mapFlightRouteLineWidth')
   }
 
+  /** For every row that has both a resolvable map position (`axis.map(id)`) and a non-null
+   * `airport` type, draws a connector line (`drawRoutes()`) to each of the row's own `routes`
+   * (other row ids) that also resolve to a map position, then draws the row's own airport marker
+   * (`drawAirport()`) on top of them. Rows missing either `airport` or a resolvable position are
+   * skipped entirely (no marker, no routes). */
   draw = (): any => {
     this.eachData((d) => {
       const row = d as BrushData

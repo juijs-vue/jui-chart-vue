@@ -44,6 +44,11 @@ function getFormat(brush: Record<string, unknown>, self: MapWeatherBrush, id: st
 }
 
 export class MapWeatherBrush extends MapCoreBrush {
+  /** Builds one weather card group at `id`'s map position (returning `undefined`, drawing
+   * nothing, when `id` doesn't resolve - `draw()` appends whatever this returns without checking
+   * for that case), centered via `translate(xy.x - W/2, xy.y - H/2)`: a rounded background `rect`,
+   * the `uri` icon image, a bold `name` title above it, and an `info`/`temp` line below, all fixed
+   * to the shared `W`/`H`/`R` card dimensions. */
   private createWeather(id: string, name: unknown, uri: string, temp: unknown): any {
     const xy = ((this.axis as unknown as Record<string, unknown>).map as unknown as MapScaleFn)(id)
     if (xy == null) return undefined
@@ -95,6 +100,12 @@ export class MapWeatherBrush extends MapCoreBrush {
     return g
   }
 
+  /** Draws one weather card per row via `createWeather()`: the title comes from `getFormat()`
+   * (`brush.format(id)` when it's a non-empty-string-returning function, else the row's own `id`),
+   * the temperature line from the row's `temperature` field (default `0`), and the icon from
+   * `IMAGES[row.weather]` (default key `'sunny'`) - a `weather` value outside the 5 registered
+   * `IMAGES` keys resolves to `undefined`, producing a card with a broken/empty icon rather than an
+   * error. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const brush = this.brush as Record<string, unknown>
@@ -111,6 +122,8 @@ export class MapWeatherBrush extends MapCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`format`), merged by `defineOptions()` on top of
+   * `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_WEATHER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

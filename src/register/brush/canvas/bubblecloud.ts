@@ -51,6 +51,18 @@ class BubbleCloud {
     this.contextHeight = contextHeight
   }
 
+  /** Reconciles the live `bubbles` map against a fresh `nextData` row set, keyed by `name`. Every
+   * existing bubble is first unmarked; each incoming row either creates a brand-new `Bubble` (sized
+   * via `radiusSize()`, given a random starting `pos` so new bubbles enter from an arbitrary point
+   * rather than the origin) or, for a `name` that already has a bubble, just re-marks it and only
+   * actually applies the recomputed radius when it drifted by more than `20`px (avoiding
+   * jittery/near-continuous radius churn from tiny `capacity` fluctuations). Any bubble left
+   * unmarked afterward (present before, absent from `nextData`) is deleted. `radiusSize(c)` scales
+   * a bubble's radius by its share of the total `capacity` across all rows (`c / count`) against a
+   * base proportional to the canvas's shorter dimension (`(min(width,height)/6)`), plus a flat
+   * `+50`px floor so even a tiny share stays visible. Whenever anything actually changed (a bubble
+   * was added, removed, or meaningfully resized), `animationAlpha` is reset to `0.1` so `draw()`'s
+   * center-gravity pull re-engages instead of staying settled at `0`. */
   processData(nextData: BubbleCloudDatum[] | null): void {
     if (nextData == null) return
 
@@ -96,11 +108,27 @@ class BubbleCloud {
     if (isChanged) this.animationAlpha = 0.1
   }
 
+  /** Discards every existing bubble and rebuilds the whole set from `data` via `processData()` -
+   * used only for the very first population of a fresh `BubbleCloud` instance (see
+   * `CanvasBubbleCloudBrush.draw()`), since starting from an empty map makes every row look "new"
+   * and so seeds every bubble with a random `pos`. */
   start(data: BubbleCloudDatum[]): void {
     this.bubbles = {}
     this.processData(data)
   }
 
+  /** Runs one animation frame for the whole cloud. `animationAlpha` (reset to `0.1` by
+   * `processData()` on any real change) decays multiplicatively by `0.99` per call and is clamped
+   * to a `0` floor - each bubble is nudged toward the canvas center by `animationAlpha` times the
+   * vector to center, so the pull is strong right after a change and fades to a standstill as the
+   * cloud settles. Every distinct bubble pair closer than `radius sum + 4`px (`collisionPadding`)
+   * is then separated directly by mutating `pos` (not via `force()`/velocity) proportionally to how
+   * much they overlap, scaled by a `jitter` factor of `0.5`, so overlapping bubbles push apart
+   * gradually rather than snapping fully clear in one frame. Each bubble's own `update()` is called
+   * afterward for interface parity with `KineticObject`, but since nothing here ever calls
+   * `force()` on these bubbles their `veloc` stays `[0, 0]`, so `update()` has no visible effect
+   * beyond clearing `accel`. Finally each bubble's `dim` flag is set whenever a different bubble is
+   * currently hovered (`hoverBubble`), and every bubble is drawn with a shared `now` timestamp. */
   draw(): void {
     this.animationAlpha *= 0.99
 
@@ -147,6 +175,12 @@ class BubbleCloud {
     }
   }
 
+  /** Hover hit-test consumed by `canvas.picker` (via the `'picker'` chart cache entry
+   * `CanvasBubbleCloudBrush.draw()` registers): finds the first bubble (in `Object.values`
+   * insertion order) whose center is within its own `radius` of `(x, y)`, stores it on
+   * `hoverBubble` (clearing it to `null` when no bubble matches, so `draw()`'s `dim` logic
+   * un-highlights everything once the pointer leaves), and returns that bubble's original data row
+   * (`.data.origin`) or `null`. */
   pick(x: number, y: number): BrushData | null {
     let isHover = false
 
@@ -167,6 +201,16 @@ class BubbleCloud {
 }
 
 export class CanvasBubbleCloudBrush extends CanvasCoreBrush {
+  /** Reuses the cached `BubbleCloud` (just re-running its physics/render step) when one already
+   * exists and the chart's `axis.data` reference hasn't changed since it was built; otherwise
+   * builds a brand-new one from scratch. On a rebuild, every data row is converted into a
+   * `BubbleCloudDatum` keyed by its `title` field (`name`, defaulting to `"Unknown"`) with `count`
+   * from `capacity` (default `1`), a series color plus a `0.2`-alpha shadow tint, and label styling
+   * pulled from the `bubbleCloudFontColor`/`bubbleCloudFontWeight`/`bubbleCloudFontSize`/
+   * `fontFamily` theme keys; the resulting cloud is seeded via `start()`, drawn once immediately,
+   * and cached (`'bubble_cloud'`) alongside the `axis.data` reference used for the reuse check
+   * (`'bubble_data'`) and a `'picker'` entry (`{ obj, func }`) that `canvas.picker` reads to route
+   * pointer hover events into `bubbleCloud.pick()`. */
   draw = (): void => {
     const chart = this.chart as unknown as ChartWithCache
     let bubbleCloud = chart.getCache('bubble_cloud') as BubbleCloud | null

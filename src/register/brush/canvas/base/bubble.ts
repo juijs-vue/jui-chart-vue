@@ -44,6 +44,12 @@ export class Bubble extends KineticObject {
     this.textStyle = textStyle
   }
 
+  /** Renders this bubble as a drop-shadowed filled circle at its current `pos` (via `jui-graph-ts`'s
+   * `CanvasBase.drawCircle`) with its `text` centered inside, offset 5px down to visually center it
+   * against the circle's midline. When `dim` is set, the whole draw runs at half `globalAlpha`
+   * (restored to `1.0` afterward) - used by `BubbleCloud` to fade out bubbles that lost focus. The
+   * `_now` timestamp is accepted for interface parity with `MortalBubble.draw()`/`KineticObject.draw()`
+   * but is never read - a `Bubble` never expires on its own. */
   draw(context: CanvasRenderingContext2D, _now: number): void {
     if (this.dim) context.globalAlpha = 0.5
 

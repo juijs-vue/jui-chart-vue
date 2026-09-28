@@ -35,6 +35,16 @@ export class PolygonColumn3DBrush extends PolygonCoreBrush {
   private colWidth = 0
   private colHeight = 0
 
+  /** Builds one 3D cube for row `dataIndex`'s `target` field: a `CubePolygon` spanning
+   * `[axis.y(0), axis.y(data[target])]` vertically (so the cube grows up or down from the zero
+   * baseline depending on the value's sign) at `x = axis.x(dataIndex) - colWidth/2`, `z =
+   * axis.z(targetIndex) - colHeight/2`, sized `colWidth` x `colHeight` in the other two dimensions.
+   * The callback renders one `<polygon>` per visible cube face (`p.faces`, each a list of vertex
+   * indices into `p.vectors`), filled in the target's series `color` and stroked with a
+   * darkened variant of it (reusing `polygonColumnBorderOpacity` as `colorUtil.darken()`'s rate,
+   * not just its own stroke opacity - matching the legacy source exactly), all grouped under one
+   * `<g>`. Hover/click events are wired via `addEvent()` only when the cell's value is non-zero
+   * (a zero-value column renders but isn't interactive). */
   private createColumn(data: BrushData, target: string, dataIndex: number, targetIndex: number) {
     const w = this.colWidth
     const h = this.colHeight
@@ -78,6 +88,9 @@ export class PolygonColumn3DBrush extends PolygonCoreBrush {
     })
   }
 
+  /** Resolves this render pass's shared cube footprint: `colWidth`/`colHeight` are `brush.width`/
+   * `brush.height` verbatim when set above `0`, otherwise auto-derived from the x/z axis band
+   * widths (`rangeBand()`) minus `padding` on both sides. */
   drawBefore = (): void => {
     const brush = this.brush as Record<string, unknown>
     const padding = brush.padding as number
@@ -88,6 +101,8 @@ export class PolygonColumn3DBrush extends PolygonCoreBrush {
     this.colHeight = (brush.height as number) > 0 ? (brush.height as number) : height - padding * 2
   }
 
+  /** Draws every `(row, target)` cell as a 3D cube via `createColumn()`, iterating all rows from
+   * `listData()` against every configured `target` field, appending each into one shared group. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const datas = this.listData() as BrushData[]
@@ -102,6 +117,8 @@ export class PolygonColumn3DBrush extends PolygonCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`width`/`height`/`padding`/`clip`), merged by
+   * `defineOptions()` on top of `PolygonCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return POLYGON_COLUMN3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

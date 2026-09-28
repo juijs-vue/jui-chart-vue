@@ -20,6 +20,15 @@ export const CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS: CanvasScatter3DBrushOptions = 
 }
 
 export class CanvasScatter3DBrush extends CanvasCoreBrush {
+  /** Draws one 3D marker for row `dataIndex`'s `target` field. Both `x` and `z` are derived from
+   * `dataIndex` itself (`axis.x(dataIndex)`/`axis.z(dataIndex)`, not any data field - every point
+   * in a series sits at its own row position along both the x and depth axes), while `y` comes from
+   * the actual `data[target]` value. Queues a single-vertex `PointPolygon` so the engine's
+   * perspective/z-sort pass runs on it; the callback scales the base radius `r` by
+   * `mathUtil.scaleValue(z, 0, axis.depth, 1, p.perspective)` (shrinking distant points) and fills
+   * a radial gradient from the series `color` at the center out to a lightened variant
+   * (`colorUtil.lighten(color, theme('polygonScatterRadialOpacity'))`) at the edge, giving each dot
+   * a soft 3D-sphere look. */
   private createScatter(data: BrushData, target: string, dataIndex: number, targetIndex: number): void {
     const color = this.color(dataIndex, targetIndex)
     const r = ((this.brush as Record<string, unknown>).size as number) / 2
@@ -45,6 +54,8 @@ export class CanvasScatter3DBrush extends CanvasCoreBrush {
     })
   }
 
+  /** Draws every `(row, target)` cell as a 3D marker via `createScatter()`, iterating all rows
+   * from `listData()` against every configured `target` field. */
   draw = (): void => {
     const datas = this.listData() as BrushData[]
     const targets = (this.brush as Record<string, unknown>).target as string[]
@@ -56,6 +67,8 @@ export class CanvasScatter3DBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Returns this brush's own default options (`size`), merged by `defineOptions()` on top of
+   * `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_SCATTER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

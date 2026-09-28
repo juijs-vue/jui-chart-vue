@@ -22,6 +22,12 @@ export const CANVAS_SCATTER_BRUSH_OWN_DEFAULTS: CanvasScatterBrushOptions = {
 }
 
 export class CanvasScatterBrush extends CanvasCoreBrush {
+  /** Draws one marker for row `dataIndex`'s `target` field, at `x = axis.x(dataIndex)` (the row's
+   * own index, not any data field - this brush plots by category position, not an x-value column)
+   * and `y = axis.y(data[target])`, sized by `brush.size / 2`. Resolves `symbol` (calling it as
+   * `(target, value)` when it's a function) to pick the shape: a filled circle, a filled square
+   * (`'rect'`/`'rectangle'`), a filled upward triangle, or a stroked X (`'cross'`, drawn as two
+   * separate diagonal line segments/subpaths). Any other resolved symbol name draws nothing. */
   private createScatter(data: BrushData, target: string, dataIndex: number, targetIndex: number): void {
     const brush = this.brush as Record<string, unknown>
     const symbol = brush.symbol as ScatterSymbol
@@ -65,6 +71,8 @@ export class CanvasScatterBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Draws every `(row, target)` cell as a marker via `createScatter()`, iterating all rows from
+   * `listData()` against every configured `target` field. */
   draw = (): void => {
     const datas = this.listData() as BrushData[]
     const targets = (this.brush as Record<string, unknown>).target as string[]
@@ -76,6 +84,8 @@ export class CanvasScatterBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Returns this brush's own default options (`symbol`/`size`), merged by `defineOptions()` on
+   * top of `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_SCATTER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

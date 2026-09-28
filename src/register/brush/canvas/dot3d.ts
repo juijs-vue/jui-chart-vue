@@ -60,6 +60,11 @@ type Scale3 = (value: unknown) => number
 export class CanvasDot3DBrush extends CanvasCoreBrush {
   private firstCacheData: [string, number, number, number, number, number, boolean] | null = null
 
+  /** Queues one `PointPolygon` (built from `data`'s `[x, y, z]` mapped through the 3D axis
+   * scales) for deferred z-sorted rendering. The callback receives the polygon engine's already
+   *-projected 2D screen point (`p.vectors[0]`) plus its per-vertex `perspective` factor, and scales
+   * the base radius `r` by that factor via `mathUtil.scaleValue(z, 0, axis.depth, 1, p.perspective)`
+   * so dots further along the z axis are drawn smaller, before delegating to `drawDot()`. */
   private createDot(color: string, r: number, data: number[]): void {
     const x = (this.axis.x as Scale3)(data[0])
     const y = (this.axis.y as Scale3)(data[1])
@@ -74,6 +79,12 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     })
   }
 
+  /** Queues one `LinePolygon` segment from `pdata` (the previous row, or `data` itself when
+   * `pdata` is `null` - i.e. the first row draws a zero-length "segment" at its own point) to
+   * `data`, both mapped through the 3D axis scales. The callback receives the two already-projected
+   * 2D screen endpoints and delegates to `drawLine()` with the segment's color/width and the
+   * caller-supplied `isLast` flag (see this file's header comment for the `data`/`datas`
+   * transcription bug behind how `draw()` computes that flag). */
   private createLine(color: string, r: number, data: number[], pdata: number[] | null, isLast: boolean): void {
     const x = (this.axis.x as Scale3)(data[0])
     const y = (this.axis.y as Scale3)(data[1])
@@ -92,11 +103,16 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     })
   }
 
-  // `_r` (unused): legacy `createArea(color, r, data, pdata)` never actually reads its own `r`
-  // parameter either (confirmed by reading the real source in full) - a genuinely dead parameter
-  // in the original, kept in the signature here for call-site fidelity with `draw()`'s uniform
-  // `create*(color, r, data, pdata, ...)` call shape, prefixed `_` to silence the (correct)
-  // unused-parameter check rather than dropped.
+  /** Queues one `FacePolygon` quad face - spanning from the previous point `pdata` (or `data`
+   * itself when `pdata` is `null`) down to `data`, and from there down to the y=0 "floor" plane
+   * (`oy`) - for deferred z-sorted rendering. The callback receives the four already-projected 2D
+   * screen corners and delegates to `drawArea()`.
+   *
+   * `_r` (unused): legacy `createArea(color, r, data, pdata)` never actually reads its own `r`
+   * parameter either (confirmed by reading the real source in full) - a genuinely dead parameter
+   * in the original, kept in the signature here for call-site fidelity with `draw()`'s uniform
+   * `create*(color, r, data, pdata, ...)` call shape, prefixed `_` to silence the (correct)
+   * unused-parameter check rather than dropped. */
   private createArea(color: string, _r: number, data: number[], pdata: number[] | null): void {
     const oy = (this.axis.y as Scale3)(0)
     const x = (this.axis.x as Scale3)(data[0])
@@ -120,6 +136,7 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     })
   }
 
+  /** Paints a filled circle of radius `tr` at the already-projected screen point `(tx, ty)`. */
   private drawDot(color: string, tx: number, ty: number, tr: number): void {
     const canvas = this.canvas as CanvasRenderingContext2D
     canvas.beginPath()
@@ -128,6 +145,11 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     canvas.fill()
   }
 
+  /** Strokes one line segment from `(x1, y1)` to `(x2, y2)`. When `symbol == 'poly'`, the very
+   * first segment drawn (`firstCacheData == null`) has its start point cached; once `isLast` fires
+   * (per `draw()`'s buggy flag - see this file's header comment), an extra closing segment back to
+   * that cached start point is drawn and the whole accumulated path is filled in `color`, turning
+   * the chain of strokes into a closed, filled polygon outline. */
   private drawLine(color: string, x1: number, y1: number, x2: number, y2: number, width: number, isLast: boolean): void {
     const canvas = this.canvas as CanvasRenderingContext2D
     const isFill = (this.brush as Record<string, unknown>).symbol == 'poly'
@@ -154,6 +176,8 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Strokes and fills the closed quad `(x1,y1) -> (x2,y2) -> (x3,y3) -> (x4,y4) -> (x1,y1)` in a
+   * single `color` for both stroke and fill. */
   private drawArea(color: string, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void {
     const canvas = this.canvas as CanvasRenderingContext2D
     canvas.beginPath()
@@ -169,6 +193,13 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     canvas.closePath()
   }
 
+  /** Iterates every row from `listData()` (array-shaped `[x, y, (z)]` rows - see this file's
+   * header comment) - z-padding any 2-element row with a trailing `0` in place - and, per `symbol`,
+   * dispatches to `createLine()`/`createArea()`/`createDot()` with the previous row (`i == 0 ?
+   * null : datas[i - 1]`) as context for line/area segments. For `'line'`/`'poly'` it also computes
+   * `isLast` as `i == data.length - 1` (the CURRENT ROW's own length, always `3` after z-padding,
+   * not the actual final-row index - see the header's PRESERVED BUG note), which `drawLine()` uses
+   * to decide when to close and fill a `'poly'` shape. */
   draw = (): void => {
     const brush = this.brush as Record<string, unknown>
     const symbol = brush.symbol as string
@@ -199,6 +230,8 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Returns this brush's own default options (`size`/`color`/`symbol`), merged by
+   * `defineOptions()` on top of `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_DOT3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

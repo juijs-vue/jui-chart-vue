@@ -30,6 +30,10 @@ export const MAP_BUBBLE_BRUSH_OWN_DEFAULTS: MapBubbleBrushOptions = {
 }
 
 export class MapBubbleBrush extends MapCoreBrush {
+  /** Scans every row's `value` field (via `axis.getValue(row, 'value', 0)`) and returns the
+   * dataset's own `{ min, max }`, seeded from the first row so a single-row (or all-equal-value)
+   * dataset reports that one value as both bounds - `draw()` maps this range onto `brush.min`/
+   * `brush.max` for each bubble's radius. */
   private getMinMaxValues(): { min: number; max: number } {
     let min = 0
     let max = 0
@@ -45,6 +49,10 @@ export class MapBubbleBrush extends MapCoreBrush {
     return { min, max }
   }
 
+  /** Builds the centered value label shown inside a bubble when `showText` is on: `value` run
+   * through `brush.format` when it's a function (otherwise used verbatim, coerced to a string),
+   * positioned at `(x, y + 3)` (a small downward nudge to visually center the text against the
+   * bubble's middle) using the `mapBubbleFontSize`/`mapBubbleFontColor` theme keys. */
   drawText(value: unknown, x: number, y: number): any {
     let text = value
 
@@ -64,6 +72,13 @@ export class MapBubbleBrush extends MapCoreBrush {
     )
   }
 
+  /** Draws one bubble per data row, skipping any row whose `id` doesn't resolve to a map position
+   * (`axis.map(id)` returning `undefined` - e.g. an id not present on the loaded map). Each
+   * bubble's radius is `value` linearly rescaled from the dataset's own `[min, max]`
+   * (`getMinMaxValues()`) onto `[brush.min, brush.max]` via `mathUtil.scaleValue()` - when every
+   * row shares the same `value` (`min == max`), that helper's own zero-division guard collapses
+   * the result to `brush.max` for every bubble rather than dividing by zero. Appends an optional
+   * centered value label via `drawText()` when `showText` is on. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const minmax = this.getMinMaxValues()
@@ -99,6 +114,8 @@ export class MapBubbleBrush extends MapCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`min`/`max`/`showText`/`format`), merged by
+   * `defineOptions()` on top of `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_BUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

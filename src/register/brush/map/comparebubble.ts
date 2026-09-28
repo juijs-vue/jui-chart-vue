@@ -36,6 +36,9 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
   private minValue = 0
   private maxValue = 0
 
+  /** Builds a two-line text block - `value` on the first line (font-size `size`) and `title`
+   * below it (font-size `size * TITLE_RATE`, offset `x: 0, y: size` relative to the first line) -
+   * translated to `(x, y)`. Shared by `drawMaxText()`/`drawMinText()` for both circles' labels. */
   private getTextInBubble(color: unknown, align: string, size: unknown, title: unknown, value: unknown, x: number, y: number): any {
     return this.chart.svg
       .text(
@@ -52,6 +55,12 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
       .translate(x, y)
   }
 
+  /** Creates a fresh render group and, only when there are EXACTLY 2 data rows (per this file's
+   * own header comment), resolves which one is the smaller ("min") and larger ("max") by comparing
+   * their `value` fields (swapping the initial row0/row1 assignment if row0 turns out to be the
+   * larger one) and caches both the rows and their resolved numeric values on `this`. With any
+   * other row count, `min`/`max` are left `null` (their field-initializer default), which makes
+   * `draw()` render nothing but the empty group. */
   drawBefore = (): void => {
     const data = this.listData() as BrushData[]
     this.g = this.chart.svg.group()
@@ -71,6 +80,11 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
     }
   }
 
+  /** Draws the "max" bubble's callout: a dashed connector path from a small dot just outside
+   * `(centerX, centerY)` (offset by one unit along `LINE_ANGLE`, 315°) diagonally out to distance
+   * `gap * 2.5`, then horizontally out by `brush.size` more, ending at the label built by
+   * `getTextInBubble()` (left-aligned, positioned 5px past the horizontal segment's end). `value`
+   * is run through `brush.format` when it's a function. */
   drawMaxText(centerX: number, centerY: number, gap: number): any {
     const brush = this.brush as Record<string, unknown>
     const r = gap * 2.5
@@ -110,6 +124,10 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
     return group
   }
 
+  /** Draws the "min" bubble's callout: a center-aligned label built by `getTextInBubble()`,
+   * nudged up by half the title line's height (`size * TITLE_RATE / 2`) so the two-line block sits
+   * visually centered on `(centerX, centerY)` rather than the (larger) value line alone. `value` is
+   * run through `brush.format` when it's a function. */
   drawMinText(centerX: number, centerY: number): any {
     const brush = this.brush as Record<string, unknown>
     const title = this.axis.getValue(this.min as BrushData, 'title', '')
@@ -126,6 +144,14 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
     return group
   }
 
+  /** Renders the comparison: does nothing beyond returning the (possibly empty) group from
+   * `drawBefore()` unless that pass resolved both `min` and `max`. The "max" circle is drawn at the
+   * fixed `brush.size` radius, centered in the map area; the "min" circle's radius is
+   * `maxSize * (minValue / maxValue)` (a plain value ratio - an all-zero or zero-`maxValue` dataset
+   * would produce `NaN`/`Infinity`, not specially guarded here), drawn `gap = maxSize - minSize`
+   * pixels below center so the two circles overlap with their bottoms roughly level. Appends
+   * `drawMaxText()`'s callout above the overlap and `drawMinText()`'s centered label over the min
+   * circle. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
 
@@ -165,6 +191,8 @@ export class MapCompareBubbleBrush extends MapCoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`size`/`format`), merged by `defineOptions()` on
+   * top of `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_COMPAREBUBBLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

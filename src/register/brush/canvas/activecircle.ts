@@ -69,22 +69,38 @@ class Circle {
     this.yValue = yValue
   }
 
+  /** Converts a mass to a weight (`mass * gravity`, `gravity` defaulting to this circle's own
+   * `-9.8` field). Dead code per this file's header - never called anywhere in this brush (the
+   * legacy source's only call site is inside `calcAcceleration`, and `calcAcceleration` itself is
+   * never invoked live). */
   massToWeight(mass: number, gravity = this.gravity): number {
     return mass * gravity
   }
 
+  /** Inverse of `massToWeight`: recovers a mass from a weight by dividing out `gravity`. Dead
+   * code per this file's header - unreachable from `draw()`. */
   weightToMass(weight: number): number {
     return weight / this.gravity
   }
 
+  /** Converts a value in pounds-force to newtons (`pound / 0.2248`). Dead code per this file's
+   * header - unreachable from `draw()`. */
   poundToWeight(pound: number): number {
     return pound * (1 / 0.2248)
   }
 
+  /** Inverse of `poundToWeight`: converts newtons back to pounds-force. Dead code per this
+   * file's header - unreachable from `draw()`. */
   weightToPound(weight: number): number {
     return weight * (0.2248 / 1)
   }
 
+  /** Inclined-plane static-friction check: true when the along-slope component of this circle's
+   * weight (`weight * sin(angle)`) exceeds the maximum static friction resisting it
+   * (`fricCoeff * weight * cos(angle)`), i.e. whether the object would start sliding down a slope
+   * tilted at `angle` degrees. Dead code per this file's header - the legacy source only ever
+   * called this from a commented-out `if` in `draw()`, so it (and the `acceleration[1]` write that
+   * would follow it) never runs. */
   checkForMotion(angle: number, fricCoeff: number): boolean {
     const weight = this.massToWeight(this.mass, this.gravity)
     const normal = weight * Math.cos((angle * Math.PI) / 180)
@@ -94,6 +110,11 @@ class Circle {
     return perpForce > statFriction
   }
 
+  /** Inclined-plane kinetic-friction acceleration: the net along-slope force (gravity component
+   * minus kinetic friction) divided by mass, using the *current* `acceleration[1]` in place of
+   * `gravity` when computing the notional "weight" (so this isn't a fixed-gravity result, unlike
+   * `checkForMotion`). Dead code per this file's header - same unreachable commented-out call site
+   * as `checkForMotion`. */
   calcAcceleration(angle: number, fricCoeff: number): number {
     const weight = this.massToWeight(this.mass, this.acceleration[1])
     const normal = weight * Math.cos((angle * Math.PI) / 180)
@@ -104,6 +125,11 @@ class Circle {
     return totalForce / this.mass
   }
 
+  /** Recomputes this circle's pixel `position` from its original data-space `xValue`/`yValue`
+   * offset by straight-line displacement (`velocity * runtime`) plus an acceleration term
+   * (`acceleration * runtime^2` - note this is `a*t^2`, not the usual `0.5*a*t^2`, exactly as the
+   * legacy source computes it) before mapping through the axis `scale`. Called by `move()` on every
+   * frame where it actually runs. */
   updateAcceleration(): void {
     const vx = this.velocity[0] * this.runtime
     const vy = this.velocity[1] * this.runtime
@@ -114,6 +140,12 @@ class Circle {
     this.position[1] = this.scale.y((this.yValue as number) + vy + ay)
   }
 
+  /** Advances motion for one frame: accumulates elapsed time into `runtime` (scaled by `tpf`,
+   * time-per-frame) and re-derives `position` via `updateAcceleration()`. PRESERVED QUIRK: bails
+   * out with no effect at all whenever `tpf == 1` - since the owning brush's `draw()` reads `tpf`
+   * from a chart cache that defaults to exactly `1` when nothing else sets it, circles never move
+   * unless something elsewhere in the chart populates a `'tpf'` cache value different from `1`.
+   * `_fps` is accepted (matching the legacy signature) but never read. */
   move(_fps: number, tpf: number): void {
     if (tpf == 1) return
 
@@ -121,11 +153,16 @@ class Circle {
     this.updateAcceleration()
   }
 
+  /** Resets `velocity` and `acceleration` to zero, freezing further motion (`position` itself is
+   * left untouched, and nothing in this file calls `stop()`). */
   stop(): void {
     this.velocity = [0, 0]
     this.acceleration = [0, 0]
   }
 
+  /** Draws this circle as a drop-shadowed filled circle at its current `position`/`radius`/
+   * `color` via `jui-graph-ts`'s `CanvasBase.drawCircle`, with the shadow tinted from `color` at a
+   * fixed `0.3` alpha. */
   draw(): void {
     const util = new canvasBaseUtil.CanvasBase(this.context)
 
@@ -140,6 +177,13 @@ class Circle {
 }
 
 export class CanvasActiveCircleBrush extends CanvasCoreBrush {
+  /** Reports whether `circle` has crossed any of the four axis-range boundaries (its edge, `pos ±
+   * radius`, past the mapped pixel position of `axis.x`/`axis.y`'s own `min()`/`max()`). Note the
+   * y comparisons are swapped relative to the x ones (`position[1] - radius < maxY` /
+   * `position[1] + radius > minY`), matching canvas y increasing downward while the data-domain
+   * "max" maps to the smaller pixel y. Dead code: nothing in this file (or the legacy source)
+   * ever calls it, so wall collisions are never actually detected or acted on - circles can drift
+   * arbitrarily far past the axis bounds. */
   checkWallCollision(circle: Circle): boolean {
     const x = this.axis.x as ScaleWithMinMax
     const y = this.axis.y as ScaleWithMinMax
@@ -151,6 +195,13 @@ export class CanvasActiveCircleBrush extends CanvasCoreBrush {
     return circle.position[0] - circle.radius < minX || circle.position[0] + circle.radius > maxX || circle.position[1] - circle.radius < maxY || circle.position[1] + circle.radius > minY
   }
 
+  /** Builds one `Circle` per data row on the first call (cached on the chart as `'active_circle'`
+   * so later redraws reuse the same instances instead of resetting their `runtime`/`position`) -
+   * each seeded from the row's own `x`/`y`/`radius`/`vx`/`vy`/`ax`/`ay` fields (radius/velocity/
+   * acceleration falling back to `brush.radius`/`0`/`0` when absent). Every frame then calls each
+   * circle's `move(fps, tpf)` (reading `fps`/`tpf` from chart cache, both defaulting to `1`) and
+   * `draw()`, and writes the (possibly still-empty, per `move()`'s `tpf == 1` quirk) circle list
+   * back to the cache. */
   draw = (): void => {
     const chart = this.chart as unknown as ChartWithCache
     const fps = chart.getCache('fps', 1) as number
@@ -180,6 +231,8 @@ export class CanvasActiveCircleBrush extends CanvasCoreBrush {
     chart.setCache('active_circle', circles)
   }
 
+  /** Returns this brush's own default options (`radius`), merged by `defineOptions()` on top of
+   * `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_ACTIVECIRCLE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

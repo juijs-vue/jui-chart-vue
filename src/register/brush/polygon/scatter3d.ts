@@ -40,6 +40,15 @@ export const POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS: PolygonScatter3DBrushOptions 
 }
 
 export class PolygonScatter3DBrush extends PolygonCoreBrush {
+  /** Builds one 3D marker `<circle>` for row `dataIndex`'s `target` field, at `(axis.x(dataIndex),
+   * axis.y(data[target]), axis.z(dataIndex))` - both `x` and `z` keyed by the row index itself, not
+   * a data field (same shape as `canvas/scatter3d.ts`'s identical convention). Unless `this.color()`
+   * already returned a gradient reference (`color.indexOf('radial') != -1`), wraps the flat series
+   * color into a synthetic radial gradient (`'radial(40%,40%,100%,0%,0%)'`, lightened center via
+   * `polygonScatterRadialOpacity` fading to the plain color at `70%`) so every marker gets a
+   * soft-sphere look. The `createPolygon()` callback scales the circle's radius by
+   * `mathUtil.scaleValue(z, 0, axis.depth, 1, p.perspective)` (shrinking distant markers) and wires
+   * hover/click events via `addEvent()` only when the cell's value is non-zero. */
   private createScatter(data: BrushData, target: string, dataIndex: number, targetIndex: number) {
     let color = this.color(dataIndex, targetIndex)
     const r = ((this.brush as Record<string, unknown>).size as number) / 2
@@ -74,6 +83,9 @@ export class PolygonScatter3DBrush extends PolygonCoreBrush {
     })
   }
 
+  /** Draws every `(row, target)` cell as a 3D marker via `createScatter()`, iterating all rows
+   * from `listData()` against every configured `target` field, appending each into one shared
+   * group. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const datas = this.listData() as BrushData[]
@@ -88,6 +100,8 @@ export class PolygonScatter3DBrush extends PolygonCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`size`/`clip`), merged by `defineOptions()` on top
+   * of `PolygonCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return POLYGON_SCATTER3D_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

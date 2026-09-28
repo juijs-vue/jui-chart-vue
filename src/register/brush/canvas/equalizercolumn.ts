@@ -70,6 +70,9 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
   private ecBarWidth = 0
   private ecReverse = false
 
+  /** Resolves this brush's per-column pixel width: `brush.size` verbatim when it's set above `0`,
+   * otherwise the row band width (`axis.x.rangeBand()`) minus `outerPadding` on both sides, floored
+   * at `minSize` so a very narrow band never collapses to an unusably thin (or negative) column. */
   private getTargetSize(): number {
     const brush = this.brush as Record<string, unknown>
     const width = (this.axis.x as BrushAxisScale).rangeBand!()
@@ -82,6 +85,9 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Bundles the bar-related theme keys (`barBorderColor`/`barBorderWidth`/`barBorderOpacity`/
+   * `barBorderRadius`/`barDisableBackgroundOpacity`/`barPointBorderColor`) this brush shares with
+   * the SVG bar family of brushes into one lookup, read by `getBarElement()`. */
   private getBarStyle(): { borderColor: unknown; borderWidth: unknown; borderOpacity: unknown; borderRadius: unknown; disableOpacity: unknown; circleColor: unknown } {
     return {
       borderColor: this.chart.theme('barBorderColor'),
@@ -93,6 +99,12 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     }
   }
 
+  /** Builds the style/geometry-source fields (everything but `x`/`y`/`width`/`height`, filled in
+   * by the caller) for one stacked cell belonging to row `dataIndex`, target `targetIndex`: fill
+   * color from `this.color(targetIndex)`, border styling from `getBarStyle()`, and `fill-opacity`
+   * dimmed to the theme's `disableOpacity` whenever `dataIndex` isn't among the brush's `active`
+   * column(s) (an `active` of `null` leaves every column at full opacity, per the option's own
+   * doc). `hidden` is set whenever the target's raw value is exactly `0`. */
   private getBarElement(dataIndex: number, targetIndex: number): BarRect {
     const brush = this.brush as Record<string, unknown>
     const style = this.getBarStyle()
@@ -115,6 +127,9 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     } as BarRect
   }
 
+  /** Reports whether column `i` should render as the `error` placeholder (per the option's own
+   * array-of-indices / single-index / `null`-means-none matching rules) instead of its normal
+   * stacked cells. */
   private isErrorColumn(i: number): boolean {
     const error = (this.brush as Record<string, unknown>).error as number | number[] | null
 
@@ -125,12 +140,29 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     return true
   }
 
+  /** Caches this render pass's shared geometry: `ecZeroY` (the pixel y of the value-`0` baseline),
+   * `ecBarWidth` (via `getTargetSize()`), and `ecReverse` (whether the y axis is configured
+   * reversed, flipping which direction columns stack). */
   drawBefore = (): void => {
     this.ecZeroY = (this.axis.y as BrushAxisScale)(0)
     this.ecBarWidth = this.getTargetSize()
     this.ecReverse = !!(this.axis.get('y') as Record<string, unknown>).reverse
   }
 
+  /** Renders every column. Per row, walks `targets` in stacking order, converting each target's
+   * cumulative value (`value`, running total across targets so far) into a pixel endpoint via
+   * `axis.y` and measuring the pixel span (`targetY`) that target occupies. For a normal (non-error)
+   * column, that span is sliced into discrete fixed-size cells - each `unit` tall plus `innerPadding`
+   * gap (`height = unit + padding`, where `unit` itself is `band / (brush.unit * padding)`) - drawn
+   * one filled/stroked rect at a time via a `while (targetY >= height)` loop (so a target's leftover
+   * remainder shorter than one full cell is simply dropped, not drawn as a partial cell), each
+   * pushed onto `stackList`. For an `isErrorColumn()`, instead of cells this draws (redundantly,
+   * once per target iteration, always at the same position since `y` isn't advanced in this branch)
+   * a rounded-top marker shape plus a vertically rotated `errorText` label. After all targets, if
+   * any cells were stacked this row, the topmost cell is cached (`equalizer_${index}`, consumed by
+   * `drawAnimation()`'s pulsing overlay) and a hover hit-test rectangle spanning the whole column
+   * (from the axis's y-minimum up to the top of the stack) is cached as `raycast_area_${index}` for
+   * `canvas.raycast`. Finishes by calling `drawAnimation()`. */
   draw = (): void => {
     const canvas = this.canvas as CanvasRenderingContext2D
     const chart = this.chart as unknown as ChartWithCache
@@ -227,6 +259,15 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     this.drawAnimation()
   }
 
+  /** Draws the VU-meter-style pulsing "peak" overlay on top of each non-error column that has a
+   * cached top cell (`equalizer_${i}`, set by `draw()`). Maintains a per-column oscillation state
+   * (`equalizer_move_${i}`: `direction`/`distance`, persisted across frames via chart cache) that
+   * bounces `distance` between `0` and `-MAX_DISTANCE` (8px): it moves up (`direction = -1`) at
+   * `UP_SEC_PER_MOVE` (20) px/sec scaled by `tpf` until it reaches `-8`, then reverses to move back
+   * down (`direction = 1`) at `DOWN_SEC_PER_MOVE` (30) px/sec until it returns to `0`, repeating -
+   * i.e. a faster rise, slower fall pulse riding on top of the topmost cell. Draws that pulse as a
+   * thick horizontal stroke line at the oscillated y, plus the row's `target` values summed into a
+   * `total` label centered just below it. */
   private drawAnimation(): void {
     const canvas = this.canvas as CanvasRenderingContext2D
     const chart = this.chart as unknown as ChartWithCache
@@ -297,6 +338,9 @@ export class CanvasEqualizerColumnBrush extends CanvasCoreBrush {
     })
   }
 
+  /** Returns this brush's own default options (`size`/`minSize`/`outerPadding`/`innerPadding`/
+   * `unit`/`active`/`error`/`errorText`), merged by `defineOptions()` on top of
+   * `CanvasCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return CANVAS_EQUALIZERCOLUMN_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

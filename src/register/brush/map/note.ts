@@ -32,10 +32,21 @@ export class MapNoteBrush extends MapCoreBrush {
   private g: any
   private tooltips: Record<string, any> = {}
 
+  /** Creates the render group that will hold every row's note balloon. */
   drawBefore = (): void => {
     this.g = this.chart.svg.group()
   }
 
+  /** When `activeEvent` is set, wires a listener that, on that event firing for a row, shows only
+   * that row's cached balloon (from `tooltips`, keyed by `id`) and hides every other tracked one -
+   * PRESERVED BUG (also present in the legacy source): the "show" branch sets
+   * `visibility: 'visibility'`, not the valid CSS value `'visible'`, so this toggle-to-visible path
+   * never actually un-hides a balloon in a real browser; only a balloon whose `id` was in the
+   * initial `active` list (set the same way below) stays visible from the start. Then draws every
+   * row's balloon (skipped when its `id` doesn't resolve to a map position): sized to fit its text
+   * (`format(row)` when set, else `"<id>: <value>"`) plus any extra `texts` lines stacked above the
+   * main line, anchored above the row's map position, and cached into `tooltips` by `id` for the
+   * `activeEvent` handler to find later. */
   draw = (): any => {
     const brush = this.brush as Record<string, unknown>
 
@@ -115,6 +126,8 @@ export class MapNoteBrush extends MapCoreBrush {
     return this.g
   }
 
+  /** Returns this brush's own default options (`active`/`activeEvent`/`format`), merged by
+   * `defineOptions()` on top of `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_NOTE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }

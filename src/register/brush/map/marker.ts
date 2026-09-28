@@ -30,6 +30,13 @@ export const MAP_MARKER_BRUSH_OWN_DEFAULTS: MapMarkerBrushOptions = {
 }
 
 export class MapMarkerBrush extends MapCoreBrush {
+  /** Draws every row's marker(s), skipping rows whose `id` doesn't resolve to a map position.
+   * `html`/`svg` are each resolved per row (calling them with the row as the argument, `this` bound
+   * to `this.chart`, when they're functions) and only rendered when the resolved value is a
+   * non-empty string - `html` as a `<foreignObject>` of `width`x`height`, `svg` as a plain `<g>`
+   * with its markup injected via `.html()`, both centered on the row's map position (top-left
+   * corner offset by half `width`/`height`). The two are independent - a row can render an HTML
+   * marker, an SVG marker, both, or neither. */
   draw = (): any => {
     const g = this.chart.svg.group()
     const brush = this.brush as Record<string, unknown>
@@ -65,6 +72,8 @@ export class MapMarkerBrush extends MapCoreBrush {
     return g
   }
 
+  /** Returns this brush's own default options (`width`/`height`/`html`/`svg`), merged by
+   * `defineOptions()` on top of `MapCoreBrush.setup()`'s inherited defaults. */
   static setup(): Record<string, unknown> {
     return MAP_MARKER_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
