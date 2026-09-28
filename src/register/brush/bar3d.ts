@@ -23,6 +23,12 @@ export const BAR3D_BRUSH_OWN_DEFAULTS: Bar3DBrushOptions = {
   innerPadding: 5,
 }
 
+/** `chart.brush.bar3d`: draws pseudo-3D (isometric-extruded) horizontal bars, one stacked box per
+ * target within each row's band, using `chart.svg.rect3d()` boxes positioned via the `"grid3d"`
+ * axis's own `axis.c(value, index)` isometric projection - see this file's own header comment for
+ * why this is a separate, simpler extrusion system from the `polygon.*` family's full
+ * rotate+perspective engine despite sharing the same grid type. Later targets' boxes are prepended
+ * so they layer visually in front of earlier ones, matching the isometric perspective. */
 export class Bar3DBrush extends CoreBrush {
   private g: any
   private height = 0

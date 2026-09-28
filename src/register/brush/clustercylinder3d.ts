@@ -22,6 +22,10 @@ export const CLUSTERCYLINDER3D_BRUSH_OWN_DEFAULTS: ClusterCylinder3DBrushOptions
   innerPadding: 5,
 }
 
+/** `chart.brush.clustercylinder3d`: identical clustered-lane layout to `ClusterColumn3DBrush`, but
+ * each lane is drawn as a `chart.svg.cylinder3d()` (tapered per `brush.topRate`) instead of a plain
+ * extruded box - achieved by overriding only `ClusterColumn3DBrush.drawMain()` and reusing its
+ * `drawBefore()`/`draw()` wholesale. */
 export class ClusterCylinder3DBrush extends ClusterColumn3DBrush {
   /** Overrides `ClusterColumn3DBrush.drawMain()`'s box shape with a `chart.svg.cylinder3d()`, using
    * `brush.topRate` for the top ellipse's radius ratio; all other layout/event logic in the

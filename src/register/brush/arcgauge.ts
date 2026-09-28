@@ -49,6 +49,12 @@ export const ARCGAUGE_BRUSH_OWN_DEFAULTS: ArcGaugeBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.arcgauge`: a tick-marked circular arc gauge - draws a ring of short radial tick
+ * marks every 5° across `[startAngle, endAngle)`, plus one filled arc "stack" segment whose sweep
+ * represents each row's `(value - min) / (max - min)` rate, and optional centered value/title
+ * labels. Extends `FullGaugeBrush` (reusing its `createText()`/`createTitle()`) but overrides
+ * `draw()`/`drawUnit()` with its own arc geometry, positioned via the shared "panel" `axis.c(0)`
+ * area rather than per-row axis cells. */
 export class ArcGaugeBrush extends FullGaugeBrush {
   private arcG: any
 

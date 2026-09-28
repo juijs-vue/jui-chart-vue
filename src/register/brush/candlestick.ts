@@ -14,6 +14,11 @@ import type { BrushAxisScale, BrushData, BrushOptions } from 'jui-graph-ts'
  * `open`/`close` directly off each row instead of a configured `target` array. */
 export type CandleStickBrushOptions = BrushOptions
 
+/** `chart.brush.candlestick`: draws a classic OHLC candlestick per data row - a thin high-low wick
+ * line plus a body rect spanning `open`/`close` - reading `high`/`low`/`open`/`close` directly off
+ * each row via `getValue()` rather than a configured `target` array (see this file's own header
+ * comment). A bearish candle (`open > close`) is drawn in the theme's "invert" colors, a bullish one
+ * in the normal candlestick colors; only the body rect is click/hover-interactive. */
 export class CandleStickBrush extends CoreBrush {
   private g: any
   private barWidth = 0

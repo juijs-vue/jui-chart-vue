@@ -25,6 +25,10 @@ export const CYLINDER3D_BRUSH_OWN_DEFAULTS: Cylinder3DBrushOptions = {
   innerPadding: 5,
 }
 
+/** `chart.brush.cylinder3d`: identical side-by-side column layout to `Column3DBrush`, but each
+ * column is drawn as a `chart.svg.cylinder3d()` (tapered per `brush.topRate`, `1` for a true
+ * cylinder) instead of a plain extruded box - achieved by overriding only
+ * `Column3DBrush.drawMain()` and reusing its `drawBefore()`/`draw()` wholesale. */
 export class Cylinder3DBrush extends Column3DBrush {
   /** Overrides `Column3DBrush.drawMain()`'s box shape with a `chart.svg.cylinder3d()`, using
    * `brush.topRate` for the top ellipse's radius ratio; all other layout/event logic in the

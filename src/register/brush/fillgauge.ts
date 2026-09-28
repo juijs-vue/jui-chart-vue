@@ -75,6 +75,14 @@ export const FILLGAUGE_BRUSH_OWN_DEFAULTS: FillGaugeBrushOptions = {
   path: '',
 }
 
+/** `chart.brush.fillgauge`: renders a single gauge shape (`'circle'`, `'rectangle'`, or a custom
+ * `brush.path`/`brush.svg` shape) whose fill level - clipped via a `<clipPath>` rect sized by
+ * `(value - min) / (max - min)` - rises from the bottom (`direction: 'vertical'`) or from the left
+ * (`'horizontal'`). See this file's own header comment for two documented deviations from a literal
+ * port: a legacy `var`-hoisting shadow bug that has no TS equivalent to replicate, and a borrowed
+ * `stackgauge`-style fallback that synthesizes a full-chart-area panel when no `axis.c()` grid is
+ * configured. Also fixes a genuine legacy bug (documented inline on the circle's foreground fill)
+ * that made the circle shape's fill permanently invisible. */
 export class FillGaugeBrush extends CoreBrush {
   private fgW = 0
   private fgCenterX = 0

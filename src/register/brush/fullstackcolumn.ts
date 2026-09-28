@@ -15,6 +15,13 @@ import type { FullStackBarBrushOptions } from './fullstackbar'
  * `"fullstackcolumn"` has something to point at. */
 export type FullStackColumnBrushOptions = FullStackBarBrushOptions
 
+/** `chart.brush.fullstackcolumn`: the vertical counterpart to `FullStackBarBrush` - each column
+ * always fills the full axis height, with segment heights computed as each target's share of that
+ * row's own value sum (`axis.y.rate(list[j], sum)`) rather than a share of the axis's global max,
+ * stacking upward from the baseline. See this file's own header comment for a preserved quirk: an
+ * out-of-range (`NaN`) segment isn't skipped outright, it's still appended without its geometry
+ * attributes set, and `startY` still advances by that `NaN` height, poisoning every remaining target
+ * in that row too. Reuses `FullStackBarBrush`'s `drawText()`/style/active-bar machinery unchanged. */
 export class FullStackColumnBrush extends FullStackBarBrush {
   private fscWidth = 0
 

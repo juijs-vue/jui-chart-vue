@@ -22,6 +22,12 @@ export const COLUMN3D_BRUSH_OWN_DEFAULTS: Column3DBrushOptions = {
   innerPadding: 5,
 }
 
+/** `chart.brush.column3d`: the vertical-column counterpart to `Bar3DBrush` - draws pseudo-3D
+ * isometric-extruded boxes side by side within each row's band, one per target, using the
+ * `"grid3d"` axis's `axis.c(index, value)` projection. Box construction is factored into an
+ * overridable `drawMain()` seam specifically so `Cylinder3DBrush` (`extend: "chart.brush.column3d"`)
+ * can swap in a cylinder shape while reusing this class's `drawBefore()`/`draw()` layout and event
+ * logic unchanged. */
 export class Column3DBrush extends CoreBrush {
   protected g: any
   private width = 0

@@ -17,6 +17,12 @@ export type Bubble3DBrushOptions = BubbleBrushOptions
 type CAxis = (i: unknown, v: unknown, j: unknown, count: unknown) => { x: number; y: number; depth: number }
 type CScale = { radian: number; degree: unknown }
 
+/** `chart.brush.bubble3d`: a pseudo-3D variant of `BubbleBrush`, positioning each row/target's
+ * bubble via the `"grid3d"` axis's isometric projection instead of plain axis coordinates, then
+ * shrinking bubbles further "back" in the target cluster (higher target index) toward 60% of their
+ * base radius for a depth-of-field effect, and shading each bubble with a radial gradient whose
+ * highlight direction follows the 3D scene's current rotation (`getRadialGradient()`). Reuses the
+ * inherited `createBubble()` for base geometry/text but fully overrides `draw()`. */
 export class Bubble3DBrush extends BubbleBrush {
   /** Builds a radial-gradient fill (white center fading to this bubble's own `color(i, j)`) whose
    * focal point (`dx`/`dy`, as percentages) is offset according to the "grid3d" axis's current

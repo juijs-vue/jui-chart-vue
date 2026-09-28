@@ -51,6 +51,14 @@ function polarToCartesian(centerX: number, centerY: number, radius: number, angl
   }
 }
 
+/** `chart.brush.arcequalizer`: splits the full circle into one equal angular wedge per data row
+ * (`360 / dataCount`, not value-weighted like a pie's slices), and within each wedge stacks
+ * fixed-thickness annular-sector "blocks" radially outward from a fixed inner hole (`textRadius`)
+ * per target, with the block count a flat ratio of value to `maxValue` (`Math.ceil(stackCount *
+ * value/maxValue)`, no partial-block fill). A centered text label shows the summed total across all
+ * rows/targets. See this file's own header comment for why it's a genuinely independent
+ * implementation from `equalizer`/`equalizerbar`/`equalizercolumn`/`donut` despite the naming
+ * overlap. */
 export class ArcEqualizerBrush extends CoreBrush {
   private g: any
   private r = 0

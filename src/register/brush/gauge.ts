@@ -46,6 +46,14 @@ export const GAUGE_BRUSH_OWN_DEFAULTS: GaugeBrushOptions = {
   endAngle: 360,
 }
 
+/** `chart.brush.gauge`: a single-ring donut gauge, extending `DonutBrush` and reusing only its
+ * unmodified `drawDonut()` - a background track ring covering the remaining span plus a
+ * value-proportional foreground arc (`(value - min) / (max - min)` of `startAngle`-`endAngle`), with
+ * a big center value label, an optional unit label, and min/max labels positioned at the arc's own
+ * ends. See this file's own header comment for why it's ported from the legacy engine's separate
+ * `legacy` branch (not present in `master`/the npm tarball) and for the preserved quirk that the
+ * value label uses raw, unthemed `chart.svg.text()` while the unit/min/max labels use the themed
+ * `chart.text()` helper. */
 export class GaugeBrush extends DonutBrush {
   // Per-instance state written by `drawUnit()`, read by `createText()` right after (matches the
   // legacy closure-scoped `w, centerX, centerY, outerRadius, innerRadius` vars, which `createText`

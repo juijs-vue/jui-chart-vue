@@ -37,6 +37,12 @@ export const EQUALIZER_BAR_BRUSH_OWN_DEFAULTS: EqualizerBarBrushOptions = {
   unit: 1,
 }
 
+/** `chart.brush.equalizerbar`: a "block-train" variant of `StackBarBrush` - each row's stacked
+ * horizontal segments are rendered as a sequence of small fixed-size blocks with gaps instead of one
+ * continuous rect per segment, reusing the inherited `getBarElement()` for each block's styling. See
+ * this file's own header comment for a preserved quirk: the running pixel cursor is one variable
+ * shared across the whole row (never reset per target), so each target's block run continues
+ * exactly where the previous target's left off rather than realigning to its own true boundary. */
 export class EqualizerBarBrush extends StackBarBrush {
   // Legacy `equalizerbar.js`'s own `drawBefore()` also computes `zeroX = this.axis.x(0)` into a
   // closure var - confirmed dead in the legacy source (`draw()` recomputes its own local `startX =

@@ -43,6 +43,13 @@ export const EQUALIZER_BRUSH_OWN_DEFAULTS: EqualizerBrushOptions = {
   gap: 5,
 }
 
+/** `chart.brush.equalizer`: a color-banded "VU-meter" style chart - each (row, target) pair renders
+ * as a stack of small fixed-height blocks (`brush.unit`) growing from the zero baseline toward the
+ * value's pixel position, separated by a constant 1.5px gap, with every `brush.gap` consecutive
+ * blocks sharing one theme color before cycling to the next. Targets are grouped (not stacked) side
+ * by side per row, the same layout shape as a non-stacked column chart. See this file's own header
+ * comment for why it is genuinely distinct from `EqualizerBarBrush`/`EqualizerColumnBrush` despite
+ * the shared name prefix. */
 export class EqualizerBrush extends CoreBrush {
   private g: any
   private zeroY = 0

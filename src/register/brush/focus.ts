@@ -22,6 +22,12 @@ export const FOCUS_BRUSH_OWN_DEFAULTS: FocusBrushOptions = {
   end: -1,
 }
 
+/** `chart.brush.focus`: highlights a configured `[start, end]` range on whichever axis is the
+ * "range"-typed value axis (works for either chart orientation) with a semi-transparent background
+ * band plus a border line on each edge. Renders nothing when `brush.start`/`brush.end` are left at
+ * their default `-1` ("no focus configured"). For a discrete `'block'`-typed category axis, the
+ * pixel range is widened by half a cell's `rangeBand()` on each side so the highlight covers the
+ * full width of the start/end categories rather than just their center points. */
 export class FocusBrush extends CoreBrush {
   // Named `gridAxis`, not the legacy closure var's own name `grid` - `Draw` (this class's real
   // base, via `CoreBrush`) already declares a PUBLIC `grid: any` field of its own (for the

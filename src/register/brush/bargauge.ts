@@ -33,6 +33,13 @@ export const BAR_GAUGE_BRUSH_OWN_DEFAULTS: BarGaugeBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.bargauge`: draws a list of independent horizontal track+fill bars, one per data
+ * row (not one gauge for a single value), stacked top-to-bottom underneath the shared "panel"
+ * `axis.c(0)` area rather than any `axis.x`/`axis.y` scale. Each row supplies its own
+ * `value`/`min`/`max`/`title`, with the fill width proportional to `value` over the `max - min`
+ * range span. See this file's own header comment for two preserved quirks kept literal from the
+ * legacy engine: a nonzero `min` only shrinks that range divisor without shifting the bar's visual
+ * start, and the background track rect can overshoot the cell's right edge by `cut` px. */
 export class BarGaugeBrush extends CoreBrush {
   /** Draws one horizontal track+fill bar per data row, stacked top-to-bottom (`y` advances by
    * `size + cut` after each row) underneath the shared "panel" axis rect (`axis.c(0)`). Each row's

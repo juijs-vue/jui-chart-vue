@@ -25,6 +25,13 @@ export const CLUSTERBAR3D_BRUSH_OWN_DEFAULTS: ClusterBar3DBrushOptions = {
   innerPadding: 5,
 }
 
+/** `chart.brush.clusterbar3d`: draws each target as its own offset isometric "lane" (depth-wise)
+ * within a row's horizontal band, via the `"grid3d"` axis's 4-arg `axis.c(value, index,
+ * targetIndex, targetCount)` projection, rather than stacking targets vertically like `Bar3DBrush`.
+ * Rows and targets are drawn back-to-front in reverse order so the resulting isometric layering
+ * matches the legacy engine's own draw order exactly. See this file's own header comment for a
+ * stale "@extends chart.brush.bar" JSDoc note in the legacy source that the real `extend:` field
+ * (`chart.brush.core`) contradicts. */
 export class ClusterBar3DBrush extends CoreBrush {
   private g: any
   private height = 0

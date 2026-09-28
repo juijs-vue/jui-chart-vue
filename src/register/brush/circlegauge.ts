@@ -20,6 +20,11 @@ export const CIRCLEGAUGE_BRUSH_OWN_DEFAULTS: CircleGaugeBrushOptions = {
   clip: false,
 }
 
+/** `chart.brush.circlegauge`: a minimal "donut-less" gauge - one fixed-size background circle plus
+ * one foreground circle whose RADIUS (not an arc sweep, unlike `ArcGaugeBrush`/`FullGaugeBrush`)
+ * scales to `(value - min) / (max - min)` of the background's radius, per data row, positioned via
+ * the shared panel-grid `axis.c(i)` cell. See this file's own header comment for a preserved quirk:
+ * click/hover events bind redundantly onto one shared group per row rather than per-row circles. */
 export class CircleGaugeBrush extends CoreBrush {
   private group: any
 

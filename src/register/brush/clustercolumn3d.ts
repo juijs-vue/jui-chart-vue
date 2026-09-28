@@ -23,6 +23,12 @@ export const CLUSTERCOLUMN3D_BRUSH_OWN_DEFAULTS: ClusterColumn3DBrushOptions = {
   innerPadding: 5,
 }
 
+/** `chart.brush.clustercolumn3d`: the vertical counterpart to `ClusterBar3DBrush` - draws each
+ * target as its own offset isometric depth "lane" within a row's vertical band, via the `"grid3d"`
+ * axis's `axis.c(index, value, targetIndex, targetCount)` projection. Box construction is factored
+ * into an overridable `drawMain()` seam specifically so `ClusterCylinder3DBrush` can swap in a
+ * cylinder shape while reusing this class's `drawBefore()`/`draw()` layout and event logic
+ * unchanged. */
 export class ClusterColumn3DBrush extends CoreBrush {
   protected g: any
   private width = 0

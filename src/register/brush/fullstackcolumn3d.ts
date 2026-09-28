@@ -18,6 +18,14 @@ type CScale = { radian: number; degree: unknown }
 type RateScale = (v: unknown) => number
 type RateScaleFull = RateScale & { rate(value: number, max: number): number; max(): number }
 
+/** `chart.brush.fullstackcolumn3d`: the vertical counterpart to `FullStackBar3DBrush` - each
+ * column's isometric-extruded box stack always spans the full axis height, with each target's box
+ * height computed as its share of that row's own value sum (`yScale.rate(list[j], sum)`) rather than
+ * absolute values, stacking bottom-to-top. Box construction (`drawMain()`) and label positioning
+ * (`getTextXY()`) are both overridable seams so `FullStackCylinder3DBrush` can swap in a cylinder
+ * shape and re-centered labels while reusing this class's layout/event logic. See this file's own
+ * header comment for a preserved quirk in the percentage-label positioning: it reassigns the same
+ * `xy` local the row's own axis projection used, reading its pre-reassignment `depth` value. */
 export class FullStackColumn3DBrush extends FullStackBar3DBrush {
   private width = 0
   private barWidth = 0

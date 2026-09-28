@@ -20,6 +20,11 @@ export const EQUALIZER_COLUMN_BRUSH_OWN_DEFAULTS: EqualizerColumnBrushOptions = 
   unit: 1,
 }
 
+/** `chart.brush.equalizercolumn`: the vertical counterpart to `EqualizerBarBrush` - a "block-train"
+ * variant of `StackColumnBrush` where each row's stacked vertical segments render as a sequence of
+ * small fixed-height blocks with gaps rather than one continuous rect. Shares the same preserved
+ * quirk documented in `equalizerbar.ts`'s header comment (the running pixel cursor is shared across
+ * the whole row, not reset per target), transposed to the y-axis. */
 export class EqualizerColumnBrush extends StackColumnBrush {
   // Same confirmed-dead-in-legacy `zeroY` closure var omission as `EqualizerBarBrush`'s `zeroX`
   // (see that file's comment) - `equalizercolumn.js`'s `draw()` recomputes its own local `startY`.

@@ -23,6 +23,12 @@ export const HUDCOLUMN_BRUSH_OWN_DEFAULTS: HUDColumnBrushOptions = {
   clip: false,
 }
 
+/** `chart.brush.hudcolumn`: the vertical counterpart to `HUDBarBrush` - draws two overlapping
+ * angled "flag" polygons per row (`createColumn()`, for `left`/`right` values), each slanting toward
+ * the zero baseline and hidden when too short to reach it. Also draws its own bottom grid
+ * (`drawGrid()`), independent of the axis's own grid lines: an axis line, per-domain outer/inner
+ * marker dots (the inner dot revealed on hover), a domain label, and a transparent larger hit-test
+ * outline pair for hover/click. */
 export class HUDColumnBrush extends CoreBrush {
   private g: any
   private domains: unknown[] = []

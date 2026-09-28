@@ -32,6 +32,13 @@ export const DONUT_BRUSH_OWN_DEFAULTS: DonutBrushOptions = {
   showValue: false,
 }
 
+/** `chart.brush.donut`: draws a donut (ring) chart, extending `PieBrush` and reusing its
+ * `drawPie()`/`setActiveEvent()`/`drawText()`/`color()` machinery, but overriding `drawUnit()` to
+ * draw each target's slice as a thick-stroked ring segment (`drawDonut()`) rather than a filled
+ * wedge, and `getProperty()` to also compute an `innerRadius`. Supports an optional pseudo-3D mode
+ * (`brush['3d']`, via `drawDonut3d()`/`drawDonut3dBlock()`) that adds a beveled underside layer
+ * behind the flat top ring, and an optional `showValue` total shown as text in the center hole via
+ * the new `drawTotalValue()`. */
 export class DonutBrush extends PieBrush {
   // Own instance state, unrelated to `PieBrush`'s own private `cache_active` field (each class's
   // own `drawUnit` override populates/reads only its own) - renamed to avoid a TS2415 "separate

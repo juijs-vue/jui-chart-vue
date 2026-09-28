@@ -48,6 +48,13 @@ export const FULL_GAUGE_BRUSH_OWN_DEFAULTS: FullGaugeBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.fullgauge`: draws one full ring-gauge per data row in the shared "panel" `axis.c(i)`
+ * area - a background track ring covering the remaining span plus a value-proportional foreground
+ * arc (`(value - min) / (max - min)` of `startAngle`-`endAngle`), with optional centered value/title
+ * labels. Extends `DonutBrush` and reuses only its unmodified `drawDonut()` for arc rendering, fully
+ * overriding `draw()`/`drawUnit()` with its own logic (a different `drawUnit()` signature than
+ * `DonutBrush`'s, since it's never called polymorphically through the base class). Serves as the
+ * base class for `ArcGaugeBrush`'s tick-marked variant. */
 export class FullGaugeBrush extends DonutBrush {
   private group: any
 

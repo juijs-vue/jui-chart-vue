@@ -26,6 +26,12 @@ export const HUDBAR_BRUSH_OWN_DEFAULTS: HUDBarBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.hudbar`: a "HUD-style" horizontal range-bar brush - draws a top and bottom range bar
+ * per row (both anchored at the zero x-position, extending to their own value's pixel position),
+ * each with a connector line and value label reading out from its outer end. Also draws its own
+ * independent side grid (`drawGrid()`): per y-axis category, a shaded chevron/arrow-shaped polygon
+ * plus a connector line and label, positioned entirely outside the plot area rather than reusing the
+ * axis's own grid lines. */
 export class HUDBarBrush extends CoreBrush {
   private g: any
   private domains: unknown[] = []

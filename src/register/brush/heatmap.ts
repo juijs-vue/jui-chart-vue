@@ -36,6 +36,14 @@ export const HEATMAP_BRUSH_OWN_DEFAULTS: HeatmapBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.heatmap`: draws one colored cell per data row (never per `target` value - this
+ * brush never reads `brush.target`), positioned at `(axis.x(i), axis.y(i))` by row INDEX rather than
+ * a data value, with an optional text label and a hover opacity effect. See this file's own header
+ * comment for a real, easy-to-miss quirk: with the default `colors: null` (no coloring function
+ * configured), every cell falls through to the SAME uniform `heatmapBackgroundColor` rather than a
+ * distinct per-row color, because of how `this.color(i, null)`'s explicit `null` second argument is
+ * dispatched by `CoreBrush.color()`; real per-cell coloring only happens when `brush.colors` is
+ * configured as a function. */
 export class HeatmapBrush extends CoreBrush {
   /** Draws one cell per `axis.data` row (never reads `brush.target` - see this file's header
    * comment), positioned at `(axis.x(i), axis.y(i))` (the row's own index, not a data value), sized

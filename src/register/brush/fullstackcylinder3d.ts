@@ -13,6 +13,13 @@ import type { FullStackColumn3DBrushOptions } from './fullstackcolumn3d'
  * doc page for `"fullstackcylinder3d"` has something to point at. */
 export type FullStackCylinder3DBrushOptions = FullStackColumn3DBrushOptions
 
+/** `chart.brush.fullstackcylinder3d`: identical 100%-normalized vertical stacking layout to
+ * `FullStackColumn3DBrush`, but each segment is drawn as a `chart.svg.cylinder3d()` instead of a
+ * plain extruded box - achieved by overriding only `drawMain()` (shortening every non-first
+ * segment's height by its projected top sliver so stacked cylinders don't visually overlap at their
+ * seams, the same trick `StackCylinder3DBrush` uses) and `getTextXY()` (re-centering each segment's
+ * percentage label on the cylinder's own isometric footprint), reusing
+ * `drawBefore()`/`draw()`/`drawText()` wholesale. */
 export class FullStackCylinder3DBrush extends FullStackColumn3DBrush {
   /** Overrides `FullStackColumn3DBrush.drawMain()`'s box shape with a `chart.svg.cylinder3d()`.
    * Every segment except the first (`index > 0`) has its height shortened by the isometric depth's

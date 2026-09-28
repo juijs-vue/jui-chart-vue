@@ -73,6 +73,13 @@ export const BAR_BRUSH_OWN_DEFAULTS: BarBrushOptions = {
   format: null,
 }
 
+/** `chart.brush.bar`: draws horizontal bars, one per target stacked vertically within each row's
+ * band, extending outward from the zero x-position with an optional minimum visible length
+ * (`minSize`) for near-zero values and rounded outward corners. Supports permanent min/max/all
+ * value tooltips (`brush.display`), a click/hover-toggled active tooltip and dimmed-others
+ * highlight (`brush.activeEvent`/`setActiveEffect()`), and a slide-in entrance animation. Shared
+ * geometry/tooltip machinery (`barList`, `getBarStyle()`, `drawETC()`) is reused by `ColumnBrush`,
+ * its vertical-bar sibling. */
 export class BarBrush extends CoreBrush {
   protected barList: BarListItem[] = []
   protected active?: BrushTooltip

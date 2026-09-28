@@ -50,6 +50,13 @@ interface HeatmapCell {
   yValue: unknown
 }
 
+/** `chart.brush.heatmapscatter`: a coarse 2D density grid over ordinary scatter points - not a
+ * scatter chart with heatmap-style per-point coloring. Buckets every `(row, target)` point into a
+ * fixed-size table of `xInterval`/`yInterval`-sized cells (re-using the LAST point's color written
+ * to a cell as that whole cell's fill) and renders one `<rect>` per cell that received at least one
+ * point. Genuinely unrelated to `HeatmapBrush` despite the shared naming pattern - see this file's
+ * own header comment, which also documents real `type: 'date'` x-axis support (dual index/value
+ * positioning via `jui-graph-ts`'s `DateGrid`). */
 export class HeatmapScatterBrush extends CoreBrush {
   private g: any
   // Named `cellMap`, not the legacy closure var's own name `map` - `Draw` (this class's real base)

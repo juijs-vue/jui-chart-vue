@@ -142,6 +142,15 @@ interface FlameFilterRow {
   value: number
 }
 
+/** `chart.brush.flame`: renders a flame graph (call-stack profiler visualization) from rows whose
+ * `index` field is a dot-separated tree path, built into a shared `NodeManager` tree also used by
+ * `TreemapBrush`. Each node's box is divided among its children proportional to `child.value /
+ * node.value`, laid out left-to-right or right-to-left (`nodeAlign`) at a fixed per-depth-level
+ * height band, growing up from the bottom or down from the top (`nodeOrient`). Selecting a node
+ * (`brush.activeIndex`) re-roots the visible tree at that node via a literal port of the legacy
+ * drill-down/re-sort machinery. See this file's own header comment for a preserved simplification:
+ * unlike `TreemapBrush`, a flame graph assumes exactly one root frame, so any additional top-level
+ * rows past the first are silently ignored rather than rendered as siblings. */
 export class FlameBrush extends CoreBrush {
   private g: any = null
   private height = 0

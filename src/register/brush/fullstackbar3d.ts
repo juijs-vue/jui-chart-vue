@@ -26,6 +26,12 @@ export const FULLSTACKBAR3D_BRUSH_OWN_DEFAULTS: FullStackBar3DBrushOptions = {
   showText: false,
 }
 
+/** `chart.brush.fullstackbar3d`: the pseudo-3D counterpart to `FullStackBarBrush` - each row's
+ * isometric-extruded box stack is rescaled to fill the full axis width (each target's box width from
+ * `xScale.rate(list[j], sum)`, its share of that row's own value sum) rather than absolute values,
+ * with an optional percentage label per segment (`brush.showText`, via the new `drawText()`, reused
+ * unchanged by `FullStackColumn3DBrush`). Serves as the base class for
+ * `FullStackColumn3DBrush`/`fullstackcolumn3d.ts`. */
 export class FullStackBar3DBrush extends CoreBrush {
   protected g: any
   private barHeight = 0

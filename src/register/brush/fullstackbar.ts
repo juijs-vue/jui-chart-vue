@@ -27,6 +27,12 @@ export const FULL_STACK_BAR_BRUSH_OWN_DEFAULTS: FullStackBarBrushOptions = {
   showText: false,
 }
 
+/** `chart.brush.fullstackbar`: a "100%-normalized" (full-stack) variant of `StackBarBrush` - each
+ * row's bar always fills the whole axis width, with every target's segment width computed as its
+ * share of that ROW's own value sum (`axis.x.rate(list[j], sum)`) rather than a share of the axis's
+ * global max. Optionally shows each segment's percentage-of-row label (`brush.showText`, via the new
+ * `drawText()`, reused unchanged by `FullStackColumnBrush`). A segment whose computed width is `NaN`
+ * (e.g. a row summing to `0`) is skipped entirely. */
 export class FullStackBarBrush extends StackBarBrush {
   private fsBarHeight = 0
 

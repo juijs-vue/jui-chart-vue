@@ -41,6 +41,12 @@ export const AREA_BRUSH_OWN_DEFAULTS: AreaBrushOptions = {
   line: true,
 }
 
+/** `chart.brush.area`: draws a filled area under each target's line series, extending `LineBrush`
+ * and reusing its line-building/tooltip machinery unchanged while overriding `draw()` to close each
+ * line segment down to a baseline (the zero line when `startZero`, otherwise the axis minimum) and
+ * fill it at the line's own (or theme) opacity. When `brush.line` is enabled, a plain boundary line
+ * is drawn on top of the fill and wired up for hover/tooltip interaction the same way `LineBrush`
+ * does. */
 export class AreaBrush extends LineBrush {
   /** Builds one target's filled area, and (per-target) all targets' groups. For each target `k`,
    * takes `createLine()`'s line segments (its `children` - a series can be split into several

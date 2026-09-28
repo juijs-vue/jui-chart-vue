@@ -41,6 +41,15 @@ export const BUBBLE_BRUSH_OWN_DEFAULTS: BubbleBrushOptions = {
   activeEvent: null,
 }
 
+/** `chart.brush.bubble`: draws a bubble per data point at its normal `getXY()` axis position, with
+ * radius scaled between `brush.min`/`brush.max` against the data's value range (or a separate
+ * `brush.scaleKey` field, letting radius be driven by a different field than the y-position).
+ * Supports an optional centered value label, and a click/hover-toggled active-bubble highlight
+ * (`setActiveEffect()`) that dims all other bubbles. See this file's own header comment for a
+ * preserved crash in `setActiveEffect()`: it unconditionally restyles each bubble's text-label
+ * child, which only exists when `showText` is true, so toggling `active`/`activeEvent` with the
+ * default `showText: false` throws. Also extends `CoreBrush` directly, not `ScatterBrush`, despite
+ * the visual similarity. */
 export class BubbleBrush extends CoreBrush {
   protected bubbleList: any[] = []
 

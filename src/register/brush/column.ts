@@ -14,6 +14,12 @@ import type { BarBrushOptions } from './bar'
  * generated doc page for `"column"` has something to point at. */
 export type ColumnBrushOptions = BarBrushOptions
 
+/** `chart.brush.column`: the vertical counterpart to `BarBrush` - draws columns, one per target
+ * laid out side by side within each row's band, extending outward from the zero y-position with an
+ * optional minimum visible length (`minSize`) for near-zero values and rounded outward corners.
+ * Extends `BarBrush` and reuses its shared style/tooltip/highlight machinery
+ * (`getBarStyle()`/`getBarElement()`/`setActiveEffect()`/`drawETC()`) unchanged, overriding only the
+ * orientation-specific `drawBefore()`/`draw()`/`drawAnimate()`. */
 export class ColumnBrush extends BarBrush {
   private zeroY = 0
   private width = 0
