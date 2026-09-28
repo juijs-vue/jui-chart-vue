@@ -6,7 +6,13 @@
 // (defaulting each to `0`) rather than a configured `target` array - unlike every axis-based brush
 // so far, `brush.target` is never referenced anywhere in this file.
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
-import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
+import type { BrushAxisScale, BrushData, BrushOptions } from 'jui-graph-ts'
+
+/** `chart.brush.candlestick` declares no config fields of its own - see this file's own header
+ * comment. Re-exported as an alias for `jui-graph-ts`'s base `BrushOptions` purely so a future
+ * `jui-api-doc` page for `"candlestick"` has a named type to point at; it reads `high`/`low`/
+ * `open`/`close` directly off each row instead of a configured `target` array. */
+export type CandleStickBrushOptions = BrushOptions
 
 export class CandleStickBrush extends CoreBrush {
   private g: any

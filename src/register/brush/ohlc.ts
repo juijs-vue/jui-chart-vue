@@ -8,6 +8,12 @@
 import { registerBrush } from 'jui-graph-ts'
 import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
 import { CandleStickBrush } from './candlestick'
+import type { CandleStickBrushOptions } from './candlestick'
+
+/** `chart.brush.ohlc` has no `setup()` of its own - it inherits `CandleStickBrush`'s (itself just
+ * the base `BrushOptions`, no own fields) verbatim, per the real `extend` chain. Re-exported under
+ * this name purely so a future `jui-api-doc` page for `"ohlc"` has something to point at. */
+export type OHLCBrushOptions = CandleStickBrushOptions
 
 export class OHLCBrush extends CandleStickBrush {
   private ohlcG: any

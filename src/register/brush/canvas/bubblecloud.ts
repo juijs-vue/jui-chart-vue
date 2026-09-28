@@ -7,8 +7,15 @@
 // The local `BubbleCloud` class is ported verbatim as a plain (non-`extend`-chain) helper,
 // building on `Bubble` (`base/bubble.ts`, ported from legacy `base/bubble.js`).
 import { registerBrush, CanvasCoreBrush, colorUtil } from 'jui-graph-ts'
-import type { BrushData } from 'jui-graph-ts'
+import type { BrushData, BrushOptions } from 'jui-graph-ts'
 import { Bubble } from './base/bubble'
+
+/** `chart.brush.canvas.bubblecloud` declares no `static setup()`/config fields of its own - every
+ * bubble's size/color/label is instead derived per-row from `title`/`capacity` data fields (see
+ * `CanvasBubbleCloudBrush.draw()`). Re-exported as an alias for `jui-graph-ts`'s base
+ * `BrushOptions` purely so a future `jui-api-doc` page for `"canvas.bubblecloud"` has a named type
+ * to point at. */
+export type CanvasBubbleCloudBrushOptions = BrushOptions
 
 interface ChartWithCache {
   getCache(key: string, defValue?: unknown): unknown

@@ -3,7 +3,13 @@
 // straight connector lines to each of that row's own `routes` (other row ids), with a hover
 // balloon tooltip showing the row's `title`.
 import { registerBrush, MapCoreBrush } from 'jui-graph-ts'
-import type { BrushData } from 'jui-graph-ts'
+import type { BrushData, BrushOptions } from 'jui-graph-ts'
+
+/** `chart.brush.map.flightroute` declares no `static setup()`/config fields of its own - airport
+ * type/routes/title are all read per-row off the data itself (see `MapFlightRouteBrush.draw()`).
+ * Re-exported as an alias for `jui-graph-ts`'s base `BrushOptions` purely so a future
+ * `jui-api-doc` page for `"map.flightroute"` has a named type to point at. */
+export type MapFlightRouteBrushOptions = BrushOptions
 
 type MapScaleFn = (id: string) => { x: number; y: number; data: BrushData | null } | undefined
 

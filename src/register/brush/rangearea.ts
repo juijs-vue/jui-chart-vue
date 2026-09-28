@@ -11,7 +11,13 @@
 // `this.addEvent(...)` anywhere, unlike `rangebar.js`/`rangecolumn.js` - so no per-element event
 // forwarding is added here either, matching the legacy source's own real gap, not an oversight.
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
-import type { BrushAxisScale, BrushData } from 'jui-graph-ts'
+import type { BrushAxisScale, BrushData, BrushOptions } from 'jui-graph-ts'
+
+/** `chart.brush.rangearea` declares no config fields of its own - see this file's own header
+ * comment. Re-exported as an alias for `jui-graph-ts`'s base `BrushOptions` purely so a future
+ * `jui-api-doc` page for `"rangearea"` has a named type to point at; each row's target field is
+ * a `[low, high]` 2-element tuple. */
+export type RangeAreaBrushOptions = BrushOptions
 
 export class RangeAreaBrush extends CoreBrush {
   draw = (): any => {

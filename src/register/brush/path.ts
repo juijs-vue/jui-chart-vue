@@ -4,7 +4,12 @@
 // use for `axis.c(i)`, here called with a second `value` argument too - used directly by the real
 // site's radar/circle-radar demos, via a `radar`-type `c` grid).
 import { CoreBrush, registerBrush } from 'jui-graph-ts'
-import type { BrushData } from 'jui-graph-ts'
+import type { BrushData, BrushOptions } from 'jui-graph-ts'
+
+/** `chart.brush.path` declares no `static setup()`/config fields of its own - it relies entirely
+ * on the inherited `CoreBrush`/`Draw` defaults. Re-exported as an alias for `jui-graph-ts`'s base
+ * `BrushOptions` purely so a future `jui-api-doc` page for `"path"` has a named type to point at. */
+export type PathBrushOptions = BrushOptions
 
 type CAxis = (i: number, value: unknown) => { x: number; y: number }
 

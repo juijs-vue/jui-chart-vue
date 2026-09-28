@@ -8,6 +8,18 @@ import type { BrushData } from 'jui-graph-ts'
 
 type CAxis = (i: number) => { width: number; height: number; x: number; y: number }
 
+/** `chart.brush.circlegauge`'s own config fields (on top of `jui-graph-ts`'s `BrushOptions`). */
+export interface CircleGaugeBrushOptions {
+  /** If the brush is drawn outside of the chart, cut the area - redeclared here because
+   * `circlegauge.js` defaults this to `false`, unlike `BrushOptions`'s own `true` default. */
+  clip?: boolean
+}
+
+/** Own `chart.brush.circlegauge.setup()` fields - see legacy `circlegauge.js`. */
+export const CIRCLEGAUGE_BRUSH_OWN_DEFAULTS: CircleGaugeBrushOptions = {
+  clip: false,
+}
+
 export class CircleGaugeBrush extends CoreBrush {
   private group: any
 
@@ -60,7 +72,7 @@ export class CircleGaugeBrush extends CoreBrush {
   }
 
   static setup(): Record<string, unknown> {
-    return { clip: false }
+    return CIRCLEGAUGE_BRUSH_OWN_DEFAULTS as Record<string, unknown>
   }
 }
 
