@@ -325,6 +325,10 @@ export const darkTheme: ChartThemeOptions = {
   crossBorderColor: '#a9a9a9',
   crossBorderWidth: 1,
   crossBorderOpacity: 0.8,
+  // `crossBorderDashArray` is deliberately NOT added here (dead code - no widget in this repo
+  // ever reads it - and only gradient/pattern define it, classic/dark/pastel don't);
+  // `zoomScrollButtonImage` likewise (only `pastel.ts` defines it). See
+  // `register/theme/types.ts`'s header comment for the full investigation.
   crossBalloonFontSize: 11,
   crossBalloonFontColor: '#333',
   crossBalloonBackgroundColor: '#fff',

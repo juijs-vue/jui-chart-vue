@@ -74,6 +74,13 @@ export const classicTheme: ChartThemeOptions = {
   barPointBorderColor: '#fff',
   barDisableBackgroundOpacity: 0.4,
   barStackEdgeBorderWidth: 1,
+  // `barActiveBackgroundColor` is deliberately NOT added here: dark/gradient/pattern/pastel each
+  // define it with a DIFFERENT value (a real per-theme accent color, not a shared default), so
+  // unlike the shared-default gaps this project restores elsewhere (see
+  // `register/theme/pastel.ts`'s own header comment), there's no single faithful value to port -
+  // `classic` genuinely never had one. `crossBorderDashArray`/`zoomScrollButtonImage` are also
+  // absent here for the same reason as `pastel.ts`'s identical gaps (dead code / only 1 other
+  // theme defines it) - see `register/theme/types.ts`'s header for the full investigation.
   rateBarFontSize: 11,
   rateBarFontColor: '#333',
   rateBarBorderColor: 'none',

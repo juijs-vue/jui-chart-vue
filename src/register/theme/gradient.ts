@@ -91,6 +91,10 @@ export const gradientTheme: ChartThemeOptions = {
   tooltipPointRadius: 5, // common
   tooltipPointBorderWidth: 1, // common
   tooltipPointFontWeight: 'bold', // common
+  // Genuinely absent from this file otherwise - restored here, not fabricated: confirmed
+  // byte-identical (11) across classic/dark/pastel/pattern, a real shared default (see
+  // `register/theme/types.ts`'s own header comment for the wider investigation this belongs to).
+  tooltipPointFontSize: 11,
   tooltipPointFontColor: '#333',
   barFontSize: 11,
   barFontColor: '#333',
@@ -284,6 +288,11 @@ export const gradientTheme: ChartThemeOptions = {
   flameDisableBackgroundOpacity: 0.4,
   flameTextFontSize: 12,
   flameTextFontColor: '#333',
+  // `selectBox*` (`selectBoxBackgroundColor`/`BackgroundOpacity`/`BorderColor`/`BorderOpacity`) is
+  // deliberately NOT added here: only classic/dark define it, and they disagree with each other
+  // ('#666' vs '#fff') - no single faithful value exists to restore (same reasoning
+  // `register/theme/pastel.ts`'s own inline comment documents for the identical gap there; see
+  // `register/theme/types.ts`'s header for the full investigation).
 
   // widget styles
   titleFontColor: '#333',

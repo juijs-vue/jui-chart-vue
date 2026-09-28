@@ -280,6 +280,11 @@ export const patternTheme: ChartThemeOptions = {
   flameDisableBackgroundOpacity: 0.4,
   flameTextFontSize: 12,
   flameTextFontColor: '#333',
+  // `selectBox*` (`selectBoxBackgroundColor`/`BackgroundOpacity`/`BorderColor`/`BorderOpacity`) is
+  // deliberately NOT added here: only classic/dark define it, and they disagree with each other
+  // ('#666' vs '#fff') - no single faithful value exists to restore (same reasoning
+  // `register/theme/pastel.ts`'s own inline comment documents for the identical gap there; see
+  // `register/theme/types.ts`'s header for the full investigation).
 
   // widget styles
   titleFontColor: '#333',
