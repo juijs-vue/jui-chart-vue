@@ -5,31 +5,42 @@
 // SAME shape - each theme configures a subset of this same key space with its own color/size
 // values, not a per-file-distinct config surface the way each brush/widget type is.
 //
-// **Every field is optional, and this is a real finding, not a hedge**: the 5 theme files do NOT
-// all configure the same keys - `pastel.ts` alone omits 40 keys the other 4 all set (confirmed by
-// diffing every theme file's own key set against the union of all 5), and 3 keys
-// (`barActiveBackgroundColor`/`crossBorderDashArray`/`zoomScrollButtonImage`) are each missing
-// from one or more of the other 4. A brush/widget reading a key no active theme happens to set
-// gets `undefined` back from `chart.theme(key)` at runtime (see `mapPathBackgroundColor`'s own
-// comment below for a real case this caused - a thrown, chart-aborting `TypeError`). This
-// interface documents the REAL, full key space (every key that appears in at least one theme
-// file), not a false "every theme has every key" guarantee.
+// **Every field is optional, and this is a real finding, not a hedge**: the 5 theme files
+// originally did NOT all configure the same keys (confirmed by diffing every theme file's own key
+// set against the union of all 5) - `pastel.ts` alone omitted 40 keys the other 4 all set, plus a
+// handful of smaller cross-theme gaps (see below). A brush/widget reading a key no active theme
+// happens to set gets `undefined` back from `chart.theme(key)` at runtime (see
+// `mapPathBackgroundColor`'s own comment below for a real case this caused - a thrown,
+// chart-aborting `TypeError`, before that particular gap was fixed in `classic.ts`).
 //
-// **`pastel.ts`'s 40 missing keys specifically are NOT a porting gap to fix**: `pastel.ts`'s own
-// header comment already establishes it was byte-for-byte extracted from the REAL live
-// `www.jui-vue.io` bundle's own "pastel" theme object, which genuinely has only 318 keys in
-// production - inventing values for the 40 it doesn't have would fabricate configuration that
-// was never real, the opposite of this project's "literal port of real behavior" rule. Checked
-// whether this is actually reachable: `theme="pastel"` is used in exactly one place across the
-// whole site (`web/src/pages/gallery/Fitness.vue`, 6 `<Chart>`s), exclusively with
-// `heatmap`/`pie`/`line`/`scatter` brushes and `tooltip`/`title` widgets - none of which read any
-// of the 40 missing keys directly (`pie.ts`'s own `pieDisableBackgroundOpacity` read has a
-// defensive `|| 0.5` fallback; the other affected types - `guideline`, `ratebar`, `selectbox`,
-// `canvas.bubblecloud`, `canvas.equalizercolumn` - are simply never combined with `pastel`
-// anywhere in this repo's demos or `play/chart` JSON configs, confirmed by grep). `crossBorderDashArray`
-// is additionally dead code everywhere - no widget in this repo ever reads it, not just under
-// `pastel`. So: real inconsistency, currently unreachable in practice, correctly left as `pastel`
-// actually has it - not "fixed" by putting words in the real site's mouth.
+// **Every field stays optional even after the restoration below**, because a theme/brush/widget
+// combination is a real, consumer-controlled runtime choice, not limited to what this repo's own
+// demos happen to exercise today - "could be combined" is a real use case for a published library,
+// not a hypothetical one. That reframing is WHY most of the original 56 cross-theme gap
+// occurrences (40 keys missing from `pastel.ts`, 3 from `classic.ts`, 2 from `dark.ts`, 6 from
+// `gradient.ts`, 5 from `pattern.ts`) were investigated and RESTORED, not just documented as an
+// accepted gap: 36 of them were confirmed byte-identical across every theme that already set
+// them - i.e. real,
+// theme-agnostic shared defaults that were simply missing from one or more files, not genuine
+// per-theme customization - and were added back (see each restored file's own inline comment at
+// the exact block, e.g. `pastel.ts`'s `rateBar*`/`guideline*`/`bubbleCloud*`/
+// `equalizerColumnError*`/`pieDisableBackgroundOpacity` blocks, `gradient.ts`'s
+// `tooltipPointFontSize`). This is the same evidentiary bar `classic.ts`'s own earlier
+// "Map Chart styles" restoration used (see `mapPathBackgroundColor`'s comment below) - not
+// re-guessing what a theme "should" look like, only recovering a value that's provably identical
+// everywhere else and therefore was never actually theme-specific to begin with.
+//
+// **7 distinct keys across the 5 files remain genuinely un-restorable, and stay
+// optional/undefined for a real reason**: `barActiveBackgroundColor` (missing from `classic.ts`) and `selectBoxBackgroundColor`/
+// `BackgroundOpacity`/`BorderColor`/`BorderOpacity` (missing from `gradient.ts`/`pattern.ts`, and
+// even the 2 themes that DO define them - `classic`/`dark` - disagree with each other) have no
+// single value that's actually shared, so inventing one would be fabrication, the opposite of this
+// project's "literal port of real behavior" rule. `crossBorderDashArray` (missing from `classic`/
+// `dark`/`pastel`) is additionally dead code everywhere - no widget in this repo ever reads it, in
+// any theme. `zoomScrollButtonImage` is defined in exactly 1 of the 5 themes (`pastel.ts`) and is
+// also never read by any widget - no other theme to cross-check a value against, and no behavioral
+// risk from its absence either way. See each affected file's own inline comment at the relevant
+// spot for the specific reasoning.
 //
 // Every value's type was derived from actually reading all 5 theme files' own literal values
 // (not guessed from the key name) - confirmed there is exactly one consistent type per key across
