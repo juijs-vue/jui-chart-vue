@@ -75,6 +75,7 @@ import './widget/cross'
 
 // Phase 3, widget batch 2: selection-rectangle family
 import './widget/dragselect'
+import './widget/canvas/dragselect'
 import './widget/guideline'
 import './widget/zoomselect'
 
