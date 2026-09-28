@@ -9,6 +9,17 @@
 // (The same extraction also captured a `"jennifer"` key, independently confirmed byte-identical
 // to this project's own `"classic"` theme - www.jui-vue.io itself already maps that name to
 // `"classic"`, so no separate port of it was needed here.)
+//
+// **This object now has more than the original extracted 318 keys** - a later pass (see the
+// `rateBar*`/`pieDisableBackgroundOpacity`/`guideline*`/`bubbleCloud*`/`equalizerColumnError*`
+// blocks' own inline comments below) restored the subset of keys real `pastel` genuinely lacked
+// that were confirmed byte-identical - real, theme-agnostic shared defaults, not theme-specific
+// colors - across all of classic/dark/gradient/pattern. This is NOT re-guessing what the real
+// site's `pastel` bundle contains; it's recovering a value that's provably identical everywhere
+// else and therefore not actually theme-specific, same evidentiary bar `classic.ts`'s own
+// previously-restored "Map Chart styles" block used. `selectBox*`/`crossBorderDashArray` were
+// deliberately left out (no such faithful value exists for them - see their own inline comments).
+// See `register/theme/types.ts`'s header comment for the full investigation.
 import { registerTheme } from 'jui-graph-ts'
 import type { ChartThemeOptions } from './types'
 
@@ -68,6 +79,28 @@ export const pastelTheme: ChartThemeOptions = {
   barPointBorderColor: "#ebebeb",
   barDisableBackgroundOpacity: 0.4,
   barStackEdgeBorderWidth: 1,
+  // The following `rateBar*` keys were genuinely absent from this theme's real, byte-for-byte
+  // extracted source (see this file's own header comment) - `pastel` genuinely has fewer keys
+  // than the other 4 themes in production. Added here, not fabricated: all 8 values below are
+  // confirmed byte-identical across classic/dark/gradient/pattern (real shared defaults, not
+  // theme-specific colors), and `rateBarFontColor`/`rateBarTooltipBackgroundColor`/
+  // `rateBarTooltipFontColor` use the value classic/gradient/pattern (the other 3 LIGHT themes)
+  // all share - `dark.ts` is the only one of the 4 with a different, dark-appropriate value for
+  // those 3 keys, and `pastel` is unambiguously a light theme (`backgroundColor: "#fff"`, same
+  // family as classic/gradient/pattern) - so their shared light-family value is the faithful
+  // choice, not an invented one. See `register/theme/types.ts`'s own header comment for the full
+  // investigation (including which keys were deliberately NOT restored this way).
+  rateBarFontSize: 11,
+  rateBarFontColor: "#333",
+  rateBarBorderColor: "none",
+  rateBarBorderWidth: 0,
+  rateBarBorderOpacity: 0,
+  rateBarBorderRadius: 5,
+  rateBarDisableBackgroundOpacity: 0.7,
+  rateBarTooltipFontSize: 10,
+  rateBarTooltipFontColor: "#333",
+  rateBarTooltipBackgroundColor: "#fff",
+  rateBarTooltipBorderColor: "#666666",
   gaugeBackgroundColor: "#f5f5f5",
   gaugeArrowColor: "#808080",
   gaugeFontColor: "#666666",
@@ -95,6 +128,10 @@ export const pastelTheme: ChartThemeOptions = {
   pieTotalValueFontSize: 36,
   pieTotalValueFontColor: "#dcdcdc",
   pieTotalValueFontWeight: "bold",
+  // Genuinely absent from the real extracted source, restored here - confirmed byte-identical
+  // across classic/dark/gradient/pattern, a real shared default (see the `rateBar*` block above
+  // for the same reasoning).
+  pieDisableBackgroundOpacity: 0.5,
   areaBackgroundOpacity: 0.4,
   areaSplitBackgroundColor: "#ebebeb",
   bubbleBackgroundOpacity: 0.5,
@@ -273,6 +310,32 @@ export const pastelTheme: ChartThemeOptions = {
   dragSelectBackgroundOpacity: 0.3,
   dragSelectBorderColor: "#7BBAE7",
   dragSelectBorderWidth: 1,
+  // `selectBox*` (`selectBoxBackgroundColor`/`BackgroundOpacity`/`BorderColor`/`BorderOpacity`)
+  // is DELIBERATELY NOT restored here, unlike the `rateBar*`/`guideline*`/`bubbleCloud*`/
+  // `equalizerColumnError*` blocks in this file: those 4 keys are only defined in 2 of the other
+  // 4 themes (classic/dark - not gradient/pattern), and classic ('#666' background/border) vs
+  // dark ('#fff') genuinely disagree, unlike every other restored key here. There is no faithful
+  // "real" pastel value derivable from that evidence, so inventing one would be exactly the
+  // fabrication this project avoids - left undocumented in the object itself (see
+  // `register/theme/types.ts`'s header for the full writeup of this decision).
+  guidelineBorderColor: "#a9a9a9",
+  guidelineBorderWidth: 1,
+  guidelineBorderOpacity: 0.8,
+  guidelineBalloonFontSize: 11,
+  guidelineBalloonFontColor: "#fff",
+  guidelineBalloonBackgroundColor: "#000",
+  guidelineBalloonBackgroundOpacity: 0.5,
+  guidelineBorderDashArray: "2,2",
+  guidelinePointRadius: 3,
+  guidelinePointBorderColor: "#fff",
+  guidelinePointBorderWidth: 1,
+  guidelineTooltipFontColor: "#333",
+  guidelineTooltipFontSize: 12,
+  guidelineTooltipPointRadius: 3,
+  guidelineTooltipBackgroundColor: "#fff",
+  guidelineTooltipBackgroundOpacity: 0.7,
+  guidelineTooltipBorderColor: "#a9a9a9",
+  guidelineTooltipBorderWidth: 1,
   mapPathBackgroundColor: "#67B7DC",
   mapPathBackgroundOpacity: 1,
   mapPathBorderColor: "#fff",
@@ -331,6 +394,16 @@ export const pastelTheme: ChartThemeOptions = {
   polygonScatterBackgroundOpacity: 0.8,
   polygonLineBackgroundOpacity: 0.6,
   polygonLineBorderOpacity: 0.7,
+  bubbleCloudFontColor: "#fff",
+  bubbleCloudFontSize: 11,
+  bubbleCloudFontWeight: "bold",
+  equalizerColumnErrorBackgroundColor: "#ff0000",
+  equalizerColumnErrorFontColor: "#fff",
+  // `crossBorderDashArray` is DELIBERATELY NOT restored here either: only gradient/pattern define
+  // it (classic/dark don't), AND it's genuinely dead code - no widget in this repo's
+  // `register/widget/cross.ts` ever reads it (confirmed via grep), so restoring it would add a
+  // value with zero behavioral effect either way, for a key that isn't even a real shared default
+  // to begin with (same "spotty, not identical" bar `selectBox*` above failed).
 }
 
 registerTheme('pastel', pastelTheme)
