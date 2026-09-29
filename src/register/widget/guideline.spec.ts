@@ -3,11 +3,12 @@ import { mount } from '@vue/test-utils'
 import Chart from '../../Chart.vue'
 import type { Builder } from 'jui-graph-ts'
 
-// `tooltipFormat` is deliberately never configured in these tests - see `guideline.ts`'s own
-// header comment: `drawContentTooltip()`'s `getTextWidth()` uses a real `<canvas>` 2D context,
-// unimplemented in jsdom (this project's unit-test environment). The rest of this widget's logic
-// (line positioning, tooltip visibility, point coloring/hiding) doesn't touch canvas at all and is
-// fully covered here.
+// Most tests below don't configure `tooltipFormat`, since the widget's line positioning/tooltip
+// visibility/point coloring logic doesn't touch canvas at all. A dedicated test further down DOES
+// configure `tooltipFormat` (reaching `drawContentTooltip()`'s `getTextWidth()`, which uses a real
+// `<canvas>` 2D context - unimplemented in jsdom, this project's unit-test environment, so
+// `getContext('2d')` returns `null` here) to cover `getTextWidth()`'s no-2D-context fallback - see
+// `guideline.ts`'s own header comment.
 function mountGuideline() {
   const wrapper = mount(Chart, {
     props: {
@@ -71,5 +72,33 @@ describe('guideline widget', () => {
     // drawContentTooltip) should have a real, non-transparent fill.
     const fills = Array.from(circles).map((c) => c.getAttribute('fill'))
     expect(fills.some((f) => f && f !== 'transparent')).toBe(true)
+  })
+
+  // Regression test for the `getTextWidth()` crash: jsdom's `HTMLCanvasElement.getContext('2d')`
+  // returns `null` (no real canvas 2D context implementation - see `guideline.ts`'s own header
+  // comment), and `getTextWidth()` used to dereference `context.font = font` with no null-check,
+  // throwing `TypeError: Cannot set properties of null` the moment `widget.tooltipFormat` is
+  // configured (the only caller of `getTextWidth()`, in `drawContentTooltip()`). This exercises
+  // exactly that path in this project's real jsdom test environment (no mocking needed).
+  it('does not throw when tooltipFormat is configured and the canvas 2D context is unavailable (jsdom)', () => {
+    const wrapper = mount(Chart, {
+      props: {
+        width: 400,
+        height: 300,
+        axis: [
+          {
+            x: { type: 'range', domain: [0, 4], step: 1, line: true },
+            y: { type: 'range', domain: [0, 10], line: true },
+            data: [{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }, { v: 5 }],
+          },
+        ],
+        brush: [{ type: 'line', target: ['v'] }],
+        widget: [{ type: 'guideline', brush: 0, tooltipFormat: (data: unknown, key: string) => ({ key, value: (data as Record<string, unknown>)[key] }) }],
+      },
+    })
+
+    const builder = (wrapper.vm as unknown as { getBuilder(): Builder }).getBuilder()
+
+    expect(() => builder.emit('guideline.show', [2])).not.toThrow()
   })
 })
