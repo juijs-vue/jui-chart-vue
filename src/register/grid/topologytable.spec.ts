@@ -70,6 +70,43 @@ describe('TopologyTableGrid', () => {
     })
   })
 
+  describe('drawBefore/scale - unrecognized sort value', () => {
+    // Regression test: an unrecognized `grid.sort` (a typo, or any config from an untyped/JSON/API
+    // source bypassing the `'linear' | 'random'` TS union) used to leave `axis.cacheXY` completely
+    // unassigned, since `SORT_STRATEGIES[grid.sort]` resolves to `undefined` and there was no
+    // fallback branch. `scale()`'s returned closure unconditionally dereferences
+    // `axisRef.cacheXY![resolvedIndex]` on the very first render of any `topologynode` chart, so
+    // this crashed immediately, not just on some later interaction.
+    it('falls back to the linear sort strategy instead of leaving axis.cacheXY unset', () => {
+      const g = new TopologyTableGrid()
+      g.axis = makeAxis({ data: [{ key: 'a' }, { key: 'b' }, { key: 'c' }] }) as any
+      g.grid = makeGrid({ sort: 'not-a-real-strategy' }) as any
+
+      expect(() => g.drawBefore!()).not.toThrow()
+
+      const axis = g.axis as unknown as { cacheXY: { x: number; y: number }[] }
+      expect(axis.cacheXY).toBeDefined()
+      expect(axis.cacheXY.length).toBe(3)
+      for (const p of axis.cacheXY) {
+        expect(Number.isFinite(p.x)).toBe(true)
+        expect(Number.isFinite(p.y)).toBe(true)
+      }
+    })
+
+    it('does not throw when scale(index) is used after an unrecognized sort value (first-render path)', () => {
+      const g = new TopologyTableGrid()
+      g.axis = makeAxis({ data: [{ key: 'a' }, { key: 'b' }] }) as any
+      g.grid = makeGrid({ sort: 'not-a-real-strategy' }) as any
+
+      g.drawBefore!()
+
+      expect(() => g.scale(0)).not.toThrow()
+      const result = g.scale(0)
+      expect(Number.isFinite(result.x)).toBe(true)
+      expect(Number.isFinite(result.y)).toBe(true)
+    })
+  })
+
   describe('scale(index)', () => {
     it('returns {x, y, scale} plus mutator closures for a numeric index, scaled by axis.cache.scale', () => {
       const g = new TopologyTableGrid()

@@ -133,8 +133,10 @@ const SORT_STRATEGIES: Record<string, (data: unknown[], area: { x: number; y: nu
 export interface TopologyTableGridOptions {
   /** Which `SORT_STRATEGIES` entry scatters each node's initial `{x, y}` position: `'linear'`
    * spreads nodes across alternating columns (left/right) at a random row each; `'random'`
-   * places every node at a uniformly random position. An unrecognized value leaves positions
-   * unset entirely (see this file's own "PRESERVED QUIRK" comment). */
+   * places every node at a uniformly random position. An unrecognized value (outside the
+   * `'linear' | 'random'` union - e.g. from an untyped/JSON/API config source) falls back to
+   * `'linear'`, the same strategy used when `sort` isn't configured at all (see `drawBefore()`'s
+   * own comment on why this fallback exists). */
   sort?: 'linear' | 'random'
   /** Margin in px reserved from the axis area's own edges when scattering node positions
    * (`'random'`), or the row/column pitch nodes are placed on (`'linear'`). */
@@ -182,19 +184,24 @@ export class TopologyTableGrid extends CoreGrid {
     const grid = this.grid as unknown as { sort: string; space: number }
 
     if (!axis.cacheXY) {
-      const sortFunc = SORT_STRATEGIES[grid.sort]
+      // **Fixed - was a real, live crash, not "dead/unreachable in ordinary usage" as a previous
+      // version of this comment claimed**: `scale()`'s returned closure below unconditionally
+      // dereferences `axisRef.cacheXY![resolvedIndex]` in `setX`/`setY`/the position getter, and
+      // that closure is used on the VERY FIRST render of any `topologynode` chart - not just on
+      // some later interaction. Any `grid.sort` value that isn't exactly `'linear'` or `'random'`
+      // (a typo, or any config from an untyped/JSON/API source bypassing the
+      // `'linear' | 'random'` TS union) left `sortFunc` `undefined` with no `else` branch, so
+      // `axis.cacheXY` was never assigned and the whole chart crashed on first render. The
+      // original engine's own fallback (`jui.include("chart.topology.sort." + this.grid.sort)`,
+      // treating `grid.sort` itself as a raw registry key) has no equivalent here (no real
+      // registry exists in this port, per this whole project's Phase 0 rule 1), so instead of
+      // reproducing that second lookup, an unrecognized `sort` now falls back to the `'linear'`
+      // strategy - the same strategy `TOPOLOGYTABLE_GRID_OWN_DEFAULTS.sort` already uses when
+      // `sort` isn't configured at all, so this is consistent with the documented default rather
+      // than an invented new behavior.
+      const sortFunc = SORT_STRATEGIES[grid.sort] ?? SORT_STRATEGIES.linear
 
-      if (typeof sortFunc === 'function') {
-        axis.cacheXY = sortFunc(axis.data, axis.area(), grid.space)
-      }
-      // **PRESERVED QUIRK**: the original falls back to `jui.include(this.grid.sort)` (treating
-      // `grid.sort` itself as a raw registry key) when the "chart.topology.sort."+name lookup
-      // fails - a real registry no longer exists in this port (per this whole project's Phase 0
-      // rule 1), and there is no equivalent second lookup table this could fall back to, so an
-      // unrecognized `sort` value here simply leaves `axis.cacheXY` unset (matching what the
-      // original would ALSO do for any `grid.sort` value that isn't itself a valid global
-      // registry key - a dead/unreachable fallback in ordinary usage, not a behavior this port
-      // needs to reproduce with a second real lookup).
+      axis.cacheXY = sortFunc(axis.data, axis.area(), grid.space)
     }
 
     if (!axis.cache) {
