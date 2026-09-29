@@ -18,10 +18,11 @@ export type FullStackColumnBrushOptions = FullStackBarBrushOptions
 /** `chart.brush.fullstackcolumn`: the vertical counterpart to `FullStackBarBrush` - each column
  * always fills the full axis height, with segment heights computed as each target's share of that
  * row's own value sum (`axis.y.rate(list[j], sum)`) rather than a share of the axis's global max,
- * stacking upward from the baseline. See this file's own header comment for a preserved quirk: an
- * out-of-range (`NaN`) segment isn't skipped outright, it's still appended without its geometry
- * attributes set, and `startY` still advances by that `NaN` height, poisoning every remaining target
- * in that row too. Reuses `FullStackBarBrush`'s `drawText()`/style/active-bar machinery unchanged. */
+ * stacking upward from the baseline. See `draw()`'s own doc comment for how an out-of-range
+ * (`NaN`) segment is handled: it isn't skipped outright, it's still appended without its geometry
+ * attributes set, but (FIXED - was a PRESERVED BUG) a `NaN` segment's height no longer poisons
+ * `startY` for the remaining targets in that row. Reuses `FullStackBarBrush`'s
+ * `drawText()`/style/active-bar machinery unchanged. */
 export class FullStackColumnBrush extends FullStackBarBrush {
   private fscWidth = 0
 
@@ -55,10 +56,13 @@ export class FullStackColumnBrush extends FullStackBarBrush {
    * iterating targets in REVERSE (`j` counting down) so segments stack upward from the row's
    * baseline. Unlike `FullStackBarBrush.draw()`, a segment whose geometry comes out `NaN` isn't
    * skipped outright - its bar element is still created and appended to the group, just without its
-   * `x`/`y`/`width`/`height` attributes set (left at `getBarElement()`'s own defaults). `startY`
-   * still unconditionally advances by that (NaN) height afterward, same as any other segment - so
-   * one bad segment poisons `startY` to `NaN` for every remaining target in that row too, not just
-   * the one segment. Percentage labels
+   * `x`/`y`/`width`/`height` attributes set (left at `getBarElement()`'s own defaults). FIXED (was a
+   * PRESERVED BUG): `startY` used to unconditionally advance by that (NaN) height afterward too,
+   * which poisoned `startY` to `NaN` for every remaining target in that row, silently blanking out
+   * otherwise-valid segments later in the same row (e.g. a row whose value sum is 0, so one target's
+   * own `0/0` rate computes `NaN`, while other targets in that row have perfectly finite heights of
+   * their own). Now a `NaN` height is treated as a 0 contribution to `startY` instead, isolating the
+   * corruption to just the one bad segment. Percentage labels
    * (`brush.showText`, via `drawText()`) and active-bar wiring
    * (`setActiveEventOption()`/`addBarElement()`/`setActiveEffectOption()`) work the same as the
    * inherited version. */
@@ -112,7 +116,12 @@ export class FullStackColumnBrush extends FullStackBarBrush {
 
         this.setActiveEventOption(group)
 
-        startY += height
+        // FIX (was PRESERVED BUG): a NaN `height` no longer advances `startY` - it's treated as a
+        // 0-height contribution so it can't poison the running total for the remaining (lower-index)
+        // targets in this same row. See this method's own header comment.
+        if (!isNaN(height)) {
+          startY += height
+        }
       }
 
       this.addBarElement(group)
