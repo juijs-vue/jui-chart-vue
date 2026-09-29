@@ -19,17 +19,25 @@
 // (the technique `title.ts` uses) - a real, literal difference in the original source (confirmed by
 // reading `guideline.js` in full: it defines its own canvas-based helper, memoized onto the
 // function object itself via `getTextWidth.canvas ||= ...`, exactly as ported below) - kept
-// faithful rather than "fixed" to reuse the SVG-based technique. **Fixed (was a real crash, not
-// just a jsdom quirk)**: `getContext('2d')` can return `null` in any environment without a real
-// canvas 2D context - jsdom (this project's unit-test environment) is one, logging "Not
-// implemented..." and returning `null`, but so can some SSR/headless render pipelines. The original
-// literal port had no null-check and threw `TypeError: Cannot set properties of null` the instant
-// it ran, which is reachable the moment `widget.tooltipFormat` is configured (see
-// `drawContentTooltip()` below) - a perfectly valid, supported config, not an edge case nobody
-// depends on. `getTextWidth()` now falls back to a character-count-based width estimate when there
-// is no real 2D context, so the tooltip still renders (with an approximate width) instead of
-// crashing the whole chart. See `getTextWidth()`'s own comment for the fallback formula. This
-// project's tests for this widget cover both the normal path and this fallback path directly.
+// faithful rather than "fixed" to reuse the SVG-based technique for the normal (2D-context-available)
+// path. **Fixed (was a real crash, not just a jsdom quirk)**: `getContext('2d')` can return `null`
+// in any environment without a real canvas 2D context - jsdom (this project's unit-test
+// environment) is one, logging "Not implemented..." and returning `null`, but so can a real browser
+// with canvas blocked (privacy/fingerprinting-protection tooling commonly does exactly this - null
+// or a tainted canvas, while leaving SVG untouched) or some SSR/headless render pipelines. The
+// original literal port (confirmed against the real legacy `guideline.js`, which has NO null-check
+// and no fallback of any kind here - canvas support is simply assumed) had no null-check either and
+// threw `TypeError: Cannot set properties of null` the instant it ran, reachable the moment
+// `widget.tooltipFormat` is configured (see `drawContentTooltip()` below) - a perfectly valid,
+// supported config, not an edge case nobody depends on. Since the legacy engine itself has no
+// equivalent fallback to port, `getTextWidth()` now falls back to `chart.svg.getTextSize()` - the
+// SAME real SVG-based measurement technique `title.ts`/`legend.ts`/`ratebar.ts`/`note.ts` already
+// use elsewhere in this project for exactly this need - rather than inventing a new heuristic, so
+// the tooltip still renders (accurately, in a real canvas-blocked browser; at a jsdom-limited
+// `{width:0}` in this project's own tests, same pre-existing limitation `ratebar.spec.ts` already
+// documents for `getTextSize()`) instead of crashing the whole chart. See `getTextWidth()`'s own
+// comment for the fallback's exact mechanics. This project's tests for this widget cover both the
+// normal path and this fallback path directly.
 import { CoreWidget, registerWidget } from 'jui-graph-ts'
 import type { BrushData } from 'jui-graph-ts'
 
@@ -75,24 +83,33 @@ export const GUIDELINE_WIDGET_OWN_DEFAULTS: GuidelineWidgetOptions = {
 let sharedCanvas: HTMLCanvasElement | null = null
 
 /** Literal port of legacy `getTextWidth(text, font)` - see this file's own header comment on the
- * real canvas dependency. **Fix**: `getContext('2d')` can genuinely return `null` - not just in
- * jsdom (which was the originally-suspected-only case), but in any environment without a real
- * canvas 2D context (some SSR/headless render pipelines). The original literal port had no
- * null-check here and crashed (`TypeError: Cannot set properties of null`) the instant
- * `widget.tooltipFormat` was configured, taking down the whole chart on a config that's otherwise
- * perfectly valid. Falls back to a character-count heuristic (`text.length * font-size * 0.6`,
- * the common average-glyph-width-to-font-size ratio for proportional fonts) so
- * `drawContentTooltip()`'s tooltip rect/row sizing (the only consumer of this return value, around
- * this file's `drawContentTooltip()`) still gets a finite, reasonably-sized width instead of
- * either crashing or silently collapsing to 0. */
-function getTextWidth(text: string, font: string): number {
+ * real canvas dependency and why the legacy engine itself has no fallback to port here. **Fix**:
+ * `getContext('2d')` can genuinely return `null` - not just in jsdom, but in any environment
+ * without a real canvas 2D context (a real browser with canvas blocked, some SSR/headless render
+ * pipelines). The original literal port had no null-check here and crashed (`TypeError: Cannot set
+ * properties of null`) the instant `widget.tooltipFormat` was configured, taking down the whole
+ * chart on a config that's otherwise perfectly valid. Falls back to `svg.getTextSize()` - this
+ * project's own real SVG-based text-measurement utility, the SAME one `title.ts`/`legend.ts`/
+ * `ratebar.ts`/`note.ts` already call for the same need elsewhere - reusing an established,
+ * already-verified technique from this very codebase instead of inventing a new one, so
+ * `drawContentTooltip()`'s tooltip rect/row sizing (the only consumer of this return value) still
+ * gets a real measurement wherever the DOM can produce one (accurate in a real canvas-blocked
+ * browser), instead of crashing. `font` is parsed back into `getTextSize()`'s
+ * `{fontSize, bold}` options since that's the shape `drawContentTooltip()`'s call site already has
+ * the pieces for (`` `bold ${fontSize}px ${fontFamily}` ``). */
+function getTextWidth(svg: { getTextSize(text: string, opt?: { fontSize?: string | number; fontFamily?: string; bold?: string | number }): { width: number; height: number } }, text: string, font: string): number {
   if (!sharedCanvas) sharedCanvas = document.createElement('canvas')
   const context = sharedCanvas.getContext('2d') as CanvasRenderingContext2D | null
 
   if (!context) {
     const fontSizeMatch = /(\d+(?:\.\d+)?)px/.exec(font)
-    const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 12
-    return text.length * fontSize * 0.6 * 1.5
+    const fontFamilyMatch = /px\s+(.+)$/.exec(font)
+    const size = svg.getTextSize(text, {
+      fontSize: fontSizeMatch ? fontSizeMatch[1] : undefined,
+      fontFamily: fontFamilyMatch ? fontFamilyMatch[1] : undefined,
+      bold: /^bold\b/.test(font) ? 'bold' : undefined,
+    })
+    return size.width * 1.5
   }
 
   context.font = font
@@ -288,7 +305,7 @@ export class GuideLineWidget extends CoreWidget {
       if (typeof widget.tooltipFormat === 'function') {
         const ret = (widget.tooltipFormat as (this: unknown, data: unknown, key: string) => { key: unknown; value: unknown }).apply(this, [data, key])
 
-        width = Math.max(width, getTextWidth(`${ret.key} ${ret.value}`, `bold ${this.chart.theme('guidelineTooltipFontSize')}px ${this.chart.theme('fontFamily')}`))
+        width = Math.max(width, getTextWidth(this.chart.svg, `${ret.key} ${ret.value}`, `bold ${this.chart.theme('guidelineTooltipFontSize')}px ${this.chart.theme('fontFamily')}`))
 
         texts.get(index).get(0).text(ret.key)
         texts.get(index).get(1).text(ret.value)
