@@ -27,6 +27,7 @@ import {
   Grid3D,
   OverlapGrid,
   TableGrid,
+  RuleGrid,
   type GridConstructor,
 } from 'jui-graph-ts'
 // `topologytable` is a `jui-chart`-OWN grid extension (not part of `juijs-graph`/`jui-graph-ts`
@@ -52,4 +53,10 @@ export const GRID_TYPES: Record<string, GridConstructor> = {
   overlap: OverlapGrid as unknown as GridConstructor,
   table: TableGrid as unknown as GridConstructor,
   topologytable: TopologyTableGrid as unknown as GridConstructor,
+  // `chart.grid.rule` (`jui-graph-ts`'s `RuleGrid`, `src/grid/rule.ts`) - previously omitted here
+  // (unreachable in this Vue ecosystem despite being a real, now-fully-fixed grid type in
+  // jui-graph-ts - see that file's own header comment for the Tier A crash fixes that made it
+  // usable). Registered under the same "chart.grid.X" -> "X" short-key convention every other grid
+  // type above uses.
+  rule: RuleGrid as unknown as GridConstructor,
 }
