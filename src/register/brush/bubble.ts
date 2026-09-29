@@ -45,11 +45,10 @@ export const BUBBLE_BRUSH_OWN_DEFAULTS: BubbleBrushOptions = {
  * radius scaled between `brush.min`/`brush.max` against the data's value range (or a separate
  * `brush.scaleKey` field, letting radius be driven by a different field than the y-position).
  * Supports an optional centered value label, and a click/hover-toggled active-bubble highlight
- * (`setActiveEffect()`) that dims all other bubbles. See this file's own header comment for a
- * preserved crash in `setActiveEffect()`: it unconditionally restyles each bubble's text-label
- * child, which only exists when `showText` is true, so toggling `active`/`activeEvent` with the
- * default `showText: false` throws. Also extends `CoreBrush` directly, not `ScatterBrush`, despite
- * the visual similarity. */
+ * (`setActiveEffect()`) that dims all other bubbles - see that method's own doc comment for a fixed
+ * crash: it used to unconditionally restyle each bubble's text-label child, which only exists when
+ * `showText` is true, so toggling `active`/`activeEvent` with the default `showText: false` used to
+ * throw. Also extends `CoreBrush` directly, not `ScatterBrush`, despite the visual similarity. */
 export class BubbleBrush extends CoreBrush {
   protected bubbleList: any[] = []
 
@@ -122,11 +121,14 @@ export class BubbleBrush extends CoreBrush {
   }
 
   /** Highlights bubble `r` at full opacity while dimming every other bubble in `bubbleList` to
-   * `bubbleBackgroundOpacity`. See the inline comment below for a preserved crash: this
-   * unconditionally restyles each bubble's second child (`.get(1)`, the text label), which only
-   * exists when `brush.showText` is `true` - with the default `showText: false`, calling this
-   * (via `activeEvent` or `brush.active`) throws `TypeError: Cannot read properties of null`, a
-   * real bug reachable in the original engine too and preserved rather than silently fixed. */
+   * `bubbleBackgroundOpacity`. FIXED (was a PRESERVED BUG, Tier A - a guaranteed crash under the
+   * DEFAULT options, not a "look" anyone could depend on): this used to unconditionally restyle
+   * each bubble's second child (`.get(1)`, the text label) too, but `createBubble()` only ever
+   * appends that second child when `brush.showText` is `true` - with the default `showText: false`,
+   * `.get(1)` is `null` and calling `.attr(...)` on it threw `TypeError: Cannot read properties of
+   * null`, reachable whenever a default (`showText: false`) bubble chart also configured `active`
+   * or `activeEvent` (both of which call this method). Now the text-label child is only restyled
+   * when it actually exists. */
   setActiveEffect(r: any): void {
     const cols = this.bubbleList
 
@@ -134,17 +136,11 @@ export class BubbleBrush extends CoreBrush {
       const opacity = cols[i] == r ? 1 : this.chart.theme('bubbleBackgroundOpacity')
 
       cols[i].get(0).attr({ opacity })
-      // PRESERVED BUG, not silently avoided with `?.` here: legacy calls `.get(1).attr(...)`
-      // UNCONDITIONALLY, even though `createBubble()` only ever appends a second (text) child
-      // when `brush.showText` is true (the default is `false`). With `showText: false` (the
-      // default!), `.get(1)` returns `null` (per `Element.get()`'s own real "child doesn't exist"
-      // return value), and calling `.attr(...)` on it throws `TypeError: Cannot read properties
-      // of null` - a REAL crash in the true original engine too, reachable whenever a default
-      // (`showText: false`) bubble chart also configures `active` or `activeEvent` (both of which
-      // call this method). Flagged in this task's final report rather than silently patched with
-      // optional chaining, per the same "don't silently fix a faithfully-reachable original bug"
-      // instruction already applied to `BarBrush`/`ColumnBrush`'s `drawAnimate()`.
-      cols[i].get(1).attr({ opacity })
+
+      const textLabel = cols[i].get(1)
+      if (textLabel != null) {
+        textLabel.attr({ opacity })
+      }
     }
   }
 

@@ -67,10 +67,12 @@ describe('bubble brush', () => {
     expect(radii[1]).toBeCloseTo(30, 0)
   })
 
-  it('faithfully crashes when `active` is set with the default showText: false (legacy `setActiveEffect()` ' +
-    'unconditionally calls `.get(1).attr(...)`, which is `null` whenever no text child was appended)', () => {
-    expect(() =>
-      mount(Chart, {
+  it('does not throw when `active` is set with the default showText: false (setActiveEffect() must ' +
+    "not restyle a text-label child that createBubble() never appended)", () => {
+    let wrapper: ReturnType<typeof mount> | undefined
+
+    expect(() => {
+      wrapper = mount(Chart, {
         props: {
           width: 400,
           height: 300,
@@ -86,7 +88,37 @@ describe('bubble brush', () => {
           ],
           brush: [{ type: 'bubble', target: ['value1'], active: 0 }],
         },
-      }),
-    ).toThrow()
+      })
+    }).not.toThrow()
+
+    const circles = wrapper!.element.querySelectorAll('g.brush-bubble circle')
+    expect(circles.length).toBe(2)
+    // setActiveEffect() ran without throwing and restyled the active bubble's own <circle> to full
+    // opacity (its would-be text-label child, which showText: false never created, is left alone).
+    expect(Number(circles[0].getAttribute('opacity'))).toBeCloseTo(1)
+  })
+
+  it('does not throw when `activeEvent` fires with the default showText: false', () => {
+    const wrapper = mount(Chart, {
+      props: {
+        width: 400,
+        height: 300,
+        axis: [
+          {
+            x: { type: 'block', domain: ['A', 'B'] },
+            y: { type: 'range', domain: [0, 100] },
+            data: [
+              { name: 'A', value1: 10 },
+              { name: 'B', value1: 90 },
+            ],
+          },
+        ],
+        brush: [{ type: 'bubble', target: ['value1'], activeEvent: 'click' }],
+      },
+    })
+
+    const circles = wrapper.element.querySelectorAll('g.brush-bubble circle')
+    expect(circles.length).toBe(2)
+    expect(() => circles[0].dispatchEvent(new Event('click', { bubbles: true }))).not.toThrow()
   })
 })
