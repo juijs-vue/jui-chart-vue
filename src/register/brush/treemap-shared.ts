@@ -328,20 +328,20 @@ export class NodeManager {
     }
   }
 
-  /** **PRESERVED QUIRK, never called by `treemap.js`/`flame.js`**: `node.data` doesn't exist
-   * anywhere in `TreemapNode` (fields are flat: `text`/`value`/`x`/`y`/`width`/`height`), so the
-   * original's `node.data[key] = data[key]` throws a `TypeError` the instant this is ever called
-   * with a non-empty `data` object - a latent, unreachable bug in the real upstream engine, kept
-   * as a literal crash rather than silently "fixed" (same "faithful crash over silent patch"
-   * principle applied throughout this project). The extra, always-inert second `reload()` argument
-   * the original passes (`node.reload(node.nodenum, true)` - `reload()` only ever takes one
-   * parameter) is simply not passed here, same as `grid/panel.ts`'s own precedent for dropping an
+  /** FIXED (was a PRESERVED BUG, Tier A - a guaranteed crash, not a "look" anyone could depend on):
+   * the original ported `node.data[key] = data[key]`, but `node.data` doesn't exist anywhere on
+   * `TreemapNode` (fields are flat: `text`/`value`/`x`/`y`/`width`/`height`, not nested under a
+   * `.data` object), so that literal port threw a `TypeError` the instant this public method was
+   * ever called with a non-empty `data` object - unconditionally, for any caller. Now assigns each
+   * key straight onto the node's own flat fields instead. The extra, always-inert second `reload()`
+   * argument the original passes (`node.reload(node.nodenum, true)` - `reload()` only ever takes one
+   * parameter) is still not passed here, same as `grid/panel.ts`'s own precedent for dropping an
    * already-100%-inert extra argument. */
   updateNode(index: string, data: Record<string, unknown>): TreemapNode {
     const node = this.getNode(index) as TreemapNode
 
     for (const key in data) {
-      ;(node as unknown as { data: Record<string, unknown> }).data[key] = data[key]
+      ;(node as unknown as Record<string, unknown>)[key] = data[key]
     }
 
     node.reload(node.nodenum ?? undefined)
