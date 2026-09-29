@@ -5,7 +5,7 @@
 // template) - `<template>` below really is just the one `<div ref="rootEl" />`.
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import type { Builder } from 'jui-graph-ts'
-import { GRID_TYPES } from './register/setup'
+import { GRID_TYPES, MAP_TYPE } from './register/setup'
 import { ChartBuilder } from './register/chartMap'
 
 export interface AxisPadding {
@@ -309,6 +309,10 @@ function remount(): void {
   // `Builder` never declares/populates `gridTypes` itself (see `register/gridTypes.ts`'s header
   // comment) - stamped on directly before `.mount()`, since `mount()` renders synchronously.
   Object.assign(b, { gridTypes: GRID_TYPES })
+  // Same wiring, for the single `AxisChart.mapType` slot (see `register/mapTypes.ts`'s own header
+  // comment for why this is a single constructor, not a keyed record like `GRID_TYPES`, and for why
+  // `ChartBuilder`'s own constructor already stamped a placeholder here before this existed).
+  Object.assign(b, { mapType: MAP_TYPE })
   // See `cloneForEngine()`'s own doc comment above - never hand the engine a live reference to a
   // Vue-reactive prop value.
   b.mount(el, cloneForEngine(assembledOptions.value) as never)

@@ -166,3 +166,4 @@ import './brush/fillgauge'
 import './brush/stackgauge'
 
 export { GRID_TYPES } from './gridTypes'
+export { MAP_TYPE } from './mapTypes'
