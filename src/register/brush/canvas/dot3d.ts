@@ -61,9 +61,9 @@ type Scale3 = (value: unknown) => number
  * `'line'`, `'poly'`, or `'area'`), each shape queued via `addPolygon()`/`drawAfter()` for deferred,
  * z-sorted drawing. Reads `listData()` rows as plain `[x, y, (z)]` arrays rather than the usual
  * object-shaped rows (z-padded with a trailing `0` when a row only has 2 elements). For
- * `'line'`/`'poly'`, `draw()` preserves a legacy transcription bug where the "is this the last row"
- * check reads the current row's own (always-3) length instead of the dataset's actual last index -
- * see `draw()`'s own doc for the full quirk. */
+ * `'line'`/`'poly'`, `draw()` FIXED (was a legacy transcription bug) the "is this the last row"
+ * check, which used to read the current row's own (always-3) length instead of the dataset's
+ * actual last index - see `draw()`'s own doc for the full history. */
 export class CanvasDot3DBrush extends CanvasCoreBrush {
   private firstCacheData: [string, number, number, number, number, number, boolean] | null = null
 
@@ -204,9 +204,9 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
    * header comment) - z-padding any 2-element row with a trailing `0` in place - and, per `symbol`,
    * dispatches to `createLine()`/`createArea()`/`createDot()` with the previous row (`i == 0 ?
    * null : datas[i - 1]`) as context for line/area segments. For `'line'`/`'poly'` it also computes
-   * `isLast` as `i == data.length - 1` (the CURRENT ROW's own length, always `3` after z-padding,
-   * not the actual final-row index - see the header's PRESERVED BUG note), which `drawLine()` uses
-   * to decide when to close and fill a `'poly'` shape. */
+   * `isLast` as `i == datas.length - 1` (the actual final-row index - see the inline comment below
+   * for the FIXED transcription bug this used to have), which `drawLine()` uses to decide when to
+   * close and fill a `'poly'` shape. */
   draw = (): void => {
     const brush = this.brush as Record<string, unknown>
     const symbol = brush.symbol as string
@@ -222,13 +222,15 @@ export class CanvasDot3DBrush extends CanvasCoreBrush {
       }
 
       if (symbol == 'line' || symbol == 'poly') {
-        // **PRESERVED BUG**: legacy `(i == data.length-1)` reads the CURRENT ROW's own length
-        // (2 or 3, after the `data.push(0)` z-padding above always makes it 3) as the "is this the
-        // last row" check, not `datas.length-1` (the actual last-row index) - so `isLast` is true
-        // only when the loop index happens to equal 3 (a transcription typo: `data` vs `datas`),
-        // not on the real final iteration. Kept exactly as written, not "fixed" to `datas.length -
-        // 1`.
-        this.createLine(color, r, data, i == 0 ? null : datas[i - 1], i == data.length - 1)
+        // FIXED (was a PRESERVED BUG, Tier A - real data corruption, not a "look" anyone could
+        // depend on): legacy `(i == data.length-1)` read the CURRENT ROW's own length (2 or 3,
+        // after the `data.push(0)` z-padding above always makes it 3) as the "is this the last row"
+        // check, instead of `datas.length-1` (the actual last-row index) - a transcription typo
+        // (`data` vs `datas`). For a 3-point dataset this coincidentally worked, but for fewer than
+        // 3 points `isLast` was never true (`'poly'` mode never closed/filled at all), and for more
+        // than 3 points it fired prematurely at row index 2 (mid-dataset), then kept drawing
+        // additional unclosed/garbage segments afterward. Now compares against `datas.length - 1`.
+        this.createLine(color, r, data, i == 0 ? null : datas[i - 1], i == datas.length - 1)
       } else if (symbol == 'area') {
         this.createArea(color, r, data, i == 0 ? null : datas[i - 1])
       } else {

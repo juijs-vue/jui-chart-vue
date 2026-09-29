@@ -73,6 +73,63 @@ describe('canvas.dot3d brush', () => {
     expect(buffer.calls).toContain('stroke')
   })
 
+  it('symbol: "poly" with exactly 3 points closes and fills once, at the true last row (sanity check - unaffected by the datas.length fix)', () => {
+    patch = installStubCanvasContext()
+
+    const wrapper = mount3d({ type: 'canvas.dot3d', symbol: 'poly' }, [
+      [1, 1, 1],
+      [2, 2, 2],
+      [3, 3, 3],
+    ])
+
+    const builder = (wrapper.vm as unknown as { getBuilder(): Builder }).getBuilder()
+    const buffer = (builder as unknown as { _canvas: { buffer: { calls: string[] } } })._canvas.buffer
+
+    expect(buffer.calls.filter((c) => c === 'fill').length).toBe(1)
+    expect(buffer.calls.filter((c) => c === 'closePath').length).toBe(1)
+  })
+
+  it('symbol: "poly" with FEWER than 3 points still closes and fills the shape (was: never closed at all - ' +
+    "isLast read the current row's own (always-3, post z-padding) length instead of datas.length)", () => {
+    patch = installStubCanvasContext()
+
+    const wrapper = mount3d({ type: 'canvas.dot3d', symbol: 'poly' }, [
+      [1, 1, 1],
+      [2, 2, 2],
+    ])
+
+    const builder = (wrapper.vm as unknown as { getBuilder(): Builder }).getBuilder()
+    const buffer = (builder as unknown as { _canvas: { buffer: { calls: string[] } } })._canvas.buffer
+
+    expect(buffer.calls.filter((c) => c === 'fill').length).toBe(1)
+    expect(buffer.calls.filter((c) => c === 'closePath').length).toBe(1)
+  })
+
+  it('symbol: "poly" with MORE than 3 points closes and fills at the true last row, not prematurely mid-dataset ' +
+    '(was: closed/filled at row index 2, then kept drawing unclosed segments afterward)', () => {
+    patch = installStubCanvasContext()
+
+    const wrapper = mount3d({ type: 'canvas.dot3d', symbol: 'poly' }, [
+      [1, 1, 1],
+      [2, 2, 2],
+      [3, 3, 3],
+      [4, 4, 4],
+      [5, 5, 5],
+    ])
+
+    const builder = (wrapper.vm as unknown as { getBuilder(): Builder }).getBuilder()
+    const buffer = (builder as unknown as { _canvas: { buffer: { calls: string[] } } })._canvas.buffer
+
+    // Only ever closes/fills once, no matter the dataset size.
+    expect(buffer.calls.filter((c) => c === 'fill').length).toBe(1)
+    expect(buffer.calls.filter((c) => c === 'closePath').length).toBe(1)
+
+    // And it must happen at the true end - no more line segments (`stroke`) drawn after the fill.
+    const lastFillIndex = buffer.calls.lastIndexOf('fill')
+    const lastStrokeIndex = buffer.calls.lastIndexOf('stroke')
+    expect(lastFillIndex).toBeGreaterThan(lastStrokeIndex)
+  })
+
   it('setup() defaults size/color/symbol', () => {
     patch = installStubCanvasContext()
 
